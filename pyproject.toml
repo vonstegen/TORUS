@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "torus"
-version = "0.2.0"
+version = "0.3.0"
 description = "Ternary Optimized Recursive Unified System - extreme-efficiency LLM inference via residual ternary planes, adaptive gating, and recursive context-as-variable handling."
 readme = "README.md"
 requires-python = ">=3.10"

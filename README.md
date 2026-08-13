@@ -46,12 +46,14 @@ When combined with the **RLM/Prime-Agent pattern** of treating context as a vari
 | MoE-aware expert-specialized residual planes         | scaffolded  | `torus.moe.ExpertBank` |
 | Recursive context-as-variable (RLM) primitive       | implemented | `torus.rlm.RecursiveContext` |
 | REPL integration                                   | implemented | `torus.rlm.ContextREPL` |
+| Capability-aware distillation loss                  | implemented | `torus.train.losses` |
+| Straight-through estimator for ternary gradients   | implemented | `torus.train.TernarySTE` |
+| Progressive residual-plane curriculum               | implemented | `torus.train.CurriculumSchedule` |
+| QAT / distillation training loop                    | implemented | `torus.train.DistillationTrainer` |
 | Hardware kernels (CUDA / AVX-512 implementation)    | planned     | Phase 2 follow-on |
 | BitNet / GGUF / llama.cpp adapters                  | planned     | Phase 4 |
-| Training recipes (QAT, distillation)                | planned     | Phase 3 |
-| MoE-learned gating head                             | planned     | Phase 3 |
-| Native fitness + training utility scripts           | planned     | Phase 3 |
-
+| Joint learned gate (replaces heuristic)             | planned     | Phase 4 |
+| Native fitness + training utility scripts           | planned     | Phase 4 |
 ---
 
 ## Installation

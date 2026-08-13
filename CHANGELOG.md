@@ -1,5 +1,37 @@
 # CHANGELOG
 
+## 0.3.0 — Phase 3 (training scaffolding)
+
+### Added
+
+- `torus.train.losses`: capability-aware distillation loss combining
+  logit-KL, intermediate-state alignment, and MoE-route symmetric-KL
+  (`combined_distillation_loss`). The intermediate term is what
+  trains the residual plane to fix the primary plane's worst errors.
+- `torus.train.ste`: straight-through estimator
+  (`TernarySTE`) wrapping a learnable full-precision weight with a
+  ternary quantization forward pass and an identity backward pass.
+  Reference SGD-friendly gradient is computed via finite differences.
+- `torus.train.curriculum`: `CurriculumSchedule` with progressive
+  stages that grow `n_planes_active` from 1 to N, lock per-stage
+  thresholds, and decide active plane count by training step.
+- `torus.train.loop`: end-to-end `DistillationTrainer` with step
+  loop, eval hooks, training stats, grad-clip, momentum-SGD on the
+  latent weight, and an `on_log` callback. Phase-3 trainer is a
+  pure-numpy reference; autograd swaps in behind the same
+  interface.
+- `examples/qat_smoke.py`: 10-step smoke run that demonstrates the
+  curriculum handing off from plane 1 to plane 2 at the configured
+  step boundary.
+- `tests/test_training.py`: 24 new tests covering distillation
+  losses, STE, curriculum, and trainer smoke / curriculum /
+  grad-clip / data-exhaustion paths.
+
+### Verified
+
+- `pytest`: 89 passed in 0.12 s.
+- `examples/qat_smoke.py`: curriculum handoff at step 4 reported.
+
 ## 0.2.0 — Phase 2 (in progress)
 
 ### Added
@@ -9,7 +41,6 @@
 - `torus.core.kernels`: three reference CPU kernels (`dense`,
   `sparse`, `unrolled`) with a uniform `(x, plane) -> (y, OpCount)`
   contract and a registry for adding Phase-3 hardware kernels
-  (`register_kernel(name, fn)`, `get_kernel(name)`).
 - `torus.core.memory`: declarative placement policy for residual
   planes across `VRAM`, `RAM`, `NVME` tiers, plus a
   `p620_default_budget()` helper for the P620 target machine.

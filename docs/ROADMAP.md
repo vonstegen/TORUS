@@ -37,14 +37,18 @@ the public API stable.
 - [ ] End-to-end benchmark vs `bitnet.cpp` baseline
 
 
-## Phase 3 — Training & Distillation
+## Phase 3 — Training & Distillation (scaffolding complete)
 
 **Deliverable**: a real ternary model trained from an open base on
 modest hardware.
 
-- [ ] Capability-aware distillation loss that targets *intermediate*
-      residual errors, not just final logits
-- [ ] QAT recipes on OLMoE (~7B total / ~1B active)
+- [x] Capability-aware distillation loss that targets *intermediate*
+      residual errors, not just final logits (`torus.train.losses`)
+- [x] Straight-through estimator for ternary weights (`torus.train.ste`)
+- [x] Progressive residual-plane curriculum (`torus.train.curriculum`)
+- [x] QAT / distillation training loop (`torus.train.loop`)
+- [ ] Realistic model wiring: integrate the trainer with a concrete
+      open base (OLMoE ~7B / ~1B active is the first target)
 - [ ] Larger targets: 7B–13B dense + Qwen-style 27B
 - [ ] Joint gate learning (replacing the heuristic with a small
       head trained alongside residual planes)
