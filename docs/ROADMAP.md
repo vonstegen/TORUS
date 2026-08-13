@@ -15,29 +15,27 @@ core primitives with passing tests.
 - [x] `torus.moe.expert_bank` + `router` — MoE scaffolding
 - [x] `torus.rlm.context` + `repl` — recursive context-as-variable
 - [x] pytest suite covering quantization, gating, layering, MoE, RLM
-- [ ] ARCHITECTURE / VISION / ROADMAP docs
+- [x] ARCHITECTURE / VISION / ROADMAP / KERNELS docs
 
-**Status**: Phase 1 complete aside from this document family.
+**Status**: Phase 1 complete.
 
-## Phase 2 — Hardware-aware Kernels
+## Phase 2 — Hardware-aware Kernels (in progress)
 
 **Deliverable**: accelerated ternary GEMM kernels for the dev box
 (P620, Threadripper 3995WX + 2× TITAN RTX 24 GB + 128 GB ECC), keeping
 the public API stable.
 
-- [ ] Packed 2-bit / 1.6-bit weight layout
-- [ ] CUDA kernel for multi-plane ternary GEMM with predicated
-      residual activation
-- [ ] AVX-512 / AVX2 fallback for CPU-only execution
-- [ ] Memory-hierarchy: hot residual planes in VRAM, cold ones in
-      NVMe, prefetch on gate history
-- [ ] Benchmark suite: tokens/sec, residual activation rate, memory
-      traffic
+- [x] Packed 2-bit / 1.6-bit weight layout (`torus.quant.packing`)
+- [x] CPU reference kernels with op counts
+      (`torus.core.kernels`: dense / sparse / unrolled)
+- [x] Memory-hierarchy policy (`torus.core.memory`, `place_planes`)
+- [x] Gate telemetry (`torus.core.GateTelemetry`)
+- [x] Kernel spec (CUDA + AVX-512) (`docs/KERNELS.md`)
+- [ ] CUDA implementation of `docs/KERNELS.md` §3
+- [ ] AVX-512 / AVX2 implementation of `docs/KERNELS.md` §4
+- [ ] Hardware-side gate activation tracking
+- [ ] End-to-end benchmark vs `bitnet.cpp` baseline
 
-**Acceptance**: pure-ternary primary-plane run matches `bitnet.cpp`
-or llama.cpp low-bit baselines; adding one residual plane recovers
-visible quality on a small LM without doubling the time-to-first-
-token.
 
 ## Phase 3 — Training & Distillation
 

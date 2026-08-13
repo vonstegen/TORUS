@@ -38,12 +38,19 @@ When combined with the **RLM/Prime-Agent pattern** of treating context as a vari
 | Residual ternary planes                             | implemented | `torus.quant.residual_quantize` |
 | Adaptive per-layer / per-token residual gate        | implemented | `torus.core.ResidualGate` |
 | Reconstruction under multi-plane weights            | implemented | `torus.quant.compose_planes` |
+| 2-bit packed weight layout (4 codes/byte)           | implemented | `torus.quant.pack_plane` |
+| CPU reference ternary GEMM kernels + op counters    | implemented | `torus.core.kernels` (dense/sparse/unrolled) |
+| Memory-hierarchy placement policy (VRAM/RAM/NVMe)   | implemented | `torus.core.memory` |
+| Gate telemetry (rates, trends, flagged layers)       | implemented | `torus.core.GateTelemetry` |
+| CUDA / AVX-512 hardware kernel spec                 | specified   | `docs/KERNELS.md` |
 | MoE-aware expert-specialized residual planes         | scaffolded  | `torus.moe.ExpertBank` |
 | Recursive context-as-variable (RLM) primitive       | implemented | `torus.rlm.RecursiveContext` |
-| REPL integration scaffold                           | scaffolded  | `torus.rlm.ContextREPL` |
-| Hardware-aware ternary GEMM kernels                 | planned     | CUDA / AVX-512 paths |
-| BitNet / GGUF / llama.cpp adapters                  | planned     | export + inference hooks |
+| REPL integration                                   | implemented | `torus.rlm.ContextREPL` |
+| Hardware kernels (CUDA / AVX-512 implementation)    | planned     | Phase 2 follow-on |
+| BitNet / GGUF / llama.cpp adapters                  | planned     | Phase 4 |
 | Training recipes (QAT, distillation)                | planned     | Phase 3 |
+| MoE-learned gating head                             | planned     | Phase 3 |
+| Native fitness + training utility scripts           | planned     | Phase 3 |
 
 ---
 
