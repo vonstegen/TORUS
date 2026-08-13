@@ -1,0 +1,200 @@
+# Architecture
+
+TORUS is organized as a small set of composable layers, each with a
+single responsibility and a clean interface to the next. Phase 1 ships
+numpy-only reference implementations; later phases swap in accelerated
+backends behind the same interfaces.
+
+## Layer Diagram
+
+```
+                   ┌─────────────────────────────────────┐
+                   │            RecursiveContext          │  ← rlm/context.py
+                   │   context-as-variable substrate      │
+                   │   slice / grep / chunk / recurse    │
+                   └──────────────┬──────────────────────┘
+                                  │ ask(slice)
+                                  ▼
+   ┌──────────────────────────────────────────────────────────────┐
+   │                    ResidualTernaryLinear                      │  ← core/residual_linear.py
+   │   planes + gate  ──►  ternary_matmul (× num_planes used)      │
+   └────────────┬─────────────────────────────────────────────────┘
+                │ dispatches per call to:
+                ▼
+   ┌──────────────────────────────────────────────────────────────┐
+   │                ResidualGate (adaptive gate)                   │  ← core/gate.py
+   │       ALWAYS / NEVER / ADAPTIVE (per-call heuristic)          │
+   └────────────┬─────────────────────────────────────────────────┘
+                │ operates on:
+                ▼
+   ┌──────────────────────────────────────────────────────────────┐
+   │          ResidualTernaryPlanes (weight representation)       │  ← quant/residual.py
+   │   planes[0] = primary (always), planes[1..k] = residual        │
+   │   each is a TernaryPlane (codes + per-group scale)             │
+   └────────────┬─────────────────────────────────────────────────┘
+                │ built by:
+                ▼
+   ┌──────────────────────────────────────────────────────────────┐
+   │        ternary_quantize / residual_quantize (numpy)           │  ← quant/ternary.py
+   │        absmean + per-group scale + threshold                  │
+   └──────────────────────────────────────────────────────────────┘
+```
+
+MoE hangs off to the side:
+
+```
+   ┌──────────────┐    dispatches     ┌────────────────────────────┐
+   │ TopKRouter   │ ────────────────► │     ExpertBank             │
+   │  (scaffold)  │     per token     │   per-expert ResidualTernaryLinear
+   └──────────────┘                   └────────────────────────────┘
+```
+
+## Components
+
+### `torus.quant.ternary`
+
+Single-plane ternary quantization. Each plane stores:
+
+- `codes: int8[(out, in)]` — values in `{-1, 0, +1}` (2 bits)
+- `scales: float32[(out, n_groups)]` — one FP16-equivalent per group
+- `group_size: int`
+
+The pipeline is:
+
+```
+s = mean(|w|, axis=-1 over each group)
+w_n = w / s
+t = round(clip(w_n, -1, 1))
+t = 0 where |w_n| < threshold       # sparsity knob (default 0.7)
+```
+
+Storage budget for `group_size = 128` is ~2.125 bits/weight:
+2 bits for `t` plus 1 bit / 8 weights for the scale.
+
+### `torus.quant.residual`
+
+`residual_quantize(W, num_planes)` stacks planes by successive
+residual error:
+
+```
+plane_0 = ternary(w)
+plane_i = ternary(w - sum_{j<i} plane_j.reconstruct())
+```
+
+`compose_planes(planes, active=k)` reconstructs the full-precision
+weight from the first `k` planes. The first plane alone gives the
+canonical 1.58-bit approximation; adding more planes monotonically
+reduces reconstruction error (verified in `tests/test_quant.py`).
+
+### `torus.core.gate`
+
+`ResidualGate(mode, threshold, depth_bias, magnitude_bias)` decides,
+per call site, whether to activate the residual plane. Three modes:
+
+- `ALWAYS` — always engage the residual plane (no speed/quality
+  trade-off; convenience mode).
+- `NEVER` — pure primary plane, maximum efficiency.
+- `ADAPTIVE` — score = sigmoid(4 · (mag + depth + biases)) ≥ threshold.
+
+The scoring function is deliberately simple in Phase 1; Phase 3 will
+add a learned gate head trained jointly with capability-aware
+distillation.
+
+### `torus.core.residual_linear`
+
+`ResidualTernaryLinear` is the unit the kernels target. It owns
+`planes` and a `gate` and a `forward(x, ..., depth)` method that
+returns `(y, decision)`. The phase-1 implementation dispatches to
+`compose_planes(planes, active=k)` then `x @ W.T`. Phase 2 will
+replace the matmul with a specialized ternary GEMM that can
+short-circuit when the gate is low.
+
+### `torus.moe.expert_bank` & `router`
+
+`ExpertBank` is a dict-shaped container mapping expert ids to
+`ResidualTernaryLinear` instances. `TopKRouter(num_experts, top_k)`
+returns top-k expert indices and renormalized weights per token. Both
+are scaffolding for Phase 1; real learned routing arrives in Phase 3.
+
+### `torus.rlm.context`
+
+`RecursiveContext` is the substrate that turns the prompt into a
+variable. The model receives a `RecurseableContext` whose primitives
+are:
+
+- `total` / `len(context)`
+- `slice(ContextSlice)` — materialize a sub-range to a string
+- `grep(pattern)` — find chunks containing a pattern, as `ContextSlice`s
+- `chunk(chunk_size)` — split into fixed-size pieces
+- `ask(slice | str)` — call the registered `ask_callable` on a piece
+- `recurse_on(slice, chunk_size)` — recursively `ask` each sub-piece
+  and aggregate
+
+`ContextSlice(start, stop)` is a lightweight, hashable handle for
+slice ranges (no copy until materialized).
+
+### `torus.rlm.repl`
+
+`ContextREPL` is a tiny Python environment that binds `context`,
+`RecursiveContext`, and `ContextSlice` as builtins. The model writes
+Python to manipulate the context; the REPL executes it and returns
+stdout + repr of the last expression. Phase 1 is a plain AST-driven
+local REPL; Phase 2 will provide a model-facing adapter that turns
+natural-language tool calls into REPL statements.
+
+## Data Flow (single inference call)
+
+```
+input
+  │
+  ▼
+TopKRouter.route(features) ──► list of (expert_id, weight) per token
+  │
+  ▼
+for each expert per token:
+  ├─► ResidualGate.decide(magnitude, depth) ──► activate? (bool)
+  ├─► ternary_matmul(x, planes[0])               (always)
+  └─► ternary_matmul(x, planes[1..])             (if activate)
+  │
+  ▼
+output = sum weighted over experts (+ bias)
+  │
+  ▼
+softmax/head (model-side)
+```
+
+## What Phase 2 replaces
+
+| Aspect                       | Phase 1 (numpy)               | Phase 2 (target)                        |
+|------------------------------|-------------------------------|------------------------------------------|
+| ternary GEMM                 | `x @ (T * s)`                 | Addition-based ternary kernel, AVX-512   |
+| per-token residual gating    | numpy boolean + matmul        | Predicated CUDA / SIMD control flow      |
+| MoE routing                  | Phase-1 heuristic             | Learned gating, expert-aware residuals   |
+| REPL execution               | Local Python                  | Sandboxed exec, model-facing adapter     |
+| Memory layout                | Eager arrays                  | Packed 2-bit planes, lazy resident       |
+| Context store                | In-memory list of strings     | NVMe-backed chunk store + prefetch       |
+
+The Phase-2 surface area is identical: every component swap keeps
+the same public types and method signatures.
+
+## Risks and Trade-offs
+
+- **Gate heuristics** (Phase 1) are not learned — they will fire too
+  often on some layers and not enough on others. Phase 3 evaluates
+  this.
+- **Orthogonal quantized residual planes** *can* overfit the training
+  objective if not regularized. Phase 3 explores capability-aware
+  distillation losses specifically designed for residual planes.
+- **CPU-first inference** is good for memory-bound workloads (LLM
+  decoding) but not for compute-bound prefill at long context. Phase 2
+  considers heterogeneous execution.
+- **REPL execution** is a security surface — Phase 2 must ship a
+  sandbox before production use.
+
+## Why Python first, hardware later?
+
+Each idea has a *math* plus a *runtime*. Phase 1 nails down the math
+with tests that are fast, deterministic, and framework-free. Phase 2
+then implements the runtime behind the same types. Splitting the
+phases this way lets the math be reviewed independently from the
+systems work.
