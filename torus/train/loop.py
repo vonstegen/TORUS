@@ -91,7 +91,8 @@ class DistillationTrainer:
     Args:
         student_params: list of `TernarySTE` representing trainable
             ternary layers.
-        forward_student: `forward(params, batch, n_planes) -> (logits, hidden, route)`.
+        forward_student: `forward(batch, n_planes) -> (logits, hidden, route)`.
+            The STE list is read from `student_params` at call time.
         forward_teacher: same signature, on the (full-precision) teacher.
         data: iterable yielding `DistillationBatch` (one per step).
         loss_cfg: distillation config (temperatures, weights).
