@@ -244,6 +244,77 @@ the loop with a deterministic stub model. The stub grep's for the
 first goal keyword, slices the first match, and emits the answer
 in 3 steps without ever loading the full prompt.
 
+
+## Phase 8 — Persistent (NVMe-backed) Context
+
+Phase 8 swaps the in-memory `RecursiveContext` for a disk-backed
+implementation that's the same drop-in shape, with three additions:
+
+- **Chunk files on disk.** Each chunk lives at `<root>/NNNNNNNN.txt`.
+- **LRU cache.** Chunks are loaded lazily into a bounded in-memory
+  cache (`cache_size=64` by default). Reads are O(1) on the cache,
+  O(1) syscall on miss.
+- **Append-only writes.** `PersistentContext.add_chunk(text)` is
+  the only way to grow. Manifest writes are atomic (write-then-rename).
+  Cross-process appends on the same directory are serialized via
+  `fcntl` on a `.lock` file.
+
+### Components
+
+- `torus.rlm.persistent.PersistentContext`: the disk-backed context.
+- `torus.rlm.repl.ContextREPL`: duck-typed; accepts either
+  `RecursiveContext` or `PersistentContext` (no annotation change
+  at runtime; both satisfy the same Protocol).
+- `torus.rlm.agent.PrimeAgentLoop`: unchanged — drives whatever
+  context sits behind `ContextREPL`.
+
+### Data flow
+
+```
+add_chunk(text)
+  |
+  v
+acquire .lock via fcntl(LOCK_EX)
+  |
+  v
+write <root>/NNNNNNNN.txt under temp name
+  |
+  v
+fsync + rename(temp -> target)        # atomic on POSIX
+  |
+  v
+write manifest.json via tmp + rename
+  |
+  v
+release .lock
+
+read chunk i:
+  |
+  v
+cache hit? return
+  |
+  v
+cache miss: read <root>/NNNNNNNN.txt, evict LRU if full
+```
+
+### Why this is the Phase-8 milestone
+
+- **Prompts measured in millions of tokens.** `RecursiveContext`
+  has the full prompt in memory. `PersistentContext` can grow
+  past RAM because only the cache footprint is resident.
+- **Crash-safe append-only growth.** The directory is the source
+  of truth. Reopening it recovers state; no in-memory copy needed.
+- **Composability.** `ContextREPL` and `PrimeAgentLoop` are
+  agnostic; `PersistentContext` is a drop-in for any code that
+  accepts a `RecursiveContext`.
+
+### Demo
+
+`examples/persistent_context_demo.py` writes a 16-chunk paper to a
+temp directory, then runs the same PrimeAgentLoop pattern against
+it. Storage bytes reported; model grep's the chunk that mentions
+Phase 8 and answers in 1 step.
+
 ## Risks and Trade-offs
 
 - **Gate heuristics** (Phase 1) are not learned — they will fire too

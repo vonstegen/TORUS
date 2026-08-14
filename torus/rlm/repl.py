@@ -3,8 +3,8 @@
 
 The REPL pattern (à la RLM / Prime Agent) is what allows the model to
 treat long context as a variable. Phase-1 ships a deterministic local
-REPL backed by the standard library; Phase 2 will provide a model-facing
-adapter that converts natural-language tool calls into REPL statements.
+REPL backed by the standard library; Phase 8 makes it work over any
+duck-typed context (PersistentContext, RecursiveContext, mocks).
 """
 from __future__ import annotations
 
@@ -30,7 +30,11 @@ class ContextREPL:
     a full sandbox. Phase 2 will add a secured variant for production use.
     """
 
-    def __init__(self, context: RecursiveContext) -> None:
+    def __init__(self, context) -> None:
+        # `context` is duck-typed: any object exposing
+        # `slice(ContextSlice)`, `grep`, `chunk`, `ask`, and
+        # `recurse_on` works. `RecursiveContext` and
+        # `PersistentContext` both satisfy this Protocol.
         self.context = context
         self._env: dict = {
             "context": context,
