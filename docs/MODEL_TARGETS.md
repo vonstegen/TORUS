@@ -1,12 +1,23 @@
 # Phase 3 — Concrete Model Targets
 
-The Phase-3 trainer (a numpy reference) drives any callable that
 matches `(batch, n_planes) -> (logits, hidden, route)`. The HF
 adapter (`torus.train.hf_adapter`) wraps a `transformers` causal-LM
 into that interface.
 
 This document picks the *concrete* open bases the adapter is meant
 to drive, in order of integration priority.
+
+## Hardware targets
+
+- **Legion** (x86_64, Threadripper 3995WX + 2× TITAN RTX, 123 GB
+  RAM, 1.6 TB free NVMe) is the production / training host. Both
+  x86 SIMD paths (AVX2 / AVX-512) and the CUDA path are exercised
+  here. `pip install torch` from the default index already gives
+  CUDA support.
+- **dev** (aarch64, GB10 Blackwell, 121 GB RAM) is the dev box.
+  Only the portable C reference path runs (no x86 SIMD). CUDA
+  torch requires a Python 3.11 side venv (see README §"Optional:
+  GPU torch").
 
 ## Primary: OLMo-1B (dense)
 

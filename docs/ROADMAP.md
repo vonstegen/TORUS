@@ -20,10 +20,10 @@ core primitives with passing tests.
 **Status**: Phase 1 complete.
 
 ## Phase 2 — Hardware-aware Kernels (in progress)
-**Deliverable**: accelerated ternary GEMM kernels for the dev box
-(GB10 Blackwell + ARM Cortex-X925 + 121 GB RAM + 916 GB NVMe),
-keeping the public API stable.
-- [x] Packed 2-bit / 1.6-bit weight layout (`torus.quant.packing`)
+
+**Deliverable**: accelerated ternary GEMM kernels for Legion (x86-64
+Threadripper + 2× TITAN RTX) and the dev box (aarch64 GB10), keeping
+the public API stable.
 - [x] CPU reference kernels with op counts
       (`torus.core.kernels`: dense / sparse / unrolled)
 - [x] Memory-hierarchy policy (`torus.core.memory`, `place_planes`)
@@ -111,3 +111,61 @@ hardware resource.
 - **The math is the contract.** Each phase's math is fixed by the
   Phase 1 types and tests. Phase 2+ optimizes behind that contract.
 - **No heavy dependencies in core.** Phase 1 uses only numpy. Phase 2
+ wraps the math in optional `torch` / `numba` integrations.
+- **No silent precision drift.** Every ternary plane uses
+  `ternary_quantize_with_ste` or `ternary_quantize`. No silent
+  casting.
+- **Open by default.** All code, docs, and (when possible) weights go
+  under permissive licenses.
+
+---
+
+## Hardware targets
+
+The project targets two named environments. Kernel paths are
+identical across both — the C reference works on any ISA, the
+AVX-512 path activates on Legion, and the numba CUDA path activates
+on any CUDA-capable GPU.
+
+### `legion` — production / training host
+
+| Component   | Spec                                                |
+|-------------|-----------------------------------------------------|
+| CPU         | AMD Ryzen Threadripper PRO 3995WX, 64c/128t        |
+| RAM         | 123 GB                                              |
+| GPU         | 2× NVIDIA TITAN RTX (Turing, sm_75), NVLink         |
+| Storage     | 1.8 TB NVMe (1.6 TB free)                           |
+| ISA         | x86-64; AVX2 + AVX-512 available                    |
+| Driver      | CUDA 13.0 (580.173.02), compute capability 7.5      |
+
+### `dev` — this dev box (where the GB10 lives)
+
+| Component   | Spec                                                  |
+|-------------|-------------------------------------------------------|
+| CPU         | ARM Cortex-X925, 10c/10t, 3.9 GHz boost               |
+| RAM         | 121 GB (114 GB available)                             |
+| GPU         | 1× NVIDIA GB10 (Blackwell, sm_120), CUDA 13.0 driver |
+| Storage     | 916 GB NVMe (579 GB free)                            |
+| ISA         | aarch64; portable C reference path (no AVX)           |
+| Driver      | CUDA 13.0 (580.159.03), compute capability 12.1       |
+
+### Notes
+
+- **Legion** is the original P620-style dev box the docs assume.
+  The AVX-512 kernel path is exercised there.
+- **GB10** is the Jetson-Thor-style ARM dev box the recent
+  benchmarking was done on. Only the portable C reference path
+  runs (no x86 SIMD).
+- **Phase 1–2 + 4** are sized to fit comfortably on Legion.
+  Phase 3 may need additional compute for larger students.
+
+### Notes on CUDA torch
+
+`torch` with CUDA support is *not* available for Python 3.12 +
+aarch64 at the time of writing (PyPI only ships cp310/cp111 CUDA
+wheels for ARM). The TORUS CUDA kernel uses `numba` instead and
+runs on either GPU out of the box. To get a CUDA-enabled torch on
+the dev box (so the HF adapter can drive a real model on the GPU),
+use a Python 3.11 side venv; see README §"Optional: GPU torch".
+On Legion (x86_64) `pip install torch` from the default index
+already gives CUDA support.

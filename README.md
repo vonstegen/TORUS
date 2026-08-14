@@ -121,9 +121,7 @@ See `examples/` for full workflows and `tests/` for runnable verification.
 ## Repository layout
 
 ```
-TORUS/
-├── torus/                  # Python package
-│   ├── core/               # adaptive gates, residual plane container
+- **Phase 2** — CUDA / AVX-512 kernels for ternary multi-plane GEMM on real hardware (Legion: Threadripper 3995WX + 2× TITAN RTX).
 │   ├── quant/              # ternary + residual-plane quantization math
 │   ├── moe/                # expert bank + routing (scaffold)
 │   └── rlm/                # recursive context-as-variable primitive

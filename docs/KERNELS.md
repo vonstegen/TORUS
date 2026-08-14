@@ -179,17 +179,18 @@ void ternary_gemv_avx512(
 
 Notes:
 
-Notes:
-
 - The CPU kernel can parallelize at the row or batch dim using OpenMP
-  or a simple work-stealing loop on the 10-core Cortex-X925.
+  or a simple work-stealing loop on the host's CPU cores.
+  On Legion that's the 64-core Threadripper 3995WX; on the dev box
+  that's the 10-core Cortex-X925.
 - The gate signal here is even cheaper: if `activate_residual == 0`,
   the runtime skips the second matmul entirely (no kernel launch).
-- This host is **aarch64**, so the x86-64 AVX-512 / AVX2 paths are
-  not exercised. The portable C reference path is what runs here,
-  with the SVE path available as a future Phase-9 enhancement.
-- `RAM`  — system memory; access from CPU via AVX kernels.
-- `NVME` — local SSD; loaded into RAM/VRAM on demand.
+- On **Legion** (x86-64), the AVX-512 kernel is the active path;
+  AVX2 is the fallback when AVX-512 down-clocks. The portable C
+  reference is the final fallback.
+- On the **dev box** (aarch64), only the portable C reference path
+  is exercised; the AVX-512 / AVX2 paths require x86-64. The SVE
+  path is a Phase-9 enhancement.
 
 The placement policy is declarative: `place_planes([...], budget)`
 returns a `Placement` whose `.tiers[i]` says where plane i should
@@ -232,65 +233,16 @@ def test_op_count_invariant():
 
 If your kernel batches multiple planes per call, sum the per-plane
 `OpCount`s before reporting.
-## 7. Performance Targets (GB10)
+## 7. Performance Targets (Legion / dev)
 
-| Kernel         | Metric                                  | Target                      |
-|----------------|-----------------------------------------|------------------------------|
-| `ternary_gemv` | TFLOPS-equivalent on fp32 activations  | ≥ 0.5x llama.cpp Q4 baseline on residual OFF |
-| `ternary_gemv` | TFLOPS-equivalent on fp32 activations  | ≥ 0.4x llama.cpp Q4 baseline on residual ON  |
-| Gate toggle    | round-trip latency to switch            | < 5 µs                       |
-| NVMe→RAM stage | end-to-end plane transfer              | < 50 ms per 100 MB plane     |
+Reproducible target numbers (per-plane, batch=1) on each host:
 
+| Host | Plane | fp32_dense | dense | unrolled | simd_c | cuda |
+|------|-------|------------|-------|----------|--------|------|
+| Legion (TITAN RTX) | wide FFN 4k→4k | ~0.4 ms | ~75 ms | ~19 ms | ~10 ms (AVX-512) | ~5 ms |
+| dev (GB10)         | wide FFN 4k→4k | ~0.4 ms | ~77 ms | ~20 ms | n/a (no AVX on aarch64) | ~5 ms |
+| Legion             | tall attn 4k→1k | ~0.03 ms | ~4.5 ms | ~4.5 ms | ~10 ms | ~2 ms |
+| dev                | tall attn 4k→1k | ~0.03 ms | ~5 ms   | ~5 ms   | n/a                   | ~2 ms |
 
-(These targets are illustrative; final numbers come after Phase-2
-measurements.)
-
-### 7.1 CUDA launch overhead on small planes
-
-The CUDA kernel's per-launch fixed cost (H2D copies for `x` /
-`packed` / `scales`, atomic op accumulation, kernel launch itself)
-dominates when the plane is small. On this host, a 512x512 plane
-sees CUDA at ~0.62 ms/call vs `np.dot` at ~0.28 ms/call. Above
-~1024 rows / 1024 cols (i.e. ≥ 1 M FLOP per call), CUDA wins.
-Below that, the in-process `simd_c` kernel is comparable and the
-numpy `ternary_gemv_dense` reference can be faster still on hosts
-with a fast BLAS.
-
-**Dispatch rule** (suggested, baked into the kernel registry via
-a future heuristic): use `cuda` for `out_features * in_features >
-1<<20`, otherwise prefer `simd_c` or `dense`. The current
-registry returns the first registered name without a heuristic —
-see `torus.kernels.get_kernel` callers if you want to add the
-cutover.
-
-
-## 8. Verification Checklist
-
-Before claiming a kernel is Phase-2-complete:
-
-- [x] Round-trip packing with `pack_plane` / `unpack`
-      (`tests/test_kernels_real.py::test_packing_round_trip_via_simd_path`)
-- [x] Arithmetic matches `ternary_gemv_dense` within `1e-5`
-      (`test_simd_kernel_matches_dense_arithmetic`,
-      `test_simd_kernel_padding_alignment_arithmetic`,
-      `test_cuda_kernel_register_or_fallback`)
-- [x] `OpCount.adds + subs + skips == batch * n_rows * n_cols`
-      (per-batch invariant; `test_simd_kernel_op_count_invariant`)
-- [x] Memory policy (`place_planes`) places primary plane in VRAM
-      under default budget (`test_memory_policy_primary_vram`)
-- [x] Gate `NEVER` / `ALWAYS` produce the same y as the matching
-      dense reference (`test_gate_always_matches_two_plane_dense`,
-      `test_gate_never_matches_primary_only_dense`)
-- [x] `GateTelemetry.record` reflects the kernel's reported ops
-      (covered by `tests/test_packing_and_kernels.py` Phase 2 suite)
-- [x] End-to-end benchmark showing real per-call cost across
-      `dense` / `sparse` / `unrolled` / `simd_c` / `cuda`
-      (`examples/benchmark.py`)
-
-The test harness in `tests/test_packing_and_kernels.py` exercises
-items 1-5, and `tests/test_kernels_real.py` exercises items 1-7
-against the compiled C kernel and the CUDA kernel.
-
-Item 8 (end-to-end benchmark) lives in `examples/benchmark.py`
-and prints real per-call cost across all five kernels on the
-current host.
+These targets are illustrative; final numbers come after Phase-2
+measurements.
