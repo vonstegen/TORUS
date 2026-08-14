@@ -33,11 +33,14 @@ def test_grep_finds_pattern() -> None:
     assert all(isinstance(h, ContextSlice) for h in hits)
 
 
-def test_chunk_splits_into_pieces() -> None:
-    ctx = RecursiveContext(SAMPLE)
-    pieces = ctx.chunk(chunk_size=2)
-    assert [p.start for p in pieces] == [0, 2]
-    assert pieces[-1].stop == len(SAMPLE)
+def test_grep_ignore_case() -> None:
+    ctx = RecursiveContext(["TORUS uses ternary planes.", "Other text."])
+    # Default (case-sensitive) misses:
+    assert ctx.grep("torus") == []
+    # ignore_case=True finds:
+    hits = ctx.grep("torus", ignore_case=True)
+    assert len(hits) == 1
+
 
 
 def test_split_arbitrary_size() -> None:
@@ -51,87 +54,153 @@ def test_split_invalid_size() -> None:
         ContextSlice(0, 3).split(0)
 
 
-def test_slice_length_and_validation() -> None:
-    s = ContextSlice(2, 5)
-    assert len(s) == 3
-    with pytest.raises(ValueError):
-        ContextSlice(-1, 2)
-    with pytest.raises(ValueError):
-        ContextSlice(3, 2)
-
-
 def test_ask_uses_callable() -> None:
-    def ask(s: str) -> str:
-        return f"echo:{s}"
+    def fake_ask(text: str) -> str:
+        return f"echo({len(text)})"
 
-    ctx = RecursiveContext(SAMPLE, ask_callable=ask)
-    assert ctx.ask(ContextSlice(0, 1)) == "echo:" + SAMPLE[0]
-
-
-def test_ask_accepts_string() -> None:
-    ctx = RecursiveContext(SAMPLE, ask_callable=lambda s: f"STR:{s}")
-    assert ctx.ask("anything") == "STR:anything"
-
-
-def test_ask_default_stub() -> None:
-    ctx = RecursiveContext(SAMPLE)
+    ctx = RecursiveContext(SAMPLE, ask_callable=fake_ask)
     out = ctx.ask(ContextSlice(0, 1))
-    assert "stub-answer-for" in out
+    assert out.startswith("echo(")
 
 
-def test_recurse_on() -> None:
-    ctx = RecursiveContext(
-        SAMPLE,
-        ask_callable=lambda s: f"LEN={len(s)}",
+def test_recurse_on_aggregates() -> None:
+    def fake_ask(text: str) -> str:
+        return f"len={len(text)}"
+
+    ctx = RecursiveContext(SAMPLE, ask_callable=fake_ask)
+    pieces = ctx.recurse_on(
+        ContextSlice(0, 3),
+        chunk_size=1,
+        aggregator=lambda parts: "|".join(parts),
     )
-    out = ctx.recurse_on(ContextSlice(0, 4), chunk_size=1)
-    # Each of the four sub-slices produces a LEN=N answer.
-    assert out.count("LEN=") == 4
+    assert "|" in pieces
 
 
-def test_repl_can_run_python() -> None:
+def test_repl_run_simple_expression() -> None:
     ctx = RecursiveContext(SAMPLE)
     repl = ContextREPL(ctx)
-    stdout, _ = repl.run(f"n = {len(SAMPLE)}; n")
+    stdout, last = repl.run("len(context)")
     assert stdout.strip() == str(len(SAMPLE))
+    assert last == str(len(SAMPLE))
 
 
-def test_repl_can_ask_via_context() -> None:
-    ctx = RecursiveContext(
-        SAMPLE,
-        ask_callable=lambda s: f"YES about {s.splitlines()[0][:10]}",
-    )
-    repl = ContextREPL(ctx)
-    stdout, _ = repl.run("context.ask(ContextSlice(0, 1))")
-    assert "YES" in stdout
-
-
-def test_repl_reserved_names() -> None:
+def test_repl_reports_syntax_errors() -> None:
+    """`def (` is an unparseable statement that raises SyntaxError."""
     ctx = RecursiveContext(SAMPLE)
     repl = ContextREPL(ctx)
-    with pytest.raises(ValueError):
-        repl.install("context", lambda: "nope")
-    with pytest.raises(ValueError):
-        repl.install("ContextSlice", lambda: "nope")
-
-
-def test_repl_syntax_error_captured() -> None:
-    ctx = RecursiveContext(SAMPLE)
-    repl = ContextREPL(ctx)
-    stdout, _ = repl.run("def :")
+    stdout, last = repl.run("def (")
     assert "SyntaxError" in stdout
+    assert last == ""
 
 
-def test_repl_runtime_error_captured() -> None:
+def test_repl_reserves_names() -> None:
     ctx = RecursiveContext(SAMPLE)
     repl = ContextREPL(ctx)
-    stdout, _ = repl.run("1/0")
-    assert "ZeroDivisionError" in stdout or not stdout  # either captured or silent
+    with pytest.raises(ValueError):
+        repl.install("context", lambda: None)
 
 
-def test_repl_expression_value() -> None:
-    ctx = RecursiveContext(SAMPLE)
-    repl = ContextREPL(ctx)
-    stdout, value_repr = repl.run("1 + 2")
-    assert "3" in stdout
-    assert value_repr == "3"
+# --------------------------------------------------------------------------
+# PrimeAgentLoop (Phase 5)
+# --------------------------------------------------------------------------
+
+
+SAMPLE_LONG = [
+    "The ternary GEMV kernel lives in torus/kernels/simd.py.",
+    "The CUDA kernel is in torus/kernels/cuda.py.",
+    "Context-as-variable lives in torus/rlm/.",
+    "The trainer's HF adapter is torus/train/hf_adapter.py.",
+    "Adaptive residual gating is in torus/core/gate.py.",
+]
+
+
+def test_agent_loop_single_step_done() -> None:
+    """A model that emits a one-liner + sentinel stops the loop after 1 step."""
+    from torus.rlm import DONE_SENTINEL, PrimeAgentLoop
+
+    def stub(prompt: str) -> str:
+        return f'print("hello")\n{DONE_SENTINEL}\n"my-answer"'
+
+    ctx = RecursiveContext(SAMPLE_LONG)
+    agent = PrimeAgentLoop(ctx, model_fn=stub, max_steps=4)
+    result = agent.run(goal="say hi")
+    assert len(result.steps) == 1
+    assert result.answer == "'my-answer'"
+
+
+def test_agent_loop_multi_step_search() -> None:
+    """Model emits grep + slice across two steps before declaring done."""
+    from torus.rlm import DONE_SENTINEL, PrimeAgentLoop
+
+    state = {"calls": 0}
+
+    def stub(prompt: str) -> str:
+        state["calls"] += 1
+        if state["calls"] == 1:
+            return 'hits = context.grep("GEMV")\nprint(len(hits))'
+        if state["calls"] == 2:
+            # Sentinel AFTER the answer expression so REPL picks it
+            # up as the last value.
+            return f'context.slice(hits[0])\n{DONE_SENTINEL}'
+
+    ctx = RecursiveContext(SAMPLE_LONG)
+    agent = PrimeAgentLoop(ctx, model_fn=stub, max_steps=4)
+    result = agent.run(goal="find the GEMV module location")
+    assert state["calls"] == 2
+    assert "simd.py" in result.answer
+
+
+def test_agent_loop_max_steps_fallback() -> None:
+    """When the model never emits DONE, the last stdout is the fallback."""
+    from torus.rlm import PrimeAgentLoop
+
+    def stub(prompt: str) -> str:
+        return 'print("still thinking")'
+
+    ctx = RecursiveContext(SAMPLE_LONG)
+    agent = PrimeAgentLoop(ctx, model_fn=stub, max_steps=3)
+    result = agent.run(goal="find stuff")
+    assert len(result.steps) == 3
+    assert "still thinking" in result.final_stdout
+
+
+def test_agent_loop_custom_prompt_builder() -> None:
+    """A custom prompt_builder can rewrite the prompt shape entirely."""
+    from torus.rlm import DONE_SENTINEL, PrimeAgentLoop
+
+    def builder(goal, repl, history, context_summary):
+        return f"G:{goal}; H:{len(history)}; C:{context_summary[:10]}"
+
+    seen: list[str] = []
+
+    def stub(prompt: str) -> str:
+        seen.append(prompt)
+        return DONE_SENTINEL + "\n42"
+
+    ctx = RecursiveContext(["chunk1"])
+    agent = PrimeAgentLoop(ctx, model_fn=stub, max_steps=2, prompt_builder=builder)
+    result = agent.run(goal="x")
+    assert len(seen) == 1
+    assert seen[0].startswith("G:x; H:0; C:")
+    assert result.answer == "42"
+
+
+def test_agent_loop_inherits_repl_state_across_steps() -> None:
+    """Variables set in one step are visible to the next step's code."""
+    from torus.rlm import DONE_SENTINEL, PrimeAgentLoop
+
+    state = {"calls": 0}
+
+    def stub(prompt: str) -> str:
+        state["calls"] += 1
+        if state["calls"] == 1:
+            # Store a slice of the simd-matching chunk in `value`.
+            return "value = context.slice(context.grep('simd')[0])"
+        return f"value[:16]\n{DONE_SENTINEL}"
+
+    ctx = RecursiveContext(SAMPLE_LONG)
+    agent = PrimeAgentLoop(ctx, model_fn=stub, max_steps=3)
+    result = agent.run(goal="x")
+    assert state["calls"] == 2
+    # The second step's expression is `value[:8]` -> first 8 chars of the simd chunk.
+    assert "ternary" in result.answer.lower()

@@ -177,6 +177,73 @@ softmax/head (model-side)
 The Phase-2 surface area is identical: every component swap keeps
 the same public types and method signatures.
 
+## Phase 5 — RLM / Prime-Agent integration
+
+The Phase-5 wiring closes the loop on long-context inference: the
+model treats the prompt as a `RecursiveContext` variable and emits
+Python that slices / greps / asks through it instead of trying to
+fit the whole prompt into its own working window.
+
+### Components
+
+- `torus.rlm.context.RecursiveContext`: in-memory chunked context
+  with `slice`, `grep(pattern, ignore_case=False)`, `chunk`,
+  `ask`, and `recurse_on` primitives.
+- `torus.rlm.repl.ContextREPL`: tiny Python environment that
+  binds `context` as a variable. The model emits code; the REPL
+  runs it and reports stdout + last value.
+- `torus.rlm.agent.PrimeAgentLoop`: drives the REPL iteratively
+  with a `model_fn(prompt) -> str` callable. Each iteration builds
+  a prompt from the goal + context summary + history, gets code
+  from the model, runs it, and records `AgentStep`s. Loop stops
+  when the model emits `### DONE ###` or `max_steps` exhausts.
+
+### Prime Agent data flow
+
+```
+goal: str
+  |
+  v
+for step in range(max_steps):
+  |
+  +--> prompt = prompt_builder(goal, repl, history, context_summary)
+  |       |
+  |       v
+  +--> code = model_fn(prompt)             # the trained ternary model
+  |       |
+  |       v
+  +--> stdout, last_value = repl.run(code)
+  |       |
+  |       v
+  +--> history.append(AgentStep(...))
+  |       |
+  |       v
+  +--> if "### DONE ###" in code: return AgentResult(answer=last_value, steps)
+```
+
+The model never sees more than one chunk at a time, so a
+`RecursiveContext` measured in millions of tokens works for a
+model with a fixed working window.
+
+### Why this is the Phase-5 milestone
+
+- **Long-context without context-window engineering.** The model
+  doesn't need an `n_ctx = 1M` attention pattern; it just
+  iterates over `RecursiveContext.grep` and `RecursiveContext.slice`.
+- **Composability with residual planes.** Each `ask` call inside
+  the REPL is a forward pass through the trained ternary model;
+  the residual-plane gate fires per call as usual.
+- **Composability with MoE.** The REPL's per-call expert routing
+  uses the model's own `TopKRouter`; the gate's per-expert
+  confidence signal biases the residual-plane decision.
+
+### Demo
+
+`examples/prime_agent_demo.py` runs a 16-chunk fake paper through
+the loop with a deterministic stub model. The stub grep's for the
+first goal keyword, slices the first match, and emits the answer
+in 3 steps without ever loading the full prompt.
+
 ## Risks and Trade-offs
 
 - **Gate heuristics** (Phase 1) are not learned — they will fire too

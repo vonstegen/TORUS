@@ -88,11 +88,20 @@ class RecursiveContext:
             )
         return "\n".join(self._chunks[s.start:s.stop])
 
-    def grep(self, pattern: str) -> list[ContextSlice]:
-        """Return ContextSlice handles for each chunk containing `pattern`."""
+    def grep(self, pattern: str, ignore_case: bool = False) -> list[ContextSlice]:
+        """Return ContextSlice handles for each chunk containing `pattern`.
+
+        Args:
+            pattern: substring to search for.
+            ignore_case: when True, match case-insensitively. Defaults
+                to False (case-sensitive).
+        """
+        if ignore_case:
+            pattern = pattern.lower()
         hits: list[ContextSlice] = []
         for i, c in enumerate(self._chunks):
-            if pattern in c:
+            hay = c.lower() if ignore_case else c
+            if pattern in hay:
                 hits.append(ContextSlice(i, i + 1))
         return hits
 
