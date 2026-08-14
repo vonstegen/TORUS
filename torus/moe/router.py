@@ -62,3 +62,16 @@ class TopKRouter:
         sel = probs[rows, idx]
         sel = sel / sel.sum(axis=-1, keepdims=True).clip(min=1e-8)
         return RouteResult(indices=idx.astype(np.int64), weights=sel.astype(np.float32))
+
+    def confidence(self, route: RouteResult) -> np.ndarray:
+        """Per-token confidence = top-k prob mass.
+
+        Returns float32 array of shape (batch,). Values near 1.0 mean
+        the top-k experts cover essentially all the router's prob mass
+        — easy token. Values near 0.0 mean a long tail of low-prob
+        experts is competing — hard token.
+
+        Gate policies use this signal to decide whether to engage a
+        residual plane.
+        """
+        return route.weights.sum(axis=-1).astype(np.float32)

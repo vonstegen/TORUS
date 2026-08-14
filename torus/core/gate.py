@@ -18,8 +18,11 @@ Design notes:
   the probability into a hard 0/1.
 
 - Phase 1 ships a heuristic scoring function (magnitude of residual
-  energy pre-scaled). Phase 3 will add learned gating trained jointly
-  with the residual planes under capability-aware distillation.
+  energy pre-scaled). Phase 3 adds learned gating. Phase 4 adds a
+  *router-confidence* signal: when the MoE router is unsure which
+  experts to pick, the gate is biased *toward* engaging the residual
+  plane because the residual plane captures exactly the kind of
+  per-expert nuance the router is wavering over.
 """
 from __future__ import annotations
 
@@ -37,8 +40,7 @@ class GateMode(str, Enum):
 
 def _as_broadcastable(value) -> np.ndarray:
     """Convert a scalar or Python number to a 0-d float32 ndarray."""
-    arr = np.asarray(value, dtype=np.float32)
-    return arr
+    return np.asarray(value, dtype=np.float32)
 
 
 @dataclass(frozen=True)
@@ -51,15 +53,14 @@ class GateDecision:
 class ResidualGate:
     """Adaptive gate controlling residual plane activation.
 
-    A call site is identified by a feature vector. The gate currently
-    supports two feature dimensions:
+    Three feature dimensions combine into a probability of activating
+    the residual plane:
 
         residual_relative_magnitude : estimated ||W - W_hat_primary|| / ||W||
         depth                        : int in [0, num_layers), normalized
-
-    The scoring function combines these into a probability of activating
-    the residual plane. A simple sigmoid blends both signals. A small
-    bias lets the user tune the overall activation rate.
+        router_confidence            : top-k prob mass in [0, 1] from the
+                                      MoE router; LOW confidence => engage
+                                      the residual plane. Phase 4 addition.
     """
 
     def __init__(
@@ -68,6 +69,7 @@ class ResidualGate:
         threshold: float = 0.5,
         depth_bias: float = 0.0,
         magnitude_bias: float = 0.0,
+        confidence_bias: float = 0.0,
     ) -> None:
         if not 0.0 <= threshold <= 1.0:
             raise ValueError(f"threshold must be in [0,1], got {threshold}")
@@ -75,22 +77,25 @@ class ResidualGate:
         self.threshold = threshold
         self.depth_bias = depth_bias
         self.magnitude_bias = magnitude_bias
+        # `confidence_bias` shifts the contribution of router_confidence
+        # uniformly. Positive bias makes the gate more sensitive to
+        # router uncertainty; negative bias dampens that signal.
+        self.confidence_bias = confidence_bias
 
     def decide(
         self,
         residual_relative_magnitude: np.ndarray | float,
         depth: np.ndarray | float | int,
+        router_confidence: np.ndarray | float | None = None,
     ) -> GateDecision:
         """Return a per-call-site decision to activate the residual plane.
 
         Args:
             residual_relative_magnitude: scalar or array; estimated
-                ||W - W_hat_primary|| / ||W|| for the call site. Larger
-                values indicate the primary plane is leaving more error.
+                ||W - W_hat_primary|| / ||W|| for the call site.
             depth: scalar or array; normalized layer / call depth in [0, 1].
-
-        Returns:
-            GateDecision with .activate (bool) and .score (float).
+            router_confidence: scalar or array; top-k prob mass from the
+                MoE router in [0, 1]. Optional; ignored when None.
         """
         if self.mode is GateMode.NEVER:
             score = _as_broadcastable(residual_relative_magnitude) * 0.0
@@ -103,8 +108,15 @@ class ResidualGate:
         # ADAPTIVE
         mag = _as_broadcastable(residual_relative_magnitude)
         d = _as_broadcastable(depth)
-        # Both signals are bounded; sigmoid maps to [0,1] probability.
-        logit = mag + d + self.magnitude_bias + self.depth_bias
+        if router_confidence is None:
+            conf_term = np.zeros_like(mag)
+        else:
+            conf = _as_broadcastable(router_confidence)
+            # LOW confidence should push the gate TOWARD activating the
+            # residual plane. We contribute +(1 - conf) to the logit so
+            # unsure tokens are more likely to engage.
+            conf_term = (1.0 - conf) + self.confidence_bias
+        logit = mag + d + self.magnitude_bias + self.depth_bias + conf_term
         score = 1.0 / (1.0 + np.exp(-logit * 4.0))  # 4x amplifies sensitivity
         activate = score >= self.threshold
         return GateDecision(activate=activate.astype(bool), score=score)
