@@ -38,10 +38,10 @@ When combined with the **RLM/Prime-Agent pattern** of treating context as a vari
 | Residual ternary planes                             | implemented | `torus.quant.residual_quantize` |
 | Adaptive per-layer / per-token residual gate        | implemented | `torus.core.ResidualGate` |
 | Reconstruction under multi-plane weights            | implemented | `torus.quant.compose_planes` |
-| 2-bit packed weight layout (4 codes/byte)           | implemented | `torus.quant.pack_plane` |
 | CPU reference ternary GEMM kernels + op counters    | implemented | `torus.core.kernels` (dense/sparse/unrolled) |
+| Compiled C ternary GEMM (portable + AVX2/AVX-512)   | implemented | `torus.kernels.simd` + `csrc/torus_kernel.c` |
+| CUDA ternary GEMM with graceful fallback            | implemented | `torus.kernels.cuda` (numba) |
 | Memory-hierarchy placement policy (VRAM/RAM/NVMe)   | implemented | `torus.core.memory` |
-| Gate telemetry (rates, trends, flagged layers)       | implemented | `torus.core.GateTelemetry` |
 | CUDA / AVX-512 hardware kernel spec                 | specified   | `docs/KERNELS.md` |
 | MoE-aware expert-specialized residual planes         | scaffolded  | `torus.moe.ExpertBank` |
 | Recursive context-as-variable (RLM) primitive       | implemented | `torus.rlm.RecursiveContext` |

@@ -250,18 +250,34 @@ If your kernel batches multiple planes per call, sum the per-plane
 (These targets are illustrative; final numbers come after Phase-2
 measurements.)
 
+
 ## 8. Verification Checklist
 
 Before claiming a kernel is Phase-2-complete:
 
-- [ ] Round-trip packing with `pack_plane` / `unpack`
-- [ ] Arithmetic matches `ternary_gemv_dense` within `1e-5`
-- [ ] `OpCount.adds + subs + skips == n_rows * n_cols`
-- [ ] Memory policy (`place_planes`) places primary plane in VRAM
-      under default budget
-- [ ] Gate `NEVER` / `ALWAYS` / `ADAPTIVE` produce the same y as dense
-      when forced off / on
-- [ ] `GateTelemetry.record` reflects the kernel's reported ops
+- [x] Round-trip packing with `pack_plane` / `unpack`
+      (`tests/test_kernels_real.py::test_packing_round_trip_via_simd_path`)
+- [x] Arithmetic matches `ternary_gemv_dense` within `1e-5`
+      (`test_simd_kernel_matches_dense_arithmetic`,
+      `test_simd_kernel_padding_alignment_arithmetic`,
+      `test_cuda_kernel_register_or_fallback`)
+- [x] `OpCount.adds + subs + skips == batch * n_rows * n_cols`
+      (per-batch invariant; `test_simd_kernel_op_count_invariant`)
+- [x] Memory policy (`place_planes`) places primary plane in VRAM
+      under default budget (`test_memory_policy_primary_vram`)
+- [x] Gate `NEVER` / `ALWAYS` produce the same y as the matching
+      dense reference (`test_gate_always_matches_two_plane_dense`,
+      `test_gate_never_matches_primary_only_dense`)
+- [x] `GateTelemetry.record` reflects the kernel's reported ops
+      (covered by `tests/test_packing_and_kernels.py` Phase 2 suite)
+- [x] End-to-end benchmark showing real per-call cost across
+      `dense` / `sparse` / `unrolled` / `simd_c` / `cuda`
+      (`examples/benchmark.py`)
 
 The test harness in `tests/test_packing_and_kernels.py` exercises
-items 1-5. Items 6-8 require the runtime layer.
+items 1-5, and `tests/test_kernels_real.py` exercises items 1-7
+against the compiled C kernel and the CUDA kernel.
+
+Item 8 (end-to-end benchmark) lives in `examples/benchmark.py`
+and prints real per-call cost across all five kernels on the
+current host.

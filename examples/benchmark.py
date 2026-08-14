@@ -92,10 +92,28 @@ def main() -> None:
         _bench("sparse", ternary_gemv_sparse, x, plane)
         _bench("unrolled", ternary_gemv_unrolled, x, plane)
 
-        # Packed layout size
-        packed = pack_plane(plane)
-        print(f"  packed bytes: {_fmt_bytes(packed.packed_codes.nbytes)}"
-              f"   scales bytes: {_fmt_bytes(packed.scales.nbytes)}")
+        # Compiled C kernel (if available)
+        try:
+            from torus.kernels.simd import ternary_gemm_simd, find_lib
+            if find_lib() is not None:
+                packed = pack_plane(plane)
+                _bench("simd_c", ternary_gemm_simd, x, packed)
+            else:
+                print("  simd_c : (not built; .so unavailable)")
+        except Exception as e:
+            print(f"  simd_c : ({type(e).__name__}: {e})")
+
+        # CUDA kernel (if available)
+        try:
+            from torus.kernels import cuda as cuda_mod
+            from torus.kernels.cuda import _cuda_available
+            if _cuda_available():
+                packed = pack_plane(plane)
+                _bench("cuda", cuda_mod.ternary_gemm_cuda, x, packed)
+            else:
+                print("  cuda   : (no CUDA runtime)")
+        except Exception as e:
+            print(f"  cuda   : ({type(e).__name__}: {e})")
 
         # Reconstruction error with residual planes
         planes = residual_quantize(w, num_planes=3, group_size=gs)

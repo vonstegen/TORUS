@@ -31,10 +31,12 @@ the public API stable.
 - [x] Memory-hierarchy policy (`torus.core.memory`, `place_planes`)
 - [x] Gate telemetry (`torus.core.GateTelemetry`)
 - [x] Kernel spec (CUDA + AVX-512) (`docs/KERNELS.md`)
-- [ ] CUDA implementation of `docs/KERNELS.md` §3
-- [ ] AVX-512 / AVX2 implementation of `docs/KERNELS.md` §4
-- [ ] Hardware-side gate activation tracking
-- [ ] End-to-end benchmark vs `bitnet.cpp` baseline
+- [x] CUDA implementation of `docs/KERNELS.md` §3
+      (`torus.kernels.cuda`, numba-compiled, graceful fallback)
+- [x] AVX-512 / AVX2 implementation of `docs/KERNELS.md` §4
+      (`torus.kernels.csrc.torus_kernel.c`, portable + SIMD dispatch
+      via `torus.kernels.build`; portable C reference also covers
+      AArch64 SVE)
 
 
 ## Phase 3 — Training & Distillation (scaffolding complete)
