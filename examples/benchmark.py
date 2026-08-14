@@ -1,9 +1,15 @@
 """Phase-2 microbenchmark + telemetry dump.
 
-Runs the three reference kernels (dense / sparse / unrolled) on a
+Runs the reference kernels (dense / sparse / unrolled) plus the
+compiled C kernel (`simd_c`) and the CUDA kernel when available on a
 batch of representative activations, reports wall-clock time and the
-recorded op count, and exercises the memory-tier placement policy
-on a realistic 70B-ish plane size budget.
+recorded op count, and exercises the memory-tier placement policy on
+a realistic 70B-ish plane size budget.
+
+A plain fp32 `x @ w.T` baseline is included so the ternary / SIMD /
+CUDA paths can be compared against the kind of matrix multiply that
+a vanilla fp32 runtime (or a hypothetical bitnet.cpp install) would
+produce.
 
 Run with:
 
@@ -46,6 +52,18 @@ def _fmt_bytes(n: int) -> str:
     return f"{n:.1f} PiB"
 
 
+def _bench_callable(name: str, fn: Callable, runs: int = 25) -> float:
+    """Bench a zero-arg callable (warmup + timed loop)."""
+    fn()
+    t0 = time.perf_counter()
+    for _ in range(runs):
+        fn()
+    t1 = time.perf_counter()
+    ms = (t1 - t0) / runs * 1000
+    print(f"  {name:>11}: {ms:7.3f} ms / call")
+    return ms
+
+
 def _bench(
     name: str,
     fn: Callable,
@@ -53,7 +71,7 @@ def _bench(
     plane,
     runs: int = 25,
 ) -> tuple[float, object]:
-    # Warmup
+    """Bench a `(x, plane) -> (y, OpCount)` kernel."""
     fn(x, plane)
     t0 = time.perf_counter()
     last_ops = None
@@ -62,22 +80,21 @@ def _bench(
         last_ops = ops
     t1 = time.perf_counter()
     ms = (t1 - t0) / runs * 1000
-    print(f"  {name:>8}: {ms:7.3f} ms / call   "
-          f"(adds={last_ops.adds:>6}, subs={last_ops.subs:>6}, "
-          f"skips={last_ops.skips:>6}, density={last_ops.density():.3f})")
+    print(
+        f"  {name:>8}: {ms:7.3f} ms / call   "
+        f"(adds={last_ops.adds:>6}, subs={last_ops.subs:>6}, "
+        f"skips={last_ops.skips:>6}, density={last_ops.density():.3f})"
+    )
     return ms, last_ops
 
 
 def main() -> None:
     rng = np.random.default_rng(0)
 
-    # Two realistic plane shapes:
-    #   1) a "wide" FFN plane (4096 -> 4096) at group_size=128
-    #   2) a "tall" attention plane (1024 -> 4096) at group_size=128
     sizes = [
         ("wide FFN  4096 -> 4096", (4096, 4096), 128),
         ("tall attn 1024 -> 4096", (4096, 1024), 128),
-        ("small attn 512 ->  512",  (512, 512),   128),
+        ("small attn 512 ->  512", (512, 512), 128),
     ]
 
     for label, (out_f, in_f), gs in sizes:
@@ -88,13 +105,18 @@ def main() -> None:
         w = (rng.standard_normal((out_f, in_f)) * 0.02).astype(np.float32)
         plane = ternary_quantize(w, group_size=gs)
         x = rng.standard_normal((1, in_f)).astype(np.float32)
+
+        # fp32 baseline: x @ w.T. This is what a vanilla fp32 GEMM
+        # (or bitnet.cpp if installed) would do as the floor.
+        _bench_callable("fp32_dense", lambda: np.dot(x, w.T))
+
         _bench("dense", ternary_gemv_dense, x, plane)
         _bench("sparse", ternary_gemv_sparse, x, plane)
         _bench("unrolled", ternary_gemv_unrolled, x, plane)
 
         # Compiled C kernel (if available)
         try:
-            from torus.kernels.simd import ternary_gemm_simd, find_lib
+            from torus.kernels.simd import find_lib, ternary_gemm_simd
             if find_lib() is not None:
                 packed = pack_plane(plane)
                 _bench("simd_c", ternary_gemm_simd, x, packed)
@@ -114,6 +136,13 @@ def main() -> None:
                 print("  cuda   : (no CUDA runtime)")
         except Exception as e:
             print(f"  cuda   : ({type(e).__name__}: {e})")
+
+        # Packed layout size
+        packed = pack_plane(plane)
+        print(
+            f"  packed bytes: {_fmt_bytes(packed.packed_codes.nbytes)}"
+            f"   scales bytes: {_fmt_bytes(packed.scales.nbytes)}"
+        )
 
         # Reconstruction error with residual planes
         planes = residual_quantize(w, num_planes=3, group_size=gs)
@@ -135,7 +164,7 @@ def main() -> None:
         gate = ResidualGate(
             mode=GateMode.ADAPTIVE,
             threshold=0.4,
-            magnitude_bias=-0.5 + 0.25 * lid,  # vary the policy per layer
+            magnitude_bias=-0.5 + 0.25 * lid,
         )
         layer = ResidualTernaryLinear(
             planes=planes,
@@ -164,12 +193,12 @@ def main() -> None:
     print("Memory policy: placing 3 residual planes on the P620 default budget")
     print("=" * 72)
     budget = p620_default_budget()
-    print(f"  budget: {_fmt_bytes(budget.vram_bytes)} VRAM, "
-          f"{_fmt_bytes(budget.ram_bytes)} RAM, "
-          f"{_fmt_bytes(budget.nvme_bytes)} NVMe")
+    print(
+        f"  budget: {_fmt_bytes(budget.vram_bytes)} VRAM, "
+        f"{_fmt_bytes(budget.ram_bytes)} RAM, "
+        f"{_fmt_bytes(budget.nvme_bytes)} NVMe"
+    )
     plane_sizes = [
-        # A 70B-style layer packed, per residual plane:
-        # 4096 * 4096 weights -> 4 MB packed + scales
         PlaneSize.from_estimate(num_weights=4096 * 4096, num_scales=4096 * 32),
         PlaneSize.from_estimate(num_weights=4096 * 4096, num_scales=4096 * 32),
         PlaneSize.from_estimate(num_weights=4096 * 4096, num_scales=4096 * 32),

@@ -27,7 +27,7 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -53,13 +53,27 @@ packages = [
     "torus.quant",
     "torus.moe",
     "torus.rlm",
+    "torus.kernels",
 ]
 
 [tool.setuptools.package-data]
 torus = ["py.typed"]
+"torus.kernels" = ["build/*.so"]
+
+[tool.setuptools.exclude-package-data]
+torus = ["kernels/csrc/*"]
+
+# Compile the C reference kernel as part of `pip install` so the .so
+# ships inside the wheel. The runtime loader (torus.kernels.simd)
+# already checks both `<pkg>/build/libtorus_kernel.so` and the
+# in-tree `torus/kernels/build/libtorus_kernel.so`, so a successful
+# pip install on any platform finds the artifact without rebuilding.
+[[tool.setuptools.ext-modules]]
+name = "torus.kernels.build.libtorus_kernel"
+sources = ["torus/kernels/csrc/torus_kernel.c"]
+extra-compile-args = ["-O3", "-fPIC", "-shared", "-std=c11", "-Wall", "-DNDEBUG"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
 addopts = "-ra -q"
 
 [tool.ruff]

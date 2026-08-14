@@ -247,8 +247,27 @@ If your kernel batches multiple planes per call, sum the per-plane
 | Gate toggle    | round-trip latency to switch            | < 5 µs                       |
 | NVMe→RAM stage | end-to-end plane transfer              | < 50 ms per 100 MB plane     |
 
+
 (These targets are illustrative; final numbers come after Phase-2
 measurements.)
+
+### 7.1 CUDA launch overhead on small planes
+
+The CUDA kernel's per-launch fixed cost (H2D copies for `x` /
+`packed` / `scales`, atomic op accumulation, kernel launch itself)
+dominates when the plane is small. On this host, a 512x512 plane
+sees CUDA at ~0.62 ms/call vs `np.dot` at ~0.28 ms/call. Above
+~1024 rows / 1024 cols (i.e. ≥ 1 M FLOP per call), CUDA wins.
+Below that, the in-process `simd_c` kernel is comparable and the
+numpy `ternary_gemv_dense` reference can be faster still on hosts
+with a fast BLAS.
+
+**Dispatch rule** (suggested, baked into the kernel registry via
+a future heuristic): use `cuda` for `out_features * in_features >
+1<<20`, otherwise prefer `simd_c` or `dense`. The current
+registry returns the first registered name without a heuristic —
+see `torus.kernels.get_kernel` callers if you want to add the
+cutover.
 
 
 ## 8. Verification Checklist
