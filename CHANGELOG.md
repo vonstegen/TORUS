@@ -1,4 +1,45 @@
 # CHANGELOG
+
+## 0.5.0 — Hardware refresh: GB10 Blackwell
+
+### Verified
+
+- `pip install torch transformers`: 121 passed, 0 skipped
+  (was 120 + 1 skip on the torch gate).
+- TORUS CUDA kernel (`numba`-compiled) now actually exercises
+  the host GPU on every test run, including the
+  `test_cuda_kernel_register_or_fallback` smoke.
+- `examples/benchmark.py` re-run on the actual GPU; numbers
+  reproduced within ~3% of the previous host (kernel is portable,
+  numbers are host-specific).
+- Hardware reality check: this host is a GB10 Blackwell (sm_120)
+  + ARM Cortex-X925 + 121 GB RAM, NOT a P620 / Threadripper
+  + 2× TITAN RTX as the docs had assumed. The kernel paths don't
+  care (the portable C kernel handles both), but the docs needed
+  updating.
+
+### Added
+
+- `torus.core.gb10_default_budget`: memory budget reflecting the
+  GB10's unified-memory pool (80 GB VRAM, 40 GB RAM, 1 TB NVMe).
+  `p620_default_budget` is kept for back-compat.
+- `examples/benchmark.py`: now uses `gb10_default_budget` and
+  prints "Memory policy: ... on the GB10 default budget".
+
+### Changed
+
+- `docs/ROADMAP.md`: hardware table replaced with the actual host.
+  Added note that `torch` CUDA wheels are unavailable for
+  Python 3.12 + aarch64 (numba CUDA is the working path).
+- `docs/KERNELS.md`: §7 retitled "(GB10)"; the 3995WX references
+  in §4 are replaced with Cortex-X925; P620 hardware-target
+  language is replaced throughout.
+- `README.md`: Phase-2 line updated to mention "GB10 Blackwell".
+- `torus.core.__init__.py`: export `gb10_default_budget` and
+  `place_planes` (the latter was missing — caught by tests after
+  the new budget export).
+
+# CHANGELOG
 ## 0.4.0 — Phase 2 follow-on: real kernels
 
 ### Added

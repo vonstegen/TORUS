@@ -179,20 +179,15 @@ void ternary_gemv_avx512(
 
 Notes:
 
+Notes:
+
 - The CPU kernel can parallelize at the row or batch dim using OpenMP
-  or a simple work-stealing loop on the `64-core 3995WX`.
+  or a simple work-stealing loop on the 10-core Cortex-X925.
 - The gate signal here is even cheaper: if `activate_residual == 0`,
   the runtime skips the second matmul entirely (no kernel launch).
-- AVX-512 is available on `3995WX`-class Threadripper Pros but
-  down-clocks aggressively when used; large models need the OpenMP
-  fan-out to amortize that. A pure AVX2 fallback is the practical
-  default for the P620.
-
-## 5. Memory Hierarchy
-
-The runtime keeps three weight tiers available (from `memory.py`):
-
-- `VRAM` — TITAN RTX card(s); access from CUDA kernels.
+- This host is **aarch64**, so the x86-64 AVX-512 / AVX2 paths are
+  not exercised. The portable C reference path is what runs here,
+  with the SVE path available as a future Phase-9 enhancement.
 - `RAM`  — system memory; access from CPU via AVX kernels.
 - `NVME` — local SSD; loaded into RAM/VRAM on demand.
 
@@ -233,12 +228,11 @@ def test_op_count_invariant():
     plane = ternary_quantize(...)
     _, ops = kernel(x, plane)
     assert ops.adds + ops.subs + ops.skips == ops.n_rows * ops.n_cols
-```
+## 7. Performance Targets (GB10)
 
 If your kernel batches multiple planes per call, sum the per-plane
 `OpCount`s before reporting.
-
-## 7. Performance Targets (P620)
+## 7. Performance Targets (GB10)
 
 | Kernel         | Metric                                  | Target                      |
 |----------------|-----------------------------------------|------------------------------|

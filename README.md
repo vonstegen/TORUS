@@ -71,6 +71,23 @@ pip install -e ".[torch]"   # if you want torch tensors in addition to numpy
 pip install -e ".[dev]"    # pytest + ruff + mypy
 ```
 
+### Optional: GPU torch (Python 3.11 venv)
+
+`pip install torch` from PyPI gives you the CPU build on aarch64 +
+Python 3.12. To get a CUDA-enabled torch on an aarch64 host (so the
+HF adapter can drive a real model on the GPU), create a side
+venv with Python 3.11 and install from the CUDA index:
+
+```bash
+~/.local/bin/python3.11 -m venv .venv-py311
+.venv-py311/bin/pip install -U pip
+.venv-py311/bin/pip install torch --index-url https://download.pytorch.org/whl/cu130
+.venv-py311/bin/pip install -e . --no-deps
+.venv-py311/bin/pip install pytest numpy transformers
+```
+
+The TORUS CUDA kernel uses `numba` and works with both venvs.
+
 ---
 
 ## Quick start
@@ -122,10 +139,7 @@ TORUS/
 ## Roadmap
 
 See `docs/ROADMAP.md` for the full multi-phase plan. Short version:
-
-- **Phase 1** (this repo) — pure-Python reference implementation of the core quant + gate + RLM primitives, with tests.
-- **Phase 2** — CUDA / AVX-512 kernels for ternary multi-plane GEMM on real hardware (P620 dual TITAN RTX).
-- **Phase 3** — training recipes (QAT, distillation from a teacher run via Colibri) at OLMoE scale, then 7B–13B.
+- **Phase 2** — CUDA / AVX-512 kernels for ternary multi-plane GEMM on real hardware (GB10 Blackwell).
 - **Phase 4** — runtime: GGUF / bitnet.cpp / custom adapter for serving ternary models locally.
 - **Phase 5** (research) — FPGA/ASIC exploration: ternary-native lanes with gateable residual units.
 

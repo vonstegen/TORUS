@@ -113,3 +113,17 @@ def p620_default_budget() -> Budget:
         ram_bytes=128 * 1024**3,   # 128 GB ECC, minus OS + activations
         nvme_bytes=2 * 1024**4,    # 2 TB NVMe, minus OS
     )
+
+
+def gb10_default_budget() -> Budget:
+    """Reasonable defaults for the GB10 dev box.
+
+    The GB10 has unified CPU/GPU memory (~120 GB usable), so the
+    VRAM and RAM pools overlap in practice. We split them by
+    convention: 80 GB VRAM-equivalent, 40 GB RAM-only, 1 TB NVMe.
+    """
+    return Budget(
+        vram_bytes=80 * 1024**3,   # GB10 unified memory pool (large)
+        ram_bytes=40 * 1024**3,    # remaining unified memory for non-GPU use
+        nvme_bytes=1 * 1024**4,    # ~1 TB NVMe (minus OS)
+    )

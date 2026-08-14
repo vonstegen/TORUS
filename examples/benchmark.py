@@ -28,9 +28,8 @@ from torus.core import (
     GateTelemetry,
     MemoryTier,
     PlaneSize,
-    ResidualGate,
-    ResidualTernaryLinear,
     p620_default_budget,
+    gb10_default_budget,
     place_planes,
     ternary_gemv_dense,
     ternary_gemv_sparse,
@@ -189,10 +188,9 @@ def main() -> None:
         )
 
     print()
+    print("Memory policy: placing 3 residual planes on the GB10 default budget")
     print("=" * 72)
-    print("Memory policy: placing 3 residual planes on the P620 default budget")
-    print("=" * 72)
-    budget = p620_default_budget()
+    budget = gb10_default_budget()
     print(
         f"  budget: {_fmt_bytes(budget.vram_bytes)} VRAM, "
         f"{_fmt_bytes(budget.ram_bytes)} RAM, "

@@ -71,3 +71,6 @@ logs/
 Thumbs.db
 *~
 .nfs*
+
+# Secondary venv (Python 3.11 + CUDA torch)
+.venv-py311/

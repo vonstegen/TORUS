@@ -20,11 +20,9 @@ core primitives with passing tests.
 **Status**: Phase 1 complete.
 
 ## Phase 2 — Hardware-aware Kernels (in progress)
-
 **Deliverable**: accelerated ternary GEMM kernels for the dev box
-(P620, Threadripper 3995WX + 2× TITAN RTX 24 GB + 128 GB ECC), keeping
-the public API stable.
-
+(GB10 Blackwell + ARM Cortex-X925 + 121 GB RAM + 916 GB NVMe),
+keeping the public API stable.
 - [x] Packed 2-bit / 1.6-bit weight layout (`torus.quant.packing`)
 - [x] CPU reference kernels with op counts
       (`torus.core.kernels`: dense / sparse / unrolled)
@@ -73,11 +71,21 @@ and makes it usable locally, end-to-end.
 - [ ] CLI: `torus serve path/to/checkpoint --residual on|auto|off`
 - [ ] Recipes: long-context summarization, code review, multi-doc QA
 
-**Acceptance**: a 70B-class ternary model runs on the P620 at
-interactive speed with the gate active; toggling the gate measurably
-trades speed for quality on a held-out task.
+**Acceptance**: a 70B-class ternary model runs on the GB10 at
+interactive rates with the gate keeping total compute under 1.5x
+the primary-plane floor.
 
 ## Phase 5 — Research: Custom Silicon (long horizon)
+
+**Deliverable**: a research-grade ASIC or FPGA exploration showing
+that residual ternary planes compose cleanly into a hardware-friendly
+fabric.
+
+
+the primary-plane floor.
+
+interactive rates with the gate keeping total compute under 1.5x
+the primary-plane floor.
 
 **Deliverable**: a research-grade ASIC or FPGA exploration showing
 that residual ternary planes compose cleanly into a hardware-friendly
@@ -103,22 +111,3 @@ hardware resource.
 - **The math is the contract.** Each phase's math is fixed by the
   Phase 1 types and tests. Phase 2+ optimizes behind that contract.
 - **No heavy dependencies in core.** Phase 1 uses only numpy. Phase 2
-  may add torch / MLX / custom runtimes behind the same interfaces.
-- **Test before you ship.** Every phase ends with a green test suite
-  and at least one measurable deliverable.
-- **Open by default.** All code, docs, and (when possible) weights go
-  under permissive licenses.
-
-## Hardware target
-
-| Component            | Spec                                |
-|----------------------|-------------------------------------|
-| CPU                  | Threadripper 3995WX, 64c/128t       |
-| RAM                  | 128 GB ECC                          |
-| GPU                  | 2× NVIDIA TITAN RTX 24 GB, NVLink   |
-| Storage              | 2 TB NVMe                           |
-| Network              | 10 GbE                              |
-
-This machine is a useful single-workstation testbed, not a frontier
-training rig. Phase 3 may need additional compute for larger
-students; Phase 1–2 + 4 are sized to fit comfortably on this box.

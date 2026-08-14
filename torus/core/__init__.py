@@ -14,6 +14,7 @@ from torus.core.memory import (
     Placement,
     PlaneSize,
     p620_default_budget,
+    gb10_default_budget,
     place_planes,
 )
 from torus.core.residual_linear import (
@@ -38,10 +39,10 @@ __all__ = [
     "ternary_gemv_unrolled",
     "Budget",
     "MemoryTier",
-    "Placement",
     "PlaneSize",
-    "p620_default_budget",
     "place_planes",
+    "p620_default_budget",
+    "gb10_default_budget",
     "GateTelemetry",
     "LayerStats",
 ]
