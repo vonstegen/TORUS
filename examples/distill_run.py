@@ -19,6 +19,22 @@ with torch autograd.
 """
 from __future__ import annotations
 
+# Workaround for Legion's missing python3.14-dev headers:
+# OLMo's attention/RoPE lazily call into Triton on first
+# forward. Triton's gcc build of `cuda_utils.c` then fails
+# with "Python.h: No such file or directory" because the
+# python3.14 headers aren't installed and we have no sudo.
+# Setting `sys.modules["triton"] = None` BEFORE torch is
+# imported makes subsequent `import triton` raise
+# ImportError, which forces eager fallbacks everywhere.
+# Order matters: if torch is imported first, it caches
+# triton-using ops that fail later. With
+# `attn_implementation="sdpa"` (the default when not
+# specified) or `eager`, no Triton kernel is ever invoked
+# by the model forward.
+import sys as _sys
+_sys.modules["triton"] = None
+
 import argparse
 import json
 import os
@@ -75,8 +91,10 @@ def run_one(
         device=device,
         attn_implementation=getattr(args, 'attn_impl', 'eager'),
     )
+    print(f"[distill] loading student from {model_name!r} ...")
     student = HFStudentAdapter(cfg)
     if getattr(args, "perturb_residual", False):
+        import torch
         for rp in student.residual_params:
             rp.data.add_(torch.randn_like(rp) * 0.05)
         print(f"[distill]   perturbed residual weights with N(0, 0.05) noise")
@@ -96,6 +114,7 @@ def run_one(
 
     vocab = student.model.config.vocab_size
     data = make_data_iter(vocab, batch_size, seq_len, seed=seed)
+
     train_cfg = TrainingConfig(
         n_steps=n_steps,
         log_every=max(1, n_steps // 20),
@@ -128,30 +147,27 @@ def run_one(
     print(f"[distill] done: {n_steps} steps in {elapsed:.1f}s ({elapsed / n_steps:.2f}s/step)")
     log_path.parent.mkdir(parents=True, exist_ok=True)
     rows = [asdict(s) for s in history]
+    initial_loss = rows[0]["loss"] if rows else None
+    final_loss = rows[-1]["loss"] if rows else None
     with log_path.open("w") as f:
         json.dump(
             {
                 "model_name": model_name,
+                "teacher_model_name": teacher_model_name,
+                "target_modules": list(target_modules),
                 "n_steps": n_steps,
                 "probe_rows": probe_rows,
-                "elapsed_seconds": elapsed,
                 "curriculum_planes": curriculum_planes,
+                "elapsed_seconds": elapsed,
                 "history": rows,
             },
             f,
             indent=2,
         )
-    print(f"[distill] wrote {log_path}")
-
-    if not history:
-        return {"loss": None, "n": 0, "elapsed": elapsed}
-
-    final_loss = float(history[-1].loss)
-    initial_loss = float(history[0].loss)
     return {
         "initial_loss": initial_loss,
         "final_loss": final_loss,
-        "delta": initial_loss - final_loss,
+        "delta": (initial_loss - final_loss) if (initial_loss is not None and final_loss is not None) else None,
         "elapsed": elapsed,
         "n": len(history),
         "log_path": str(log_path),
@@ -181,6 +197,10 @@ def main() -> None:
     p.add_argument("--label", default="default")
     p.add_argument("--probe-residual", action="store_true",
                    help="Also perturb STE.residual_weight at the same (r, c)")
+    p.add_argument("--perturb-residual", action="store_true",
+                   help="Initialize residual weights with random noise")
+    p.add_argument("--residual-lr-scale", type=float, default=0.1,
+                   help="Residual plane LR = learning_rate * this")
     p.add_argument("--residual-warmup", type=int, default=0,
                    help="Ramp residual LR from 0 -> target over this many steps")
     p.add_argument("--device", default="cuda",
@@ -190,6 +210,7 @@ def main() -> None:
     p.add_argument("--attn-impl", default="eager",
                    help="HF attn_implementation: eager, sdpa, flash_attention_2")
     args = p.parse_args()
+
     # Parse the curriculum: "1:50,2:150" -> [(1, 50), (2, 150)].
     planes = []
     step_counts = []
@@ -197,6 +218,7 @@ def main() -> None:
         plane, steps = entry.split(":")
         planes.append(int(plane))
         step_counts.append(int(steps))
+
     if sum(step_counts) < args.n_steps:
         # Extend the last stage to cover the remaining steps.
         step_counts[-1] += args.n_steps - sum(step_counts)
@@ -222,6 +244,9 @@ def main() -> None:
         seq_len=args.seq_len,
         log_path=log_path,
     )
+    print()
+    print(f"[distill] initial loss: {result.get('initial_loss'):.4f}")
+    print(f"[distill] final   loss: {result.get('final_loss'):.4f}")
     if result.get("initial_loss") is not None:
         delta = result["delta"]
         sign = "improved" if delta > 0 else "regressed"
