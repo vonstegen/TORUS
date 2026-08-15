@@ -55,6 +55,7 @@ class TrainingConfig:
     log_every: int = 10
     eval_every: int = 0           # 0 == skip eval
     grad_clip: float = 1.0        # global-norm clip
+    probe_rows: int = 1            # finite-difference probes per module per step
 
 
 @dataclass
@@ -200,9 +201,11 @@ class DistillationTrainer:
             # next forward pass.
             for src, ste in zip(self._params_np, self.student_params):
                 if hasattr(ste.weight, "copy_"):
-                    ste.weight.copy_(
-                        _torch.as_tensor(src).to(ste.weight.device)
-                    )
+                    #  bypasses the autograd graph and
+                    # avoids RuntimeError on a leaf Variable that
+                    # requires grad.
+                    target = ste.weight.data if hasattr(ste.weight, "data") else ste.weight
+                    target.copy_(_torch.as_tensor(src).to(target.device))
 
             if step % cfg.log_every == 0 or step == cfg.n_steps - 1:
                 stats = TrainingStats(
@@ -240,11 +243,24 @@ class DistillationTrainer:
                     if hasattr(p.weight, "numpy")
                     else np.zeros(p.weight.shape, dtype=np.float32)
                     for p in self.student_params]
+        # Per-module probe budget: how many rows to probe via the
+        # finite-difference method. The default is "one per row"
+        # (the textbook choice) but that's prohibitive on real
+        # models. Set to a small N to get a coarse but real gradient
+        # direction. The trainer exposes  so callers
+        # can override.
+        budget = getattr(self.train_cfg, "probe_rows", 1)
+        rng_grad = np.random.default_rng(0)
         for i, p in enumerate(self.student_params):
             w = self._params_np[i]
             n = w.shape[0]
             grad = np.zeros_like(w)
-            for r in range(n):
+            rows = (
+                rng_grad.choice(n, size=min(budget, n), replace=False)
+                if budget < n
+                else np.arange(n)
+            )
+            for r in rows:
                 c = 0
                 original = w[r, c]
                 w[r, c] = original + eps

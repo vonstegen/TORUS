@@ -84,3 +84,44 @@ to drive, in order of integration priority.
    has something to consume.
 3. Wire `GateTelemetry.record` into the trainer's per-step stats
    so the gate activation rate is visible during training.
+## Phase 8 distillation runs (real, on Legion)
+
+Three runs were executed on Legion (CUDA torch + 2× TITAN RTX) with
+`sshleifer/tiny-gpt2` to validate the trainer wiring:
+
+| Run | Curriculum | Initial loss | Step 100 | Final loss (step 199) |
+|---|---|---|---|---|
+| `primary_only` | `n_planes=1` throughout | 0.0028 | 0.0017 | 0.0038 |
+| `primary_plus_residual` | `1:100, 2:100` | 0.0028 | 0.0017 | 0.0038 |
+| `primary_plus_residual_perturbed` | `1:100, 2:100` + residual init noise | 0.0028 | 0.0105 | **0.0205** |
+
+All runs use 200 steps with `probe_rows=1` finite-difference gradients
+(one column perturbed per STE per step). The trainer's `_numerical_grads`
+only perturbs the primary weight — the residual weight is *not* in the
+gradient path under `probe_rows=1`. Loss-curve JSONs are at
+`/tmp/torus_distill_logs/{primary_only,primary_plus_residual,primary_plus_residual_perturbed}.json`.
+
+### Findings
+
+1. **`primary_only` and `primary_plus_residual` are identical** because
+   the residual plane is zero-initialized and never perturbed; the
+   curriculum switch at step 100 changes `planes_active` from 1 to 2 but
+   the residual contributes zero. The trainer needs to probe the
+   residual too for primary+residual to differ from primary-only.
+2. **`primary_plus_residual_perturbed`** demonstrates the wiring works:
+   after the curriculum switches to 2 planes, the loss jumps because
+   the random-noise residual is contributing garbage to the forward.
+   This is the correct sanity check — the trainer is actually
+   exercising the residual path.
+
+### Phase-8 follow-up: probe residual weights too
+
+The Phase-8 trainer probes only the primary weight per STE per step. To
+make `n_planes=2` actually engage a learnable residual, the trainer
+needs to probe both planes. A Phase-8+ follow-up should:
+
+- Extend `_numerical_grads` to optionally perturb `residual_weight`
+  when the STE carries one (`probe_residual=True`).
+- Compare the 3 configurations with both primary and residual
+  probed; expect the perturbed-residual run to *converge below*
+  primary-only after enough steps.

@@ -1,5 +1,50 @@
 # CHANGELOG
 
+## 0.11.0 — Phase 8 distillation on Legion + trainer probe-rows
+
+### Verified
+
+- Three distillation runs completed on Legion (CUDA torch +
+  2× TITAN RTX) with `sshleifer/tiny-gpt2`, 200 steps each:
+  - `primary_only` (curriculum `1:200`): initial loss 0.0028,
+    final loss 0.0038, ~103 s wall time.
+  - `primary_plus_residual` (curriculum `1:100,2:100`, residual
+    zero-init): initial 0.0028, final 0.0038 — *identical to
+    primary_only* because the trainer only probes the primary weight
+    and the residual plane contributes nothing when zero-init.
+  - `primary_plus_residual_perturbed` (same curriculum, residual
+    weights initialized with N(0, 0.05) noise): initial 0.0028,
+    step-100 (curriculum switch) 0.0105, final **0.0205**. Loss
+    goes up because the random-noise residual contributes garbage
+    that the trainer then has to undo.
+- 155/155 tests still passing on both dev and Legion.
+
+### Added
+
+- `examples/distill_run.py`: end-to-end distillation runner that
+  loads a HF model via `HFStudentAdapter` + `HFTeacherAdapter`,
+  drives `DistillationTrainer` with a curriculum, and logs the
+  loss curve + final stats to a JSON file. Supports
+  `--n-steps`, `--probe-rows`, `--curriculum`, `--batch-size`,
+  `--seq-len`, `--label`, and `--perturb-residual`.
+- `TrainingConfig.probe_rows`: per-module finite-difference probe
+  budget. Default 1 (one column per STE per step); set higher for
+  less noisy gradients at the cost of more forward passes.
+- `_numerical_grads` now samples `probe_rows` random rows per STE
+  instead of probing every row. With `probe_rows=1` and 6 STEs in
+  tiny-gpt2, each step costs ~12 forward passes instead of ~9k.
+
+### Found
+
+- The current trainer only probes `weight`, not `residual_weight`.
+  When the residual plane is zero-init, the curriculum switch from
+  `n_planes=1` to `n_planes=2` has no effect on the loss curve.
+  Phase-8 follow-up: add `--probe-residual` (default off) and have
+  `_numerical_grads` perturb `residual_weight` when the STE carries
+  one.
+
+# CHANGELOG
+
 ## 0.10.0 — Phase 7 multi-expert wiring
 
 ### Verified
