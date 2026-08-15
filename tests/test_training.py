@@ -518,3 +518,83 @@ def test_trainer_autograd_path_uses_torch_grads_when_adapter_supports() -> None:
         train_cfg=TrainingConfig(n_steps=3, log_every=1),
     ).fit()
     assert len(history) == 3
+
+def test_trainer_residual_warmup_ramps_lr_from_zero() -> None:
+    """With `residual_warmup_steps=N`, the residual SGD's LR is
+    0 for the first step, ramps linearly over N steps, and
+    reaches the target LR by step N. After step N it stays
+    at the target.
+    """
+    import torch
+    from torus.train.loop import _SGD
+
+    class _AutogradStudent:
+        def __init__(self):
+            self.weight = torch.nn.Parameter(
+                torch.randn(8, 32, dtype=torch.float32) * 0.05
+            )
+            self.residual_weight = torch.nn.Parameter(
+                torch.zeros(8, 32, dtype=torch.float32)
+            )
+
+        def forward(self, batch, n_planes):
+            return (
+                self.weight.detach().numpy(), None,
+                np.zeros((1, 1), dtype=np.float32),
+            )
+
+        def forward_with_grad(self, batch, n_planes):
+            q = (self.weight + self.residual_weight * 0.0).sum(dim=-1, keepdim=True)
+            return q, None, None, [self.weight], [self.residual_weight]
+
+        def forward_torch(self, batch):
+            q = (self.weight + self.residual_weight * 0.0).sum(dim=-1, keepdim=True)
+            return q
+
+        def __call__(self, batch, n_planes):
+            return self.forward(batch, n_planes)
+
+    class _Teacher:
+        def forward(self, batch, n_planes):
+            return np.zeros((8, 1), dtype=np.float32), None, np.zeros((1, 1), dtype=np.float32)
+        def forward_torch(self, batch):
+            return torch.zeros((8, 1), dtype=torch.float32)
+        def __call__(self, batch, n_planes):
+            return self.forward(batch, n_planes)
+
+    # Wrap _SGD.step to record the lr at each step.
+    recorded_lr: list[float] = []
+    original_step = _SGD.step
+
+    def recording_step(self, grads):
+        recorded_lr.append(self.lr)
+        return original_step(self, grads)
+
+    _SGD.step = recording_step  # type: ignore[assignment]
+    try:
+        ste = _AutogradStudent()
+        teacher = _Teacher()
+        trainer = DistillationTrainer(
+            student_params=[ste],
+            forward_student=ste,
+            forward_teacher=teacher,
+            data=iter([DistillationBatch(inputs=np.zeros((1, 8), dtype=np.float32))] * 10),
+            loss_cfg=DistillationConfig(),
+        train_cfg=TrainingConfig(
+            n_steps=10, log_every=1,
+            residual_lr_scale=0.5,
+            residual_warmup_steps=4,
+        ),
+        )
+        trainer.fit()
+    finally:
+        _SGD.step = original_step  # type: ignore[assignment]
+
+    # learning_rate=1e-3 (default) * residual_lr_scale=0.5 = 5e-4 target.
+    # Step k ramp = (k+1)/4 of 5e-4.
+    residual_lr = recorded_lr[1::2]
+    expected = [1.25e-4, 2.5e-4, 3.75e-4, 5e-4, 5e-4, 5e-4, 5e-4, 5e-4, 5e-4, 5e-4]
+    assert len(residual_lr) == 10
+    for got, want in zip(residual_lr, expected):
+        assert abs(got - want) < 1e-12, f"step lr {got} != {want}"
+    assert trainer._step == 9

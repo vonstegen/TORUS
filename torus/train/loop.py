@@ -59,7 +59,7 @@ class TrainingConfig:
     probe_cols: int = 0            # columns probed per row (0 = same as probe_rows)
     probe_residual: bool = False   # also perturb STE.residual_weight when set
     residual_lr_scale: float = 0.1  # residual plane LR = learning_rate * this
-
+    residual_warmup_steps: int = 0  # ramp residual LR from 0 -> target over this many steps (0 = no warmup)
 
 @dataclass
 class TrainingStats:
@@ -196,12 +196,27 @@ class DistillationTrainer:
         residual_params = [r for r in self._residual_np if r is not None]
         residual_opt = None
         if residual_params:
+            target_residual_lr = cfg.learning_rate * getattr(
+                cfg, "residual_lr_scale", 0.1
+            )
+            # Start at 0 if warmup is enabled; the loop ramps it
+            # up to `target_residual_lr` linearly over the first
+            # `cfg.residual_warmup_steps` steps. Warmup lets the
+            # primary plane converge first before the residual
+            # starts moving, so the residual doesn't amplify its
+            # init noise while the primary is still settling.
+            warmup_steps = getattr(cfg, "residual_warmup_steps", 0)
+            initial_residual_lr = (
+                0.0 if warmup_steps > 0 else target_residual_lr
+            )
             residual_opt = _SGD(
                 params=residual_params,
-                lr=cfg.learning_rate * getattr(cfg, "residual_lr_scale", 0.1),
+                lr=initial_residual_lr,
                 momentum=cfg.momentum,
                 weight_decay=cfg.weight_decay,
             )
+            residual_opt._target_lr = target_residual_lr  # type: ignore[attr-defined]
+            residual_opt._warmup_steps = warmup_steps  # type: ignore[attr-defined]
         history: list[TrainingStats] = []
         t0 = time.perf_counter()
 
@@ -280,6 +295,12 @@ class DistillationTrainer:
                     residual_grads_step,
                     cfg.grad_clip,
                 )
+                # Ramp residual LR linearly during warmup.
+                if step < residual_opt._warmup_steps:
+                    ramp = (step + 1) / residual_opt._warmup_steps
+                    residual_opt.lr = residual_opt._target_lr * ramp
+                else:
+                    residual_opt.lr = residual_opt._target_lr
                 residual_opt.step(residual_grads_step)
             # Copy the numpy buffers back to the torch STE weights
             # so the adapter sees the updated parameters on the

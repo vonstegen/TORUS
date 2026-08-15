@@ -89,7 +89,10 @@ def run_one(
         log_every=max(1, n_steps // 20),
         learning_rate=1e-3,
         probe_rows=probe_rows,
+        probe_cols=getattr(args, 'probe_cols', 0),
         probe_residual=getattr(args, 'probe_residual', False),
+        residual_lr_scale=getattr(args, 'residual_lr_scale', 0.1),
+        residual_warmup_steps=getattr(args, 'residual_warmup', 0),
     )
     curriculum = CurriculumSchedule.progressive(
         steps_per_stage=curriculum_steps_per_stage,
@@ -101,7 +104,9 @@ def run_one(
     history = DistillationTrainer(
         student_params=student.ste_params,
         forward_student=student.forward,
-        forward_teacher=teacher.forward,
+        forward_teacher=teacher.forward,  # callable; the trainer also
+                                          # discovers the adapter's
+                                          # forward_torch via __self__
         data=data,
         loss_cfg=DistillationConfig(),
         curriculum=curriculum,
@@ -109,8 +114,6 @@ def run_one(
     ).fit()
     elapsed = time.perf_counter() - t0
     print(f"[distill] done: {n_steps} steps in {elapsed:.1f}s ({elapsed / n_steps:.2f}s/step)")
-
-    # Persist history.
     log_path.parent.mkdir(parents=True, exist_ok=True)
     rows = [asdict(s) for s in history]
     with log_path.open("w") as f:
@@ -149,6 +152,8 @@ def main() -> None:
     p.add_argument("--n-steps", type=int, default=200)
     p.add_argument("--probe-rows", type=int, default=1,
                    help="finite-difference probes per module per step")
+    p.add_argument("--probe-cols", type=int, default=0,
+                   help="columns probed per row (0 = same as --probe-rows)")
     p.add_argument("--batch-size", type=int, default=2)
     p.add_argument("--seq-len", type=int, default=16)
     p.add_argument(
@@ -164,8 +169,9 @@ def main() -> None:
                    help="Initialize residual weights with random noise")
     p.add_argument("--residual-lr-scale", type=float, default=0.1,
                    help="Residual plane LR = learning_rate * this")
+    p.add_argument("--residual-warmup", type=int, default=0,
+                   help="Ramp residual LR from 0 -> target over this many steps")
     args = p.parse_args()
-
     # Parse the curriculum: "1:50,2:150" -> [(1, 50), (2, 150)].
     planes = []
     step_counts = []
