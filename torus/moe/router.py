@@ -19,7 +19,10 @@ import numpy as np
 class RouteResult:
     """Output of `TopKRouter.route`."""
     indices: np.ndarray   # int array of shape (batch, top_k)
-    weights: np.ndarray   # float array of shape (batch, top_k) summing to 1
+    weights: np.ndarray   # float array of shape (batch, top_k) normalized to sum to 1
+    raw_mass: np.ndarray  # float array of shape (batch,): top-k prob mass *before*
+                          # renormalization. The Phase-7 gate uses this to decide
+                          # how aggressively to engage residual planes.
 
 
 class TopKRouter:
@@ -60,8 +63,16 @@ class TopKRouter:
         # Compute selected weights then renormalize them to sum to 1.
         rows = np.arange(token_features.shape[0])[:, None]
         sel = probs[rows, idx]
+        # raw_mass is the pre-renormalization top-k prob mass.
+        # It's the right input for the Phase-7 gate: it reflects how
+        # much prob mass landed in the top-k vs the long tail.
+        raw_mass = sel.sum(axis=-1).astype(np.float32)
         sel = sel / sel.sum(axis=-1, keepdims=True).clip(min=1e-8)
-        return RouteResult(indices=idx.astype(np.int64), weights=sel.astype(np.float32))
+        return RouteResult(
+            indices=idx.astype(np.int64),
+            weights=sel.astype(np.float32),
+            raw_mass=raw_mass,
+        )
 
     def confidence(self, route: RouteResult) -> np.ndarray:
         """Per-token confidence = top-k prob mass.
@@ -74,4 +85,4 @@ class TopKRouter:
         Gate policies use this signal to decide whether to engage a
         residual plane.
         """
-        return route.weights.sum(axis=-1).astype(np.float32)
+        return route.raw_mass

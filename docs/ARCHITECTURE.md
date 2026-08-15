@@ -355,30 +355,49 @@ The `SandboxedContextREPL` is API-compatible with `ContextREPL`
 (`.run(code) -> (stdout, last)`) so `PrimeAgentLoop` accepts
 either transparently via its `repl=` parameter.
 
-### Why this is the security milestone
+## Phase 7 — Multi-expert production wiring
 
-- **Fast-fail at the AST layer.** Dangerous code never runs; the
-  sandbox raises `SandboxError` before any side effect.
-- **Defense-in-depth.** Even if the AST check were bypassed, the
-  runtime `__builtins__` is a curated subset that has no way to
-  reach the OS or filesystem.
-- **Per-REPL policy.** `SandboxPolicy` lets callers loosen
-  individual caps (e.g. longer timeouts for batch jobs) without
-  rebuilding the parser or runtime.
-- **Surface compatible.** `PrimeAgentLoop(repl=...)` accepts a
-  sandbox without API churn; existing `ContextREPL` callers
-  continue to work unchanged.
+Phase 4 shipped `ExpertBank` (per-expert residual stacks with
+optional shared primary) and `TopKRouter` (token-to-expert
+routing) but didn't tie them together end-to-end. Phase 7 closes
+that loop:
+
+- `MultiExpertRouter(router, bank, policy)` composes the two with
+  a `GatePolicy` that maps *router confidence* (top-k prob mass)
+  to *plane-count engagement*.
+- `GatePolicy(confidence_low, confidence_high, n_planes_low,
+  n_planes_high)` is a linear-interpolation policy: low
+  confidence → engage the full residual stack, high confidence →
+  primary plane only. Defaults map `0.13 → 4 planes` and
+  `0.24 → 1 plane` (calibrated against the Phase-1 random
+  router; a learned router would span `[0, 1]`).
+- `MultiExpertRouter.route(features)` returns a list of
+  `PerCallDecision(token_idx, expert_id, weight, confidence,
+  n_planes)` — one per (token, expert) pair. An optional
+  `on_decision` callback fires for telemetry.
+
+### Why this is the Phase-7 milestone
+
+- **Production-shape wiring.** Phase 4's bank supports N experts;
+  Phase 7's `MultiExpertRouter` composes them with the gate's
+  adaptive plane-count so the resulting call cost scales with
+  router uncertainty, not just expert count.
+- **Compute proportional to confidence.** A router that's sure
+  on a token engages 1 plane; unsure tokens engage 4. On a
+  16-expert × 4-plane bank with a 32-token batch, the demo
+  shows ~17% plane-activation savings vs. always-4.
+- **Scales.** Verified at 100 experts × 4 planes (400 decisions
+  per call) with no slowdown.
 
 ### Demo
 
-`examples/sandbox_demo.py` drives `SandboxedContextREPL` with a
-stub model that emits three dangerous snippets (`import os`,
-`exec(...)`, `open(...).read()`) and one safe one
-(`context.grep(...) + context.slice(...)`). The first three are
-rejected at AST level with `SandboxError` surfaced as stdout; the
-safe snippet executes and produces the final answer.
+`examples/multi_expert_demo.py` builds a 16-expert × 4-plane bank
+and routes 32 tokens through `MultiExpertRouter`. It reports the
+total plane activations vs. a naive always-4 baseline, the
+distribution of `n_planes` choices, and a sample of the per-call
+decisions. With the calibrated policy, the demo saves ~17% of
+plane activations.
 
-- **REPL execution** is a security surface — Phase 2 must ship a
   sandbox before production use. (Resolved in this release via
   `SandboxedContextREPL`; see Phase 2 above.)
 

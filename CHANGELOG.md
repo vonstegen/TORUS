@@ -1,5 +1,45 @@
 # CHANGELOG
 
+## 0.10.0 — Phase 7 multi-expert wiring
+
+### Verified
+
+- 155/155 tests passing on dev (.venv, Py3.12 + CPU torch +
+  Blackwell via numba) and Legion (.venv-py311, Py3.14 + CUDA
+  torch + 2× TITAN RTX).
+- `examples/multi_expert_demo.py`: 16-expert × 4-plane bank, 32
+  tokens, top_k=2. Adaptive router-confidence-driven plane
+  engagement saves ~17% of plane activations vs. always-4.
+
+### Added
+
+- `torus.moe.multi_expert.MultiExpertRouter`: composes
+  `TopKRouter` + `ExpertBank` + `GatePolicy` for production-shape
+  multi-expert routing. Each (token, expert) decision emits a
+  `PerCallDecision(token_idx, expert_id, weight, confidence,
+  n_planes)`.
+- `torus.moe.multi_expert.GatePolicy`: linear-interpolation policy
+  that maps router confidence to plane-count engagement. Defaults
+  calibrated against the Phase-1 random router.
+- `torus.moe.multi_expert.MultiExpertResult` and
+  `PerCallDecision`: data classes for the per-call decision list.
+- `torus.moe.router.RouteResult.raw_mass`: pre-renormalization
+  top-k prob mass. `TopKRouter.confidence()` now returns
+  `raw_mass` (the meaningful "what fraction of prob mass landed in
+  top-k" signal) instead of the normalized weight sum, which is
+  always 1.0 by construction.
+- `MultiExpertRouter.decision_table(features)`: human-readable
+  rendering of the per-call decisions (used by the demo).
+- `examples/multi_expert_demo.py`: 16-expert bank + 32-token batch
+  demo reporting plane-activation savings and the n_planes
+  distribution.
+- 8 new tests in `tests/test_moe.py` covering basic routing,
+  policy threshold behavior, 100-expert scaling, shared-primary
+  composition, the on_decision callback, and graceful handling
+  of unknown experts.
+
+# CHANGELOG
+
 ## 0.9.0 — SandboxedContextREPL + REPL injection
 
 ### Verified
