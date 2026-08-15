@@ -76,7 +76,7 @@ class HFAdapterConfig:
     )
     cache_dir: str | None = None
     device: str = "cpu"
-
+    attn_implementation: str | None = None  # "eager", "sdpa", "flash_attention_2"; None = model default
 
 def _make_forward_stub(ste: TernarySTE, qfn, *, transpose_weight: bool = False, bias_param=None, get_n_planes=lambda: 1):
     """Build a forward that re-applies the STE weights on every call.
@@ -87,7 +87,6 @@ def _make_forward_stub(ste: TernarySTE, qfn, *, transpose_weight: bool = False, 
     `bias_param` is an optional torch.nn.Parameter; if present, it's
     used as-is (no quantization) so the bias can stay fp32-trainable.
     `get_n_planes` is a zero-arg callable the patched forward
-    invokes to discover how many planes should contribute.
     """
     import torch as _torch  # local import to avoid module-level noise
     def fwd(x):
@@ -141,10 +140,12 @@ class HFStudentAdapter:
         _F = nn.functional
 
         dtype = getattr(torch, self.config.dtype)
+        kwargs: dict = {"torch_dtype": dtype, "cache_dir": self.config.cache_dir}
+        if self.config.attn_implementation is not None:
+            kwargs["attn_implementation"] = self.config.attn_implementation
         self.model = AutoModelForCausalLM.from_pretrained(
             self.config.model_name,
-            torch_dtype=dtype,
-            cache_dir=self.config.cache_dir,
+            **kwargs,
         ).to(self.config.device)
         self.model.eval()  # QAT/STE handles quantization
         self._ste_params: list[TernarySTE] = []
@@ -350,15 +351,16 @@ class HFTeacherAdapter:
         self.config = config or HFAdapterConfig()
         from transformers import AutoModelForCausalLM  # type: ignore
         dtype = getattr(torch, self.config.dtype)
+        kwargs: dict = {"torch_dtype": dtype, "cache_dir": self.config.cache_dir}
+        if self.config.attn_implementation is not None:
+            kwargs["attn_implementation"] = self.config.attn_implementation
         self.model = AutoModelForCausalLM.from_pretrained(
             self.config.model_name,
-            torch_dtype=dtype,
-            cache_dir=self.config.cache_dir,
+            **kwargs,
         ).to(self.config.device)
         self.model.eval()
         for p in self.model.parameters():
             p.requires_grad_(False)
-
     def forward(
         self,
         batch: DistillationBatch,

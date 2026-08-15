@@ -52,6 +52,10 @@ def run_one(
     args,
     *,
     model_name: str,
+    teacher_model_name: str | None = None,
+    target_modules: tuple[str, ...] = ("c_attn", "c_proj"),
+    device: str = "cuda",
+    dtype: str = "float32",
     n_steps: int,
     probe_rows: int,
     probe_residual: bool = False,
@@ -66,24 +70,32 @@ def run_one(
     """Run one distillation and return final stats."""
     cfg = HFAdapterConfig(
         model_name=model_name,
-        target_modules=("c_attn", "c_proj"),
-        dtype="float32",
+        target_modules=target_modules,
+        dtype=dtype,
+        device=device,
+        attn_implementation=getattr(args, 'attn_impl', 'eager'),
     )
-
-    print(f"[distill] loading student from {model_name!r} ...")
     student = HFStudentAdapter(cfg)
     if getattr(args, "perturb_residual", False):
-        import torch
         for rp in student.residual_params:
             rp.data.add_(torch.randn_like(rp) * 0.05)
         print(f"[distill]   perturbed residual weights with N(0, 0.05) noise")
     t0 = time.perf_counter()
-    teacher = HFTeacherAdapter(cfg)
+    if teacher_model_name is not None and teacher_model_name != model_name:
+        teacher_cfg = HFAdapterConfig(
+            model_name=teacher_model_name,
+            target_modules=(),  # teacher is FP, no quantization
+            dtype=dtype,
+            device=device,
+            attn_implementation=getattr(args, 'attn_impl', 'eager'),
+        )
+        teacher = HFTeacherAdapter(teacher_cfg)
+    else:
+        teacher = HFTeacherAdapter(cfg)
     print(f"[distill]   teacher loaded in {time.perf_counter() - t0:.1f}s")
 
     vocab = student.model.config.vocab_size
     data = make_data_iter(vocab, batch_size, seq_len, seed=seed)
-
     train_cfg = TrainingConfig(
         n_steps=n_steps,
         log_every=max(1, n_steps // 20),
@@ -149,6 +161,10 @@ def run_one(
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--model", default="sshleifer/tiny-gpt2")
+    p.add_argument("--teacher-model", default=None,
+                   help="Override the teacher model. Defaults to --model (self-distillation).")
+    p.add_argument("--target-modules", default="c_attn,c_proj",
+                   help="Comma-separated module names to quantize (e.g. q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj for OLMo)")
     p.add_argument("--n-steps", type=int, default=200)
     p.add_argument("--probe-rows", type=int, default=1,
                    help="finite-difference probes per module per step")
@@ -165,12 +181,14 @@ def main() -> None:
     p.add_argument("--label", default="default")
     p.add_argument("--probe-residual", action="store_true",
                    help="Also perturb STE.residual_weight at the same (r, c)")
-    p.add_argument("--perturb-residual", action="store_true",
-                   help="Initialize residual weights with random noise")
-    p.add_argument("--residual-lr-scale", type=float, default=0.1,
-                   help="Residual plane LR = learning_rate * this")
     p.add_argument("--residual-warmup", type=int, default=0,
                    help="Ramp residual LR from 0 -> target over this many steps")
+    p.add_argument("--device", default="cuda",
+                   help="Device for student/teacher (cpu, cuda, cuda:0, ...)")
+    p.add_argument("--dtype", default="float32",
+                   help="Torch dtype for model weights (float32, float16, bfloat16)")
+    p.add_argument("--attn-impl", default="eager",
+                   help="HF attn_implementation: eager, sdpa, flash_attention_2")
     args = p.parse_args()
     # Parse the curriculum: "1:50,2:150" -> [(1, 50), (2, 150)].
     planes = []
@@ -179,7 +197,6 @@ def main() -> None:
         plane, steps = entry.split(":")
         planes.append(int(plane))
         step_counts.append(int(steps))
-
     if sum(step_counts) < args.n_steps:
         # Extend the last stage to cover the remaining steps.
         step_counts[-1] += args.n_steps - sum(step_counts)
@@ -191,6 +208,10 @@ def main() -> None:
     result = run_one(
         args,
         model_name=args.model,
+        teacher_model_name=getattr(args, 'teacher_model', None),
+        target_modules=tuple(getattr(args, 'target_modules', 'c_attn,c_proj').split(',')),
+        device=getattr(args, 'device', 'cuda'),
+        dtype=getattr(args, 'dtype', 'float32'),
         n_steps=args.n_steps,
         probe_rows=args.probe_rows,
         probe_residual=getattr(args, 'probe_residual', False),
@@ -201,9 +222,6 @@ def main() -> None:
         seq_len=args.seq_len,
         log_path=log_path,
     )
-    print()
-    print(f"[distill] initial loss: {result.get('initial_loss'):.4f}")
-    print(f"[distill] final   loss: {result.get('final_loss'):.4f}")
     if result.get("initial_loss") is not None:
         delta = result["delta"]
         sign = "improved" if delta > 0 else "regressed"
