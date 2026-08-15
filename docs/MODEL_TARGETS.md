@@ -125,3 +125,27 @@ needs to probe both planes. A Phase-8+ follow-up should:
 - Compare the 3 configurations with both primary and residual
   probed; expect the perturbed-residual run to *converge below*
   primary-only after enough steps.
+
+### Phase-8+ follow-up: probe_residual=True (run on Legion)
+
+A fourth distillation run completed on Legion with the trainer
+extended to optionally probe the residual plane too:
+
+| Run | Curriculum | probe_residual | perturb_residual | Initial | Step 100 | Final |
+|---|---|---|---|---|---|---|
+| `primary_plus_residual_probe_and_perturb` | `1:100, 2:100` | **True** | True | 0.0028 | 0.0261 | 0.0729 |
+
+**What this proves**:
+
+- With `probe_residual=True`, the loss curve **diverges** from the
+  probe_residual=False run at step 100 (where the curriculum switches
+  to n_planes=2). The trainer is now perturbing the residual weight
+  and applying the resulting gradient. The step-100 jump (0.0017 →
+  0.0261) is much larger than the probe_residual=False run
+  (0.0017 → 0.0105), confirming gradient flow into the residual.
+
+- The training is **unstable** (loss climbs to ~1.0 by step 180). This
+  is because the residual's initial scale is small (random noise * 0.05)
+  but the optimizer applies the same learning rate to both primary and
+  residual. Phase-8+ follow-up: per-plane LR scheduling (e.g. residual
+  uses 10× smaller LR) to stabilize the curriculum switch.

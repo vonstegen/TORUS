@@ -56,6 +56,7 @@ class TrainingConfig:
     eval_every: int = 0           # 0 == skip eval
     grad_clip: float = 1.0        # global-norm clip
     probe_rows: int = 1            # finite-difference probes per module per step
+    probe_residual: bool = False   # also perturb STE.residual_weight when set
 
 
 @dataclass
@@ -114,6 +115,12 @@ class DistillationTrainer:
         if not student_params:
             raise ValueError("student_params must be a non-empty list of TernarySTE")
         self.student_params = student_params
+        # Parallel buffer for residual planes; filled by fit()
+        # with numpy views of each STE.residual_weight (or None).
+        # Initialized to a list of Nones so the post-step sync
+        # block can iterate without AttributeError when the
+        # trainer is used outside fit() (tests).
+        self._residual_np: list = [None] * len(student_params)
         self.forward_student = forward_student
         self.forward_teacher = forward_teacher
         self._data_iter = iter(data) if not hasattr(data, "__iter__") else iter(data)
@@ -199,13 +206,17 @@ class DistillationTrainer:
             # Copy the numpy buffers back to the torch STE weights
             # so the adapter sees the updated parameters on the
             # next forward pass.
-            for src, ste in zip(self._params_np, self.student_params):
+            for src, ste, rnp in zip(self._params_np, self.student_params, self._residual_np):
                 if hasattr(ste.weight, "copy_"):
                     #  bypasses the autograd graph and
                     # avoids RuntimeError on a leaf Variable that
                     # requires grad.
                     target = ste.weight.data if hasattr(ste.weight, "data") else ste.weight
                     target.copy_(_torch.as_tensor(src).to(target.device))
+                if rnp is not None and hasattr(ste, "residual_weight") and hasattr(ste.residual_weight, "data"):
+                    ste.residual_weight.data.copy_(
+                        _torch.as_tensor(rnp).to(ste.residual_weight.device)
+                    )
 
             if step % cfg.log_every == 0 or step == cfg.n_steps - 1:
                 stats = TrainingStats(
@@ -251,8 +262,10 @@ class DistillationTrainer:
         # can override.
         budget = getattr(self.train_cfg, "probe_rows", 1)
         rng_grad = np.random.default_rng(0)
+        probe_residual = getattr(self.train_cfg, "probe_residual", False)
         for i, p in enumerate(self.student_params):
             w = self._params_np[i]
+            rw = self._residual_np[i] if probe_residual else None
             n = w.shape[0]
             grad = np.zeros_like(w)
             rows = (
@@ -262,12 +275,21 @@ class DistillationTrainer:
             )
             for r in rows:
                 c = 0
-                original = w[r, c]
-                w[r, c] = original + eps
+                # Snapshot original values before perturbing.
+                original_w = w[r, c]
+                original_r = rw[r, c] if rw is not None else None
+                # Probe the primary plane.
+                w[r, c] = original_w + eps
+                if rw is not None:
+                    rw[r, c] = original_r + eps
                 plus, _ = self._loss_only(batch)
-                w[r, c] = original - eps
+                w[r, c] = original_w - eps
+                if rw is not None:
+                    rw[r, c] = original_r - eps
                 minus, _ = self._loss_only(batch)
-                w[r, c] = original
+                w[r, c] = original_w
+                if rw is not None:
+                    rw[r, c] = original_r
                 grad[r, c] = (plus - minus) / (2 * eps)
             grads.append(grad)
         return grads

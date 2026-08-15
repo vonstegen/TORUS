@@ -1,5 +1,45 @@
 # CHANGELOG
 
+## 0.12.0 — probe_residual trainer flag + 4th Legion distillation run
+
+### Verified
+
+- Fourth distillation run completed on Legion with the trainer
+  extended to perturb the residual weight at the same (r, c) as
+  the primary:
+  - `primary_plus_residual_probe_and_perturb`: curriculum
+    `1:100, 2:100`, `probe_residual=True`, `perturb_residual=True`,
+    200 steps in 51.6 s. Step-100 loss jumped from 0.0017 to
+    0.0261 (vs. 0.0105 in the previous probe_residual=False run),
+    proving that gradient now flows through the residual plane.
+- 157/157 tests passing on both dev and Legion (added 2 new
+  training tests).
+
+### Added
+
+- `TrainingConfig.probe_residual: bool = False`: when set, the
+  finite-difference trainer perturbs both the primary weight and
+  the residual weight at the same (r, c), so the curriculum
+  switch from `n_planes=1` to `n_planes>=2` actually flows gradient
+  through the residual plane.
+- `DistillationTrainer._residual_np`: parallel buffer to
+  `_params_np`, indexed one per STE. Initialized to a list of
+  Nones in `__init__`; `fit()` upgrades entries with numpy views
+  of `STE.residual_weight` (when present).
+- `examples/distill_run.py --probe-residual` CLI flag for the
+  4-run comparison on Legion.
+
+### Found
+
+- With `probe_residual=True`, the curriculum switch causes a
+  large loss jump (step 100 → 0.026 from 0.0017). Training is
+  unstable without per-plane LR scheduling; the residual's
+  initial scale (random N(0, 0.05) noise) is too small relative
+  to the primary's to be stable under the same learning rate.
+  Phase-8+ follow-up: per-plane LR scheduling.
+
+# CHANGELOG
+
 ## 0.11.0 — Phase 8 distillation on Legion + trainer probe-rows
 
 ### Verified

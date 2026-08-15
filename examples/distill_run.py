@@ -87,6 +87,7 @@ def run_one(
         log_every=max(1, n_steps // 20),
         learning_rate=1e-3,
         probe_rows=probe_rows,
+        probe_residual=getattr(args, 'probe_residual', False),
     )
     curriculum = CurriculumSchedule.progressive(
         steps_per_stage=curriculum_steps_per_stage,
@@ -155,6 +156,8 @@ def main() -> None:
     )
     p.add_argument("--log-dir", default="/tmp/torus_distill_logs")
     p.add_argument("--label", default="default")
+    p.add_argument("--probe-residual", action="store_true",
+                   help="Also perturb STE.residual_weight at the same (r, c)")
     args = p.parse_args()
 
     # Parse the curriculum: "1:50,2:150" -> [(1, 50), (2, 150)].
