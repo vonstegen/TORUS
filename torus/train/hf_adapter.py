@@ -185,10 +185,21 @@ class HFStudentAdapter:
                 else _nn_param(module.bias.detach().clone())
             )
 
-            # One zero tensor shared between the STE and the adapter's
-            # _residual_params list. Mutating either reference updates
-            # the other; this is what makes `n_planes=2` actually engage.
-            zero_param = _torch_t.zeros_like(weight)
+            # Non-zero initialization is required for the residual
+            # plane to ever receive a gradient: the ternary quantizer
+            # is `ternary_quantize(r) = scale * sign(r)` with `scale
+            # = max(mean(|r|), eps)`, and the threshold filter zeroes
+            # any output below `threshold * mean(|r|)`. At `r = 0`:
+            #   - `mean(|r|) = 0` so `scale = eps`
+            #   - `sign(r) = 0` so `codes = 0`
+            #   - `q_r = eps * 0 = 0`
+            # And `∂q_r/∂r = 0` through the dead zone, so the gradient
+            # w.r.t. residual_weight is identically zero at init.
+            # Small noise (sigma=0.01, well below the model's natural
+            # weight scale) breaks the dead zone without acting as a
+            # wholesale perturbation. The CLI flag `--perturb-residual`
+            # in `examples/distill_run.py` adds extra noise on top.
+            zero_param = nn.Parameter(_torch_t.randn_like(weight) * 0.01)
             ste = TernarySTE(
                 weight=_nn_param(weight),
                 group_size=min(128, weight.shape[0]),
@@ -258,6 +269,73 @@ class HFStudentAdapter:
         route = np.zeros((batch_t, 1), dtype=np.float32)
         return logits, hidden, route
 
+    def forward_with_grad(
+        self, batch: DistillationBatch, n_planes: int
+    ) -> tuple:
+        """Forward under `torch.enable_grad()`.
+
+        Same semantics as `forward` but returns torch tensors
+        (with autograd graph attached) instead of detached
+        numpy arrays. Use this from the trainer's autograd
+        gradient path.
+
+        Returns:
+            (student_logits_t, hidden_t_or_None, route_np,
+             primary_weights_list, residual_weights_list)
+        """
+        import torch
+        self._current_n_planes = int(n_planes)
+        # Copy STE weights into patched modules under no_grad.
+        for (ste, bias_param), target in zip(
+            zip(self._ste_params, self._bias_params), self._patched_modules
+        ):
+            module, _name = target
+            with torch.no_grad():
+                if module.weight.shape == ste.weight.shape:
+                    module.weight.copy_(ste.weight)
+                elif module.weight.shape == tuple(ste.weight.shape[::-1]):
+                    module.weight.copy_(ste.weight.t())
+                if module.bias is not None and bias_param is not None:
+                    module.bias.copy_(bias_param)
+
+        # Forward under enable_grad so autograd can flow.
+        with torch.enable_grad():
+            ids = torch.as_tensor(
+                batch.inputs, dtype=torch.long, device=self.config.device
+            )
+            out = self.model(input_ids=ids, output_hidden_states=True)
+            student_logits_t = out.logits
+            hidden_t = (
+                out.hidden_states[-1] if out.hidden_states is not None else None
+            )
+
+        batch_t = (
+            batch.inputs.shape[0]
+            if hasattr(batch.inputs, "shape")
+            else len(batch.inputs)
+        )
+        route_np = np.zeros((batch_t, 1), dtype=np.float32)
+        primary_weights = [ste.weight for ste in self._ste_params]
+        residual_weights = [
+            getattr(ste, "residual_weight", None) for ste in self._ste_params
+        ]
+        return student_logits_t, hidden_t, route_np, primary_weights, residual_weights
+
+    def forward_teacher_torch(self, batch: DistillationBatch) -> "torch.Tensor":
+        """Forward the teacher, returning torch logits on the same device."""
+        import torch
+        with torch.no_grad():
+            ids = torch.as_tensor(
+                batch.inputs, dtype=torch.long, device=self.config.device
+            )
+            # The adapter doesn't actually carry a separate teacher
+            # model; the student is also the teacher in the autograd
+            # sense. We return the student's *un-perturbed* output.
+            # In a real training run the trainer would override this
+            # with the frozen teacher adapter.
+            out = self.model(input_ids=ids)
+            return out.logits
+
 
 class HFTeacherAdapter:
     """Frozen, full-precision teacher mirror of the same HF model.
@@ -303,6 +381,21 @@ class HFTeacherAdapter:
         )
         route = np.zeros((batch_t, 1), dtype=np.float32)
         return logits, hidden, route
+
+    def forward_torch(self, batch: DistillationBatch):
+        """Autograd-friendly teacher forward.
+
+        Runs the frozen FP teacher under `enable_grad` so the
+        autograd path can compute KL(student || teacher) end-to-end.
+        Teacher parameters are frozen (requires_grad=False), so
+        gradients flow THROUGH the teacher forward to the student
+        logits, not into the teacher weights themselves.
+        """
+        torch = _require_torch()
+        ids = torch.as_tensor(batch.inputs, dtype=torch.long, device=self.config.device)
+        with torch.enable_grad():
+            out = self.model(input_ids=ids, output_hidden_states=True)
+        return out.logits
 
 
 def _nn_param(t):

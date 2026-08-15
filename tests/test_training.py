@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Iterator
 
 import numpy as np
+import torch
 import pytest
 
 from torus.quant import ternary_quantize
@@ -465,3 +466,55 @@ def test_trainer_residual_lr_scale_smoke() -> None:
         ),
     ).fit()
     assert len(history) == 2
+
+
+def test_trainer_autograd_path_uses_torch_grads_when_adapter_supports() -> None:
+    """When the student adapter has `forward_with_grad`, the trainer
+    uses torch.autograd.grad for the gradient (not finite differences).
+    """
+    import torch
+
+    class _AutogradStudent:
+        def __init__(self):
+            self.weight = torch.nn.Parameter(
+                torch.randn(8, 32) * 0.05, requires_grad=True,
+            )
+            self.residual_weight = torch.nn.Parameter(
+                torch.zeros(8, 32), requires_grad=True,
+            )
+
+        def forward_with_grad(self, batch, n_planes):
+            # Cheap "forward": just return the weight as a fake logits.
+            return self.weight, None, np.zeros((1, 1), dtype=np.float32), \
+                [self.weight], [self.residual_weight]
+        def __call__(self, batch, n_planes):
+            return self.forward(batch, n_planes)
+
+        def forward(self, batch, n_planes):
+            return self.weight.detach().numpy(), None, np.zeros((1, 1), dtype=np.float32)
+
+    class _Teacher:
+        # Shape matches the student's "logits" (8, 32) so the KL loss
+        # can compute a finite value. The teacher's forward_torch path
+        # now runs KL, which requires shape agreement (the legacy MSE
+        # path broadcast freely and was a stand-in, not a real loss).
+        def forward(self, batch, n_planes):
+            return np.zeros((8, 32), dtype=np.float32), None, np.zeros((1, 1), dtype=np.float32)
+        def forward_teacher_torch(self, batch):
+            return torch.zeros((8, 32), dtype=torch.float32)
+        def forward_torch(self, batch):
+            return torch.zeros((8, 32), dtype=torch.float32, requires_grad=False)
+        def __call__(self, batch, n_planes):
+            return self.forward(batch, n_planes)
+
+    ste = _AutogradStudent()
+    teacher = _Teacher()
+    history = DistillationTrainer(
+        student_params=[ste],
+        forward_student=ste,
+        forward_teacher=teacher,
+        data=iter([DistillationBatch(inputs=np.zeros((1, 8), dtype=np.float32))] * 5),
+        loss_cfg=DistillationConfig(),
+        train_cfg=TrainingConfig(n_steps=3, log_every=1),
+    ).fit()
+    assert len(history) == 3

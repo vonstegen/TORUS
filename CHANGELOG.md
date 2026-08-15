@@ -1,7 +1,55 @@
 # CHANGELOG
 
-## 0.13.0 — Per-plane LR scaling + 5th Legion distillation run
+## 0.14.0 — Phase 3 trainer plumbing fixes + default residual init
 
+### Fixed (audit Bugs 1–7)
+
+- `DistillationTrainer.fit()` now populates `self._residual_np` from
+  each STE's `residual_weight`. Without this, the residual SGD was
+  permanently skipped and the residual plane was never optimized
+  (Bug 1, audit).
+- `HFStudentAdapter._attach_ste` wraps the residual weight as
+  `torch.nn.Parameter` so `torch.autograd.grad` can flow into it
+  (Bug 3, audit).
+- `_numerical_grads` now probes a configurable column budget
+  alongside rows; the previous code hard-coded `c = 0` and only
+  ever updated a single weight per module per step (Bug 2, audit).
+  New `TrainingConfig.probe_cols: int = 0` (0 = same as
+  `probe_rows`); CLI flag `--probe-cols`.
+- `_autograd_grads` now computes real KL(student || teacher)
+  against the frozen `HFTeacherAdapter.forward_torch` instead of
+  self-MSE between identical student logits (Bug 4, audit). New
+  `kl_divergence_torch` in `torus.train.losses`.
+- `_loss_only` accepts an explicit `n_planes` argument so the
+  finite-difference probe measures the loss surface the
+  curriculum is actually stepping on (Bug 5, audit).
+- Post-step sync uses `hasattr(ste.residual_weight, "copy_")`
+  rather than `hasattr(ste.residual_weight, "data")` — numpy
+  arrays expose `.data` as a `memoryview` in NumPy ≥ 1.20 and
+  lack `.copy_`, which crashed the sync under the toy
+  numerical-grad tests.
+- Residual SGD built whenever any STE has a `residual_weight`
+  (previously gated on `probe_residual=True`, which only matters
+  for the numerical probe path and silently discarded the
+  autograd-path residual gradient).
+- Residual gradient list built parallel to `_residual_np` using
+  positional indexing. The previous code used `list.index(r)`
+  which always returned the first match and broke with multiple
+  residuals of different shapes.
+
+### Added
+
+- `HFStudentAdapter` initializes `residual_weight` as
+  `N(0, 0.01)` rather than identically zero. The ternary
+  quantizer's threshold filter creates a dead zone at `r = 0`
+  where both `q_r = 0` and `∂q_r/∂r = 0`, so a zero-init
+  residual never receives a gradient and the plane-2 curriculum
+  stage is structurally incapable of learning. Small noise
+  breaks the dead zone without acting as a wholesale
+  perturbation. The CLI flag `--perturb-residual` adds extra
+  noise on top.
+
+## 0.13.0 — Per-plane LR scaling + 5th Legion distillation run
 ### Verified
 
 - Fifth distillation run completed on Legion with per-plane LR:

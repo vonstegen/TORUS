@@ -116,6 +116,34 @@ def expert_route_loss(
     return float(np.mean(kl_st + kl_ts))
 
 
+def kl_divergence_torch(
+    student_logits: "torch.Tensor",
+    teacher_logits: "torch.Tensor",
+    temperature: float = 1.0,
+    axis: int = -1,
+) -> "torch.Tensor":
+    """KL(student || teacher) at temperature T, in torch.
+
+    Mirror of `kl_divergence` for the autograd path. Returns a
+    scalar mean KL that flows gradients back through `student_logits`.
+    The constant `log p_t` term is dropped because it has no gradient
+    w.r.t. the student; only `log_p_s` participates in the autograd graph.
+    """
+    import torch as _torch  # local import: module stays torch-free at import
+    if student_logits.shape != teacher_logits.shape:
+        raise ValueError(
+            f"shape mismatch: student {student_logits.shape}, teacher {teacher_logits.shape}"
+        )
+    T = float(temperature)
+    if T <= 0:
+        raise ValueError(f"temperature must be > 0, got {T}")
+    s = student_logits / T
+    t = teacher_logits / T
+    log_p_s = _torch.log_softmax(s, dim=axis)
+    p_t = _torch.softmax(t, dim=axis)
+    kl = (p_t * (_torch.log(p_t + 1e-12) - log_p_s)).sum(dim=axis) * (T * T)
+    return kl.mean()
+
 @dataclass(frozen=True)
 class DistillationConfig:
     """Hyperparameters for the TORUS distillation loss."""

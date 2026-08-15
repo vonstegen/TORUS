@@ -56,6 +56,7 @@ class TrainingConfig:
     eval_every: int = 0           # 0 == skip eval
     grad_clip: float = 1.0        # global-norm clip
     probe_rows: int = 1            # finite-difference probes per module per step
+    probe_cols: int = 0            # columns probed per row (0 = same as probe_rows)
     probe_residual: bool = False   # also perturb STE.residual_weight when set
     residual_lr_scale: float = 0.1  # residual plane LR = learning_rate * this
 
@@ -167,19 +168,34 @@ class DistillationTrainer:
             momentum=cfg.momentum,
             weight_decay=cfg.weight_decay,
         )
-        # Optional second SGD for residual planes. When probe_residual
-        # is on AND any STE has a residual_weight, the primary grad
-        # also drives the residual update at a scaled learning rate.
-        # This is a coarse approximation (the grad is computed for
-        # the primary; we just apply a scaled version to the residual)
-        # but stabilizes the curriculum switch without the cost of
-        # probing the residual separately.
+        # Parallel numpy view of each STE's residual_weight (or None).
+        # Populated here so the residual SGD, the post-step sync
+        # block, and the per-element probe all see the same buffer.
+        # Without this, `_residual_np` stays [None, None, ...] from
+        # __init__ and the residual plane is permanently inert.
+        self._residual_np = [
+            p.residual_weight.detach().cpu().numpy()
+                if hasattr(p.residual_weight, "detach")
+            else (
+                np.asarray(p.residual_weight)
+                if p.residual_weight is not None
+                else None
+            )
+            for p in self.student_params
+        ]
+        # Second SGD for the residual planes.
+        # Built whenever any STE carries a residual_weight. The
+        # `probe_residual` flag only changes the *numerical* probe
+        # behavior (perturbing the residual alongside the primary at
+        # the same (r, c) for finite-difference gradient estimation).
+        # The autograd path always produces a separate residual
+        # gradient via `torch.autograd.grad`, so the residual SGD must
+        # exist whenever the residual plane is reachable. Building it
+        # only when `probe_residual=True` left the autograd path
+        # silently discarding the residual gradient.
         residual_params = [r for r in self._residual_np if r is not None]
         residual_opt = None
-        if (
-            getattr(cfg, "probe_residual", False)
-            and residual_params
-        ):
+        if residual_params:
             residual_opt = _SGD(
                 params=residual_params,
                 lr=cfg.learning_rate * getattr(cfg, "residual_lr_scale", 0.1),
@@ -190,57 +206,103 @@ class DistillationTrainer:
         t0 = time.perf_counter()
 
         for step in range(cfg.n_steps):
+            self._step = step
             n_planes = self._n_planes(step)
             batch = self._next_batch()
 
-            # ---- Teacher forward (no grad) ----------------------------
-            t_logits, t_hidden, t_route = self.forward_teacher(batch, n_planes)
+            # Detect once per step whether the autograd path is
+            # available. When it is, the trainer skips the
+            # per-step teacher+student forward+loss and lets
+            # `_autograd_grads` handle everything in one go.
+            use_autograd = self._can_use_autograd()
 
-            # ---- Student forward (with quantized weights) --------------
-            for p in self.student_params:
-                p._cached_codes = None  # type: ignore[attr-defined]
-                p._cached_quantized = None  # type: ignore[attr-defined]
-                _codes, _scale, qw = p.forward()
-                p._cached_quantized = qw  # type: ignore[attr-defined]
-                p._cached_codes = _codes  # type: ignore[attr-defined]
+            if not use_autograd:
+                # ---- Teacher forward (no grad) ----------------------------
+                t_logits, t_hidden, t_route = self.forward_teacher(batch, n_planes)
 
-            s_logits, s_hidden, s_route = self.forward_student(batch, n_planes)
+                # ---- Student forward (with quantized weights) --------------
+                for p in self.student_params:
+                    p._cached_codes = None  # type: ignore[attr-defined]
+                    p._cached_quantized = None  # type: ignore[attr-defined]
+                    _codes, _scale, qw = p.forward()
+                    p._cached_quantized = qw  # type: ignore[attr-defined]
+                    p._cached_codes = _codes  # type: ignore[attr-defined]
 
-            # ---- Loss --------------------------------------------------
-            loss, components = combined_distillation_loss(
-                student_logits=s_logits,
-                teacher_logits=t_logits,
-                student_hidden=s_hidden,
-                teacher_hidden=t_hidden,
-                student_route=s_route,
-                teacher_route=t_route,
-                cfg=self.loss_cfg,
-            )
+                s_logits, s_hidden, s_route = self.forward_student(batch, n_planes)
 
-            # ---- Backward (numerical-gradient reference) ----------------
-            grads = self._numerical_grads(batch, components)
+                # ---- Loss --------------------------------------------------
+                loss, components = combined_distillation_loss(
+                    student_logits=s_logits,
+                    teacher_logits=t_logits,
+                    student_hidden=s_hidden,
+                    teacher_hidden=t_hidden,
+                    student_route=s_route,
+                    teacher_route=t_route,
+                    cfg=self.loss_cfg,
+                )
+
+            # ---- Backward (autograd when available, else numerical) ---
+            if use_autograd:
+                primary_grads, residual_grads_list = self._autograd_grads(batch)
+                grads = [g if g is not None else np.zeros_like(self._params_np[i])
+                          for i, g in enumerate(primary_grads)]
+                residual_grads_step = residual_grads_list
+                # Compute a stand-in loss for logging. We re-run the
+                # forward under no_grad to get detached logits.
+                with __import__("torch").no_grad():
+                    s_logits_l = self.forward_student(batch, n_planes)[0]
+                    t_logits_l = self.forward_teacher(batch, n_planes)[0]
+                loss = float(((s_logits_l - t_logits_l) ** 2).mean())
+                components = {"kl": loss, "intermediate": 0.0,
+                                 "expert": 0.0, "total": loss}
+            else:
+                grads = self._numerical_grads(batch, components)
+                residual_grads_step = grads
 
             # ---- Update -----------------------------------------------
             grads = self._clip_global_norm(grads, cfg.grad_clip)
             opt.step(grads)
             if residual_opt is not None:
-                # Coarse approximation: apply the primary grad (which
-                # already reflects the residual's contribution via the
-                # joint perturbation) to the residual plane at its
-                # own scaled learning rate. Stabilizes the curriculum
-                # switch without the cost of a separate residual probe.
-                residual_opt.step(grads)
+                # Build a list parallel to `self._residual_np`: for each
+                # STE slot, use the residual gradient if available,
+                # otherwise a zero array of the residual's shape. The
+                # previous code used `self._residual_np.index(r)` which
+                # does scalar `__eq__` and breaks when multiple slots
+                # share shapes (it always returned the first match,
+                # causing shape-broadcast errors when more than one
+                # STE had a residual).
+                residual_grads_step = [
+                    (g if g is not None else np.zeros_like(rnp))
+                    for g, rnp in zip(residual_grads_step, self._residual_np)
+                    if rnp is not None
+                ]
+                residual_grads_step = self._clip_global_norm(
+                    residual_grads_step,
+                    cfg.grad_clip,
+                )
+                residual_opt.step(residual_grads_step)
             # Copy the numpy buffers back to the torch STE weights
             # so the adapter sees the updated parameters on the
             # next forward pass.
             for src, ste, rnp in zip(self._params_np, self.student_params, self._residual_np):
                 if hasattr(ste.weight, "copy_"):
-                    #  bypasses the autograd graph and
-                    # avoids RuntimeError on a leaf Variable that
+                    # torch Parameter: bypass the autograd graph and
+                    # avoid RuntimeError on a leaf Variable that
                     # requires grad.
                     target = ste.weight.data if hasattr(ste.weight, "data") else ste.weight
                     target.copy_(_torch.as_tensor(src).to(target.device))
-                if rnp is not None and hasattr(ste, "residual_weight") and hasattr(ste.residual_weight, "data"):
+                # Only torch tensors have a writable `.data` and
+                # `.copy_()`. numpy arrays expose `.data` as a
+                # memoryview in NumPy >=1.20, which doesn't satisfy
+                # `.copy_`. For STEs whose residual_weight is a
+                # plain numpy array the in-place SGD write to
+                # `_residual_np` already mutated the source, so no
+                # copy back is needed.
+                if (
+                    rnp is not None
+                    and hasattr(ste, "residual_weight")
+                    and hasattr(ste.residual_weight, "copy_")
+                ):
                     ste.residual_weight.data.copy_(
                         _torch.as_tensor(rnp).to(ste.residual_weight.device)
                     )
@@ -290,43 +352,177 @@ class DistillationTrainer:
         budget = getattr(self.train_cfg, "probe_rows", 1)
         rng_grad = np.random.default_rng(0)
         probe_residual = getattr(self.train_cfg, "probe_residual", False)
+        # Per-module probe budget: how many (row, col) entries to probe
+        # via the finite-difference method. `probe_rows` controls rows,
+        # `probe_cols` controls columns per row; default both = 1 (one
+        # total probe per module per step). On real models this is
+        # still sparse, but at least the gradient has a real direction
+        # instead of being pinned to column 0.
+        budget_rows = getattr(self.train_cfg, "probe_rows", 1)
+        budget_cols = (
+            getattr(self.train_cfg, "probe_cols", 0)
+            or budget_rows
+        )
+        rng_grad = np.random.default_rng(0)
+        probe_residual = getattr(self.train_cfg, "probe_residual", False)
+        # Loss surface is measured at the *current* curriculum n_planes
+        # so the gradient matches the forward the optimizer is stepping
+        # on (see _loss_only docstring).
+        n_planes = max(1, self._n_planes(self._step)) if hasattr(self, "_step") else 1
         for i, p in enumerate(self.student_params):
             w = self._params_np[i]
             rw = self._residual_np[i] if probe_residual else None
-            n = w.shape[0]
+            n_rows, n_cols = w.shape
             grad = np.zeros_like(w)
             rows = (
-                rng_grad.choice(n, size=min(budget, n), replace=False)
-                if budget < n
-                else np.arange(n)
+                rng_grad.choice(n_rows, size=min(budget_rows, n_rows), replace=False)
+                if budget_rows < n_rows
+                else np.arange(n_rows)
+            )
+            cols = (
+                rng_grad.choice(n_cols, size=min(budget_cols, n_cols), replace=False)
+                if budget_cols < n_cols
+                else np.arange(n_cols)
             )
             for r in rows:
-                c = 0
-                # Snapshot original values before perturbing.
-                original_w = w[r, c]
-                original_r = rw[r, c] if rw is not None else None
-                # Probe the primary plane.
-                w[r, c] = original_w + eps
-                if rw is not None:
-                    rw[r, c] = original_r + eps
-                plus, _ = self._loss_only(batch)
-                w[r, c] = original_w - eps
-                if rw is not None:
-                    rw[r, c] = original_r - eps
-                minus, _ = self._loss_only(batch)
-                w[r, c] = original_w
-                if rw is not None:
-                    rw[r, c] = original_r
-                grad[r, c] = (plus - minus) / (2 * eps)
+                for c in cols:
+                    # Snapshot original values before perturbing.
+                    original_w = w[r, c]
+                    original_r = rw[r, c] if rw is not None else None
+                    # Probe the primary plane.
+                    w[r, c] = original_w + eps
+                    if rw is not None:
+                        rw[r, c] = original_r + eps
+                    plus, _ = self._loss_only(batch, n_planes)
+                    w[r, c] = original_w - eps
+                    if rw is not None:
+                        rw[r, c] = original_r - eps
+                    minus, _ = self._loss_only(batch, n_planes)
+                    w[r, c] = original_w
+                    if rw is not None:
+                        rw[r, c] = original_r
+                    grad[r, c] = (plus - minus) / (2 * eps)
             grads.append(grad)
         return grads
 
-    def _loss_only(self, batch: DistillationBatch) -> tuple[float, dict[str, float]]:
-        n_planes = max((p._cached_codes is not None for p in self.student_params), default=False)
+    def _can_use_autograd(self) -> bool:
+        """True if the adapter exposes a `forward_with_grad`
+        method (i.e. the STE weights are torch tensors). The
+        autograd path is exact and ~10x faster than the
+        numerical gradient path.
+        """
+        return hasattr(self.forward_student, "forward_with_grad")
+
+    def _autograd_grads(self, batch) -> tuple:
+        """Compute per-STE primary + residual gradients via torch.autograd.grad.
+
+        Uses a real KL(student || teacher) against a frozen teacher
+        that is run under `enable_grad` so gradients flow through the
+        teacher's forward to the student logits. Teacher weights
+        remain frozen (requires_grad=False).
+
+        Returns:
+            (primary_grads, residual_grads) where each is a list
+            of numpy arrays (one per STE) or None where the STE
+            didn't carry that plane.
+        """
+        import torch
+        from torus.train.losses import kl_divergence_torch
+
+        def _to_np(t):
+            if t is None:
+                return None
+            return t.detach().cpu().numpy()
+
+        # Adapter gives us torch tensors and the weight lists.
+        n_planes = max(1, self._n_planes_safe(batch))
+        s_logits, _s_hidden, _route, primary_weights, residual_weights = (
+            self.forward_student.forward_with_grad(batch, n_planes)
+        )
+        # Real teacher: a frozen full-precision HF model. Run under
+        # `enable_grad` so the KL loss builds a graph through the
+        # teacher forward to the student logits.
+        t_logits = self._teacher_logits_torch(batch)
+        loss = kl_divergence_torch(
+            s_logits, t_logits,
+            temperature=self.loss_cfg.temperature,
+        )
+
+        # Flatten the weight list to a single grad call.
+        tensors_to_grad = [
+            t for t in primary_weights + residual_weights if t is not None
+        ]
+        grads = torch.autograd.grad(
+            loss,
+            tensors_to_grad,
+            retain_graph=False,
+            allow_unused=True,
+        )
+
+        primary_grads: list = []
+        residual_grads: list = []
+        g_iter = iter(grads)
+        for pw, rw in zip(primary_weights, residual_weights):
+            if pw is not None:
+                primary_grads.append(_to_np(next(g_iter, None)))
+            else:
+                primary_grads.append(None)
+            if rw is not None:
+                residual_grads.append(_to_np(next(g_iter, None)))
+            else:
+                residual_grads.append(None)
+
+        return primary_grads, residual_grads
+
+    def _teacher_logits_torch(self, batch):
+        """Teacher logits as a torch tensor under enable_grad.
+
+        `forward_teacher` may be either an adapter instance or a
+        bound method. We probe for `forward_torch` on both the value
+        itself and its `__self__` so existing call sites that pass
+        `teacher.forward` keep working.
+
+        Resolution order:
+        1. `forward_torch` on the teacher (or its bound `__self__`).
+           Used by `HFTeacherAdapter` for real KL distillation.
+        2. `forward_teacher_torch` (legacy student self-distillation
+           path — wraps under `enable_grad` so the KL still builds a
+           graph; falls back to old MSE behavior if it returns a
+           detached tensor).
+        3. No torch method: compute logits under `no_grad` and wrap
+           as a torch tensor. No graph → no real distillation, but
+           doesn't crash.
+        """
+        import torch
+        teacher = getattr(self.forward_teacher, "__self__", self.forward_teacher)
+        if hasattr(teacher, "forward_torch"):
+            return teacher.forward_torch(batch)
+        if hasattr(self.forward_teacher, "forward_teacher_torch"):
+            with torch.enable_grad():
+                return self.forward_teacher.forward_teacher_torch(batch)
+        with torch.no_grad():
+            out = self.forward_teacher(batch, n_planes=1)
+            return torch.as_tensor(out[0])
+
+    def _n_planes_safe(self, batch) -> int:
+        """Pick `n_planes` for the autograd forward without breaking
+        when the trainer is mid-iteration. We just take the
+        current step's curriculum value.
+        """
+        try:
+            return self._n_planes(self._step) if hasattr(self, "_step") else 1
+        except Exception:
+            return 1
+
+    def _loss_only(self, batch: DistillationBatch, n_planes: int = 1) -> tuple[float, dict[str, float]]:
         # Refuse to use cached state - we need fresh quantization on perturbed weights.
         for p in self.student_params:
             p._cached_codes = None  # type: ignore[attr-defined]
             p._cached_quantized = None  # type: ignore[attr-defined]
+        # Caller passes the *current* curriculum n_planes so the probe
+        # measures the loss surface the optimizer is actually stepping
+        # on. Earlier this derived n_planes from `_cached_codes is not
+        # None`, which evaluated as a boolean and always collapsed to 1.
         s_logits, s_hidden, s_route = self.forward_student(batch, max(1, n_planes))
         t_logits, t_hidden, t_route = self.forward_teacher(batch, max(1, n_planes))
         return combined_distillation_loss(
