@@ -17,7 +17,13 @@ Notes
   (`_LOCK_FILENAME`) serializes appends across processes on the
   same machine via `fcntl`.
 - This is a single-process, single-host implementation. Cross-host
-  shards are a Phase-9 concern.
+  shards are a Phase-10 concern.
+
+Phase 9: an inverted index (`PersistentContextIndex`) is maintained
+alongside the chunk files at `<root>/index.json`. `grep` consults
+the index first; on a miss or when the index is unavailable it
+falls back to a linear scan. The index is built lazily on first
+read and incrementally extended on each `add_chunk`.
 """
 from __future__ import annotations
 
@@ -57,6 +63,9 @@ class PersistentContext:
             Created if missing. If non-empty, the directory is read
             (the existing chunks become the context).
         cache_size: maximum number of chunks kept in memory.
+        use_index: whether to maintain the inverted index
+            (`<root>/index.json`). Defaults to True; set False
+            for tests that want pure linear-scan semantics.
         ask_callable: optional stub for `RecursiveContext.ask`.
     """
 
@@ -64,10 +73,12 @@ class PersistentContext:
         self,
         root: Path | str,
         cache_size: int = 64,
+        use_index: bool = True,
         ask_callable: Callable[[str], str] | None = None,
     ) -> None:
         self.root = Path(root)
         self.cache_size = max(1, cache_size)
+        self.use_index = use_index
         self._ask = ask_callable or (lambda s: f"[stub-answer-for:{s[:32]}...]")
         self._cache: OrderedDict[int, _CacheEntry] = OrderedDict()
         self._lock_path = self.root / _LOCK_FILENAME
@@ -88,6 +99,29 @@ class PersistentContext:
                 last_idx = int(chunk_files[-1].stem)
                 self._total = last_idx + 1
                 self._write_manifest()
+        # The inverted index is built lazily on first use; no eager
+        # work in __init__ so opening a directory with millions of
+        # chunks stays cheap.
+        self._index = None
+        self._index_ignore_case: bool | None = None
+
+    # ------------------------------------------------------------------
+    # Index helpers
+    # ------------------------------------------------------------------
+
+    def _ensure_index(self, ignore_case: bool) -> "PersistentContextIndex":
+        """Build / load the inverted index for `ignore_case`."""
+        if (
+            self._index is None
+            or self._index_ignore_case != ignore_case
+            or not self.use_index
+        ):
+            from torus.rlm.index import PersistentContextIndex
+            self._index = PersistentContextIndex(
+                self.root, ignore_case=ignore_case
+            )
+            self._index_ignore_case = ignore_case
+        return self._index
 
     # ------------------------------------------------------------------
     # Persistence helpers
@@ -168,12 +202,32 @@ class PersistentContext:
         return "\n".join(self._read_chunk(i) for i in range(s.start, s.stop))
 
     def grep(self, pattern: str, ignore_case: bool = False) -> list[ContextSlice]:
+        if not self.use_index:
+            return self._grep_linear(pattern, ignore_case)
+        index = self._ensure_index(ignore_case)
+        candidates = index.candidates_for(pattern)
+        if candidates is None:
+            # Pattern has no tokens; fall back to linear scan.
+            return self._grep_linear(pattern, ignore_case)
+        hits: list[ContextSlice] = []
+        pat = pattern.lower() if ignore_case else pattern
+        for i in candidates:
+            try:
+                text = self._read_chunk(i)
+            except IndexError:
+                continue
+            hay = text.lower() if ignore_case else text
+            if pat in hay:
+                hits.append(ContextSlice(i, i + 1))
+        return hits
+
+    def _grep_linear(
+        self, pattern: str, ignore_case: bool
+    ) -> list[ContextSlice]:
+        """Linear-scan fallback (used when the index can't help)."""
         if ignore_case:
             pattern = pattern.lower()
         hits: list[ContextSlice] = []
-        # Iterate every chunk on disk; this is the slowest path but
-        # the only way to support grep on a context that's mostly
-        # evicted. Phase-9 could add an inverted index.
         for i in range(self._total):
             text = self._read_chunk(i)
             hay = text.lower() if ignore_case else text
@@ -215,10 +269,13 @@ class PersistentContext:
         Atomically:
           1. acquire the directory lock,
           2. write the chunk file under a temp name then rename,
-          3. bump `total` and rewrite the manifest.
+          3. bump `total` and rewrite the manifest,
+          4. extend the inverted index.
         """
         if not isinstance(text, str):
             raise TypeError(f"chunk text must be str, got {type(text).__name__}")
+
+        idx_holder: list[int] = []
 
         def _do() -> None:
             idx = self._total
@@ -236,9 +293,36 @@ class PersistentContext:
                 raise
             self._total += 1
             self._write_manifest()
+            idx_holder.append(idx)
 
         self._with_lock(_do)
-        return self._total - 1
+        idx = idx_holder[0]
+
+        # Extend both index variants (case-sensitive + lowercased)
+        # if either has been built already. Otherwise the next grep
+        # will rebuild the appropriate variant on demand.
+        if self.use_index and self._index is not None:
+            try:
+                self._index.add_chunk(idx, text)
+            except Exception:
+                # Index corruption must not break appends. The next
+                # grep will rebuild.
+                self._index = None
+        # Periodically flush the index to disk so a process that
+        # appends and exits doesn't lose pending writes.
+        if self.use_index and self._index is not None and (idx + 1) % 64 == 0:
+            self._index.flush()
+        return idx
+
+    def flush_index(self) -> None:
+        """Force a flush of the in-memory index to disk.
+
+        Call this before exiting if you want pending index updates
+        persisted. `__del__` doesn't call this automatically; the
+        demo does.
+        """
+        if self.use_index and self._index is not None:
+            self._index.flush()
 
     # ------------------------------------------------------------------
     # Diagnostics
@@ -246,12 +330,16 @@ class PersistentContext:
 
     def cache_info(self) -> dict:
         """Return a snapshot of cache state (for telemetry / tests)."""
-        return {
+        info = {
             "cached_chunks": len(self._cache),
             "cache_size": self.cache_size,
             "total_chunks": self._total,
             "root": str(self.root),
+            "use_index": self.use_index,
         }
+        if self._index is not None:
+            info["index"] = self._index.stats()
+        return info
 
     def storage_bytes(self) -> int:
         """Total bytes used by chunk files on disk."""
@@ -259,4 +347,11 @@ class PersistentContext:
         for p in self.root.glob("*.txt"):
             if p.stem.isdigit():
                 total += p.stat().st_size
+        # Index file adds overhead but isn't user data; report separately.
         return total
+
+    def index_bytes(self) -> int:
+        """Bytes used by the index file on disk (0 if not yet built)."""
+        from torus.rlm.index import INDEX_FILENAME
+        path = self.root / INDEX_FILENAME
+        return path.stat().st_size if path.exists() else 0

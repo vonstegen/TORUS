@@ -385,3 +385,188 @@ def test_prime_agent_loop_works_with_persistent_context() -> None:
         assert "simd.py" in result.answer
     finally:
         shutil.rmtree(root)
+
+
+# --------------------------------------------------------------------------
+# PersistentContextIndex (Phase 9)
+# --------------------------------------------------------------------------
+
+
+def test_index_built_on_first_read() -> None:
+    """Opening a context with existing chunks builds the index lazily."""
+    from torus.rlm import PersistentContext, PersistentContextIndex
+    root = _tmp_root()
+    try:
+        ctx = PersistentContext(root)
+        ctx.add_chunk("alpha beta gamma")
+        ctx.add_chunk("delta epsilon")
+        idx = PersistentContextIndex(root, ignore_case=False)
+        s = idx.stats()
+        assert s["chunks_indexed"] == 2
+        # Tokens: alpha, beta, gamma, delta, epsilon (5).
+        assert s["tokens"] == 5
+    finally:
+        shutil.rmtree(root)
+
+
+def test_index_reopened_recovers_state() -> None:
+    """Closing + reopening preserves the index on disk."""
+    from torus.rlm import PersistentContext, PersistentContextIndex
+    root = _tmp_root()
+    try:
+        a = PersistentContext(root)
+        a.add_chunk("foo bar")
+        a.add_chunk("baz qux")
+        # Force index to be on disk by creating one explicitly:
+        PersistentContextIndex(root, ignore_case=False)
+        del a
+        b = PersistentContextIndex(root, ignore_case=False)
+        assert b.stats()["chunks_indexed"] == 2
+        # foo is in chunk 0, qux is in chunk 1.
+        cands_foo = b.candidates_for("foo")
+        assert cands_foo == [0]
+        cands_qux = b.candidates_for("qux")
+        assert cands_qux == [1]
+    finally:
+        shutil.rmtree(root)
+
+
+def test_index_ignore_case_separate() -> None:
+    """Case-sensitive and case-insensitive indices are stored separately."""
+    from torus.rlm import PersistentContext, PersistentContextIndex
+    root = _tmp_root()
+    try:
+        ctx = PersistentContext(root)
+        ctx.add_chunk("HELLO World")
+        cs = PersistentContextIndex(root, ignore_case=False)
+        ci = PersistentContextIndex(root, ignore_case=True)
+        # Case-sensitive: only "World" (lowercase) isn't in the file;
+        # "hello" doesn't match "HELLO".
+        assert cs.candidates_for("hello") == []
+        assert cs.candidates_for("World") == [0]
+        # Case-insensitive: both match.
+        assert ci.candidates_for("hello") == [0]
+        assert ci.candidates_for("HELLO") == [0]
+    finally:
+        shutil.rmtree(root)
+
+
+def test_index_pattern_with_multiple_tokens() -> None:
+    """Multi-token patterns require ALL tokens to be present."""
+    from torus.rlm import PersistentContext, PersistentContextIndex
+    root = _tmp_root()
+    try:
+        ctx = PersistentContext(root)
+        ctx.add_chunk("alpha beta gamma")  # chunk 0: alpha, beta
+        ctx.add_chunk("alpha gamma delta")  # chunk 1: alpha, gamma
+        idx = PersistentContextIndex(root, ignore_case=False)
+        # "alpha beta": only chunk 0 has both.
+        assert idx.candidates_for("alpha beta") == [0]
+        # "alpha gamma": both chunks have both.
+        assert idx.candidates_for("alpha gamma") == [0, 1]
+        # "alpha epsilon": chunk 1 has alpha, neither has epsilon.
+        # candidates_for returns [] because epsilon isn't indexed.
+        assert idx.candidates_for("alpha epsilon") == []
+    finally:
+        shutil.rmtree(root)
+
+
+def test_index_pattern_with_no_tokens() -> None:
+    """A pattern made entirely of non-word chars returns None.
+
+    Note: "a.b" DOES get tokenized (\w+ matches "a" and "b"
+    separately). We use "---" instead, which has no \w+ tokens.
+    """
+    from torus.rlm import PersistentContextIndex
+    root = _tmp_root()
+    try:
+        idx = PersistentContextIndex(root, ignore_case=False)
+        assert idx.candidates_for("---") is None
+        assert idx.candidates_for("...") is None
+    finally:
+        shutil.rmtree(root)
+
+
+def test_persistent_context_grep_uses_index() -> None:
+    """`PersistentContext.grep` consults the index and returns correct hits."""
+    from torus.rlm import PersistentContext
+    root = _tmp_root()
+    try:
+        ctx = PersistentContext(root)
+        ctx.add_chunk("the quick brown fox")  # 0
+        ctx.add_chunk("jumps over the lazy dog")  # 1
+        ctx.add_chunk("nothing matches here")  # 2
+        # First grep forces index build; second is fast-path.
+        hits_cs = ctx.grep("the", ignore_case=False)
+        assert sorted([h.start for h in hits_cs]) == [0, 1]
+        hits_ci = ctx.grep("THE", ignore_case=True)
+        assert sorted([h.start for h in hits_ci]) == [0, 1]
+        # Token that's only in one chunk.
+        hits_fox = ctx.grep("fox", ignore_case=False)
+        assert [h.start for h in hits_fox] == [0]
+    finally:
+        shutil.rmtree(root)
+
+
+def test_persistent_context_index_extends_on_add() -> None:
+    """`add_chunk` extends the index for any variant that's already loaded."""
+    from torus.rlm import PersistentContext, PersistentContextIndex
+    root = _tmp_root()
+    try:
+        ctx = PersistentContext(root)
+        ctx.add_chunk("first chunk")  # chunk 0
+        # Build the case-sensitive index; the case-insensitive one is
+        # not yet built.
+        idx_cs = PersistentContextIndex(root, ignore_case=False)
+        # Now run a case-sensitive grep to force the adapter to load
+        # the case-sensitive index.
+        assert ctx.grep("first") == [ContextSlice(0, 1)]
+        # Append another chunk; the case-sensitive index should pick
+        # up the new chunk automatically.
+        ctx.add_chunk("second chunk")
+        ctx.flush_index()  # force the in-memory index to disk
+        # Re-fetch the case-sensitive index from disk to verify.
+        idx_cs2 = PersistentContextIndex(root, ignore_case=False)
+        cands = idx_cs2.candidates_for("second")
+        assert cands == [1]
+    finally:
+        shutil.rmtree(root)
+
+
+def test_persistent_context_use_index_false_falls_back_to_linear() -> None:
+    """Setting `use_index=False` skips the index entirely."""
+    from torus.rlm import PersistentContext
+    root = _tmp_root()
+    try:
+        ctx = PersistentContext(root, use_index=False)
+        ctx.add_chunk("alpha")
+        ctx.add_chunk("beta")
+        # grep still works; index is never built.
+        assert [h.start for h in ctx.grep("alpha")] == [0]
+        info = ctx.cache_info()
+        assert info["use_index"] is False
+        assert "index" not in info  # no index loaded
+    finally:
+        shutil.rmtree(root)
+
+
+def test_index_rebuilds_on_missing_or_stale_file() -> None:
+    """Index rebuilds from chunk files when the index file is missing
+    or its chunks_indexed count is greater than what's on disk."""
+    from torus.rlm import PersistentContext, PersistentContextIndex
+    from torus.rlm.index import INDEX_FILENAME
+    root = _tmp_root()
+    try:
+        ctx = PersistentContext(root)
+        ctx.add_chunk("hello world")
+        ctx.add_chunk("foo bar")
+        # Force index creation by running a grep.
+        ctx.grep("hello")
+        # Delete the index file directly; next access rebuilds.
+        (root / INDEX_FILENAME).unlink()
+        idx = PersistentContextIndex(root, ignore_case=False)
+        # After rebuild, all chunks are re-indexed.
+        assert idx.stats()["chunks_indexed"] == 2
+        assert idx.candidates_for("hello") == [0]
+    finally:
+        shutil.rmtree(root)

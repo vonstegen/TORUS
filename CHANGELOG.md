@@ -1,5 +1,44 @@
 # CHANGELOG
 
+## 0.8.0 — Phase 9 inverted index for PersistentContext
+
+### Verified
+
+- 130/130 tests passing on both dev (.venv, Py3.12 + CPU torch +
+  Blackwell via numba) and Legion (.venv-py311, Py3.14 + CUDA
+  torch + 2× TITAN RTX).
+- `examples/persistent_grep_demo.py`: on a 2000-chunk context with
+  unique-needle queries, indexed grep is **0.041 ms warm** vs
+  linear's 49.8 ms (~1200× speedup). The first indexed call pays
+  the one-time index-build cost (~1.2 s for 2000 chunks); after
+  that, every grep is constant-time-ish.
+
+### Added
+
+- `torus.rlm.index.PersistentContextIndex`: append-only inverted
+  index over a `PersistentContext` directory. Token → sorted
+  list of chunk indices, stored at `<root>/index.json`. Two
+  variants (case-sensitive, case-insensitive) live in separate
+  files.
+- `PersistentContext.grep`: now consults the index first; falls
+  back to a linear scan when the pattern has no `\w+` tokens or
+  when `use_index=False`.
+- `PersistentContext.flush_index()`: force a flush of pending
+  index updates to disk before exit.
+- `PersistentContext(use_index=False)` opt-out for tests that
+  want pure linear-scan semantics.
+- `examples/persistent_grep_demo.py`: comparison runner that
+  builds an N-chunk context and reports the indexed-vs-linear
+  speedup.
+
+### Changed
+
+- `PersistentContextIndex.add_chunk` debounces disk writes to
+  every 64 appends (in-memory updates are still immediate, so
+  grep calls between appends see fresh data).
+
+# CHANGELOG
+
 ## 0.7.0 — n_planes plumbing + comparison
 
 ### Verified
