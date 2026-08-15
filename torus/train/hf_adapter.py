@@ -78,11 +78,31 @@ class HFAdapterConfig:
     device: str = "cpu"
 
 
-def _make_forward_stub(ste: TernarySTE, qfn):
-    """Build a forward that re-applies the STE weights on every call."""
+def _make_forward_stub(ste: TernarySTE, qfn, *, transpose_weight: bool = False, bias_param=None):
+    """Build a forward that re-applies the STE weights on every call.
+
+    `transpose_weight=True` is for HF `Conv1D` modules whose weights
+    are stored transposed relative to `nn.Linear`. The stub applies
+    `F.linear(x, q_w.T, q_b)` so the math matches the Conv1D contract.
+    `bias_param` is an optional torch.nn.Parameter; if present, it's
+    used as-is (no quantization) so the bias can stay fp32-trainable.
+    """
+    import torch as _torch  # local import to avoid module-level noise
     def fwd(x):
-        q_w, q_b = qfn(ste.weight, group_size=ste.group_size, bias=ste.bias)
-        return _F.linear(x, q_w, q_b)
+        # `ste.weight` may be a torch Parameter; convert to numpy
+        # before handing to the numpy quantizer.
+        import torch as _torch
+        import numpy as _np
+        w = ste.weight
+        if isinstance(w, _torch.Tensor):
+            w_np = w.detach().cpu().numpy()
+        else:
+            w_np = _np.asarray(w)
+        codes, scale, q_w = qfn(w_np, group_size=ste.group_size)
+        w_t = q_w.T if transpose_weight else q_w
+        w_t = _torch.as_tensor(w_t, dtype=x.dtype, device=x.device)
+        qb = bias_param if bias_param is not None else None
+        return _F.linear(x, w_t, qb)
     return fwd
 
 
@@ -125,31 +145,53 @@ class HFStudentAdapter:
         ).to(self.config.device)
         self.model.eval()  # QAT/STE handles quantization
         self._ste_params: list[TernarySTE] = []
+        self._bias_params: list = []
         self._patched_modules: list[tuple[object, str]] = []
         self._attach_ste()
 
     def _attach_ste(self) -> None:
-        """Wrap every Linear under a target module name with TernarySTE."""
+        """Wrap every Linear or Conv1D under a target module name."""
         import torch.nn as nn  # type: ignore
+        from transformers.pytorch_utils import Conv1D  # type: ignore
         from torus.train.ste import ternary_quantize_with_ste
 
         targets = set(self.config.target_modules)
 
         for name, module in list(self.model.named_modules()):
             short = name.rsplit(".", 1)[-1]
-            if short not in targets or not isinstance(module, nn.Linear):
+            if short not in targets:
+                continue
+            if isinstance(module, nn.Linear):
+                transpose = False
+                weight = module.weight.detach().clone()
+            elif isinstance(module, Conv1D):
+                # Conv1D stores weight transposed: (in, out).
+                # Keep the STE weight in that orientation and let the
+                # patched forward transpose back.
+                transpose = True
+                weight = module.weight.detach().clone()
+            else:
                 continue
 
-            ste = TernarySTE(
-                weight=_nn_param(module.weight.detach().clone()),
-                group_size=min(128, module.weight.shape[0]),
-                bias=None
+            bias_param = (
+                None
                 if module.bias is None
-                else _nn_param(module.bias.detach().clone()),
+                else _nn_param(module.bias.detach().clone())
+            )
+
+            ste = TernarySTE(
+                weight=_nn_param(weight),
+                group_size=min(128, weight.shape[0]),
             )
             self._ste_params.append(ste)
+            self._bias_params.append(bias_param)
 
-            module.forward = _make_forward_stub(ste, ternary_quantize_with_ste)  # type: ignore[assignment]
+            module.forward = _make_forward_stub(
+                ste,
+                ternary_quantize_with_ste,
+                transpose_weight=transpose,
+                bias_param=bias_param,
+            )  # type: ignore[assignment]
             self._patched_modules.append((module, name))
 
     @property
@@ -163,12 +205,22 @@ class HFStudentAdapter:
     ) -> tuple[np.ndarray, np.ndarray | None, np.ndarray | None]:
         """Run the model; return (logits, hidden, route)."""
         torch = _require_torch()
-        for ste, target in zip(self._ste_params, self._patched_modules):
+        for (ste, bias_param), target in zip(
+            zip(self._ste_params, self._bias_params), self._patched_modules
+        ):
             module, _name = target
             with torch.no_grad():
-                module.weight.copy_(ste.weight)
-                if module.bias is not None and ste.bias is not None:
-                    module.bias.copy_(ste.bias)
+                if module.weight.shape == ste.weight.shape:
+                    module.weight.copy_(ste.weight)
+                elif module.weight.shape == tuple(ste.weight.shape[::-1]):
+                    module.weight.copy_(ste.weight.t())
+                else:
+                    raise RuntimeError(
+                        f"weight shape mismatch for {module}: "
+                        f"{tuple(module.weight.shape)} vs {tuple(ste.weight.shape)}"
+                    )
+                if module.bias is not None and bias_param is not None:
+                    module.bias.copy_(bias_param)
 
         ids = torch.as_tensor(batch.inputs, dtype=torch.long, device=self.config.device)
         with torch.no_grad():

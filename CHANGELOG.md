@@ -1,5 +1,66 @@
 # CHANGELOG
 
+## 0.6.0 — Legion end-to-end + CPU probe
+
+### Verified
+
+- Cloned + installed TORUS on **Legion** (the production / training
+  host): Python 3.14 venv, `torch 2.13.0+cu130` from the cu130
+  index, `transformers 5.15.0`, `numba 0.67.0` for the CUDA path.
+  121/121 tests pass on Legion with CUDA torch.
+- Re-ran the benchmark on Legion's 2× TITAN RTX: real AVX-512
+  numbers captured (the Threadripper 3995WX is Zen 2 — see
+  *Fixes* below).
+- HF adapter end-to-end smoke (`examples/hf_adapter_smoke.py`)
+  loads `sshleifer/tiny-gpt2` (or `gpt2`), drives
+  `HFStudentAdapter.forward`, `HFTeacherAdapter.forward`, and the
+  full `combined_distillation_loss` pipeline against a real
+  transformers model on Legion CUDA.
+
+### Fixes
+
+- `torus/kernels/build._machine_flags()` now probes
+  `/proc/cpuinfo` for AVX-512 / AVX2 / FMA / AVX support before
+  emitting `-mavx512f`. GCC silently accepts `-mavx512f` even on
+  CPUs that lack it, and the resulting `.so` then segfaults at
+  runtime with `Illegal instruction`. The Zen-2 Threadripper
+  3995WX (which has AVX2 but no AVX-512) was hitting this on
+  Legion's first build attempt.
+
+### Added
+
+- `examples/hf_adapter_smoke.py`: end-to-end smoke that loads a
+  HuggingFace causal-LM, calls the student/teacher adapter, and
+  runs `combined_distillation_loss` to confirm the trainer's
+  loss path consumes real-model output.
+- `TernarySTE.__post_init__` auto-picks a fitting `group_size`
+  when the requested one does not divide `in_features`. Small
+  smoke models (e.g. tiny-gpt2 with `hidden_size=2`) no longer
+  fail at construction; the closest power-of-two divisor is
+  chosen, falling back to the full row width for primes.
+- `TernarySTE.forward()` accepts both numpy arrays and torch
+  Parameters; the HF adapter path quantizes a torch Parameter
+  via a `detach().cpu().numpy()` round-trip.
+- `HFStudentAdapter` now intercepts both `nn.Linear` *and*
+  HF's `Conv1D` (GPT-2, GPT-Neo). Conv1D weights are stored
+  transposed relative to `nn.Linear`; the patched forward
+  applies `F.linear(x, q_w.T, q_b)` to match the Conv1D
+  contract. Bias is held as a separate `torch.nn.Parameter` so
+  it stays fp32-trainable without quantization.
+
+### Changed
+
+- `DistillationTrainer` keeps an in-place numpy view
+  (`self._params_np`) of every STE weight, used by the
+  numerical-gradient reference path. The torch Parameter
+  weights are sync'd back from the numpy buffer after each
+  `_SGD.step()`.
+- `examples/benchmark.py` now imports `ResidualGate` and
+  `ResidualTernaryLinear` (caught by the Legion run; the
+  telemetry section was crashing without them).
+
+# CHANGELOG
+
 ## 0.5.0 — Hardware refresh: GB10 Blackwell
 
 ### Verified

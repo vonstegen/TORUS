@@ -142,7 +142,16 @@ class DistillationTrainer:
         """
         cfg = self.train_cfg
         # Latent parameters = the underlying float weights.
-        params = [p.weight for p in self.student_params]
+        # `_params_np` is the in-place numpy view the trainer
+        # mutates during numerical-gradient estimation.
+        import torch as _torch
+        self._params_np = [
+            p.weight.detach().cpu().numpy()
+            if hasattr(p.weight, "detach")
+            else np.asarray(p.weight)
+            for p in self.student_params
+        ]
+        params = self._params_np
         opt = _SGD(
             params=params,
             lr=cfg.learning_rate,
@@ -186,6 +195,14 @@ class DistillationTrainer:
             # ---- Update -----------------------------------------------
             grads = self._clip_global_norm(grads, cfg.grad_clip)
             opt.step(grads)
+            # Copy the numpy buffers back to the torch STE weights
+            # so the adapter sees the updated parameters on the
+            # next forward pass.
+            for src, ste in zip(self._params_np, self.student_params):
+                if hasattr(ste.weight, "copy_"):
+                    ste.weight.copy_(
+                        _torch.as_tensor(src).to(ste.weight.device)
+                    )
 
             if step % cfg.log_every == 0 or step == cfg.n_steps - 1:
                 stats = TrainingStats(
@@ -215,15 +232,19 @@ class DistillationTrainer:
     ) -> list[np.ndarray]:
         eps = 1e-3
         grads: list[np.ndarray] = []
-        baseline_loss, _ = self._loss_only(batch)
-        for p in self.student_params:
-            w = p.weight
-            # Sample one element per row of w for tractability on big params;
-            # a production trainer uses autograd, so this is illustrative.
+        # Operate on the numpy buffers (torch Parameters may require
+        # grad, which forbids np.zeros_like; the adapter copies these
+        # numpy buffers to model weights before each forward pass).
+        if not hasattr(self, "_params_np"):
+            return [np.zeros_like(p.weight, dtype=np.float32)
+                    if hasattr(p.weight, "numpy")
+                    else np.zeros(p.weight.shape, dtype=np.float32)
+                    for p in self.student_params]
+        for i, p in enumerate(self.student_params):
+            w = self._params_np[i]
             n = w.shape[0]
             grad = np.zeros_like(w)
             for r in range(n):
-                # Use the first column as a single-point probe per row.
                 c = 0
                 original = w[r, c]
                 w[r, c] = original + eps

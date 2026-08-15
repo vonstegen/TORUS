@@ -30,16 +30,51 @@ def _compiler() -> list[str]:
     raise RuntimeError("no C compiler (cc / gcc / clang) found on $PATH")
 
 
+def _cpuinfo_flags() -> set[str]:
+    """Read the set of CPU flags exposed by `/proc/cpuinfo`.
+
+    Returns an empty set if the file is missing or unreadable.
+    Used to gate SIMD flags so we don't emit AVX-512 instructions
+    for a CPU that doesn't actually support them.
+    """
+    try:
+        with open("/proc/cpuinfo", "r") as f:
+            text = f.read()
+    except OSError:
+        return set()
+    flags: set[str] = set()
+    for line in text.splitlines():
+        if line.startswith("flags") or line.startswith("Features"):
+            parts = line.split(":", 1)
+            if len(parts) != 2:
+                continue
+            for tok in parts[1].split():
+                flags.add(tok)
+            break
+    return flags
+
+
 def _machine_flags() -> list[str]:
-    """Return SIMD flags the host supports."""
+    """Return SIMD flags the host's CPU actually supports.
+
+    GCC will silently accept `-mavx512f` even on a CPU that lacks
+    AVX-512 (defining `__AVX512F__` in the process), and the
+    resulting binary crashes at runtime with `Illegal instruction`.
+    Probe `/proc/cpuinfo` first to avoid that.
+    """
     host = sysconfig.get_config_var("HOST_SYSTEM") or ""
     machine = os.uname().machine.lower()
+    flags = _cpuinfo_flags()
     out: list[str] = []
     if machine.startswith("x86") or "x86" in host:
-        # x86_64: try AVX-512 first, fall back to AVX2.
-        out += ["-mavx512f", "-mavx512vl", "-mavx512bw"]
-        out += ["-mavx2"]
-        out += ["-mfma"]
+        # Order matters: AVX-512 implies AVX2 + FMA.
+        if "avx512f" in flags:
+            out += ["-mavx512f", "-mavx512vl", "-mavx512bw"]
+            out += ["-mavx2", "-mfma"]
+        elif "avx2" in flags:
+            out += ["-mavx2", "-mfma"]
+        elif "avx" in flags:
+            out += ["-mavx"]
     elif machine in ("aarch64", "arm64"):
         out += ["-march=armv8.2-a+sve+fp16"]
     return out
@@ -94,6 +129,7 @@ def build_shared_object(
             raise RuntimeError(
                 f"C kernel build failed: {res2.stderr or res2.stdout}"
             )
+
     return _OUTPUT
 
 

@@ -85,15 +85,31 @@ class TernarySTE:
     def __post_init__(self) -> None:
         if self.weight.ndim != 2:
             raise ValueError(f"weight must be 2D, got shape {self.weight.shape}")
+        # Auto-pick the largest power-of-two group size that fits.
         if self.weight.shape[1] % self.group_size != 0:
-            raise ValueError(
-                f"in_features={self.weight.shape[1]} not divisible by group_size={self.group_size}"
-            )
+            n = self.weight.shape[1]
+            g = 1
+            while g * 2 <= n and n % (g * 2) == 0:
+                g *= 2
+            # If no power-of-two > 1 divides n (e.g. n is prime),
+            # fall back to one big group covering the whole row.
+            if g == 1:
+                g = n
+            # The dataclass is frozen; bypass __setattr__.
+            object.__setattr__(self, "group_size", g)
 
     def forward(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Return (codes, scale, quantized_weight)."""
+        # `self.weight` may be a torch Parameter (HF adapter path)
+        # or a plain numpy array (pure-numpy trainer path).
+        import torch as _torch
+        w = self.weight
+        if isinstance(w, _torch.Tensor):
+            w_np = w.detach().cpu().numpy()
+        else:
+            w_np = np.asarray(w)
         return ternary_quantize_with_ste(
-            self.weight, group_size=self.group_size, threshold=self.threshold,
+            w_np, group_size=self.group_size, threshold=self.threshold,
         )
 
     def params(self) -> np.ndarray:

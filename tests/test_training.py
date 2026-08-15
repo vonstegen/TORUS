@@ -147,10 +147,20 @@ def test_ternary_ste_wrapper_does_not_modify_weight() -> None:
     assert np.array_equal(w, before)
 
 
-def test_ternary_ste_requires_divisible_columns() -> None:
+def test_ternary_ste_auto_picks_group_size() -> None:
+    # When the requested group_size does not fit, the STE auto-picks
+    # the largest power-of-two divisor (or falls back to the full
+    # row width) so small smoke models (e.g. tiny-gpt2 with
+    # hidden=2) still work without manual group_size tuning.
     w = np.zeros((4, 5), dtype=np.float32)
-    with pytest.raises(ValueError):
-        TernarySTE(weight=w, group_size=4)
+    ste = TernarySTE(weight=w, group_size=4)
+    # 5 is prime; the largest power-of-two <= 5 that divides 5 is 1;
+    # we fall back to the full row width (5).
+    assert ste.group_size == 5
+    w2 = np.zeros((4, 8), dtype=np.float32)
+    ste2 = TernarySTE(weight=w2, group_size=4)
+    # 8 / 4 fits exactly; the request is preserved.
+    assert ste2.group_size == 4
 
 
 # --- Curriculum -----------------------------------------------------------
