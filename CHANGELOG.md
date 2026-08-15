@@ -1,5 +1,51 @@
 # CHANGELOG
 
+## 0.7.0 — n_planes plumbing + comparison
+
+### Verified
+
+- Extended `HFStudentAdapter` and `HFTeacherAdapter` to honor the
+  trainer's `n_planes` parameter end-to-end against a real model on
+  Legion (CUDA torch). Both venvs green: 121/121 tests pass on
+  dev (CPU torch + Blackwell via numba) and Legion (CUDA torch +
+  TITAN RTX).
+- New `examples/n_planes_compare.py` runs the same model with
+  primary-only and primary+residual quantization, perturbing the
+  residual weights with random noise to confirm the residual plane
+  contributes to the forward (verified:
+  `||y_n_planes=1 - y_n_planes=2|| > 0` after perturbation).
+
+### Added
+
+- `TernarySTE.residual_weight`: optional second learnable
+  parameter. When set, `forward(n_planes=2)` returns the sum of
+  two independently quantized ternary weights (primary +
+  residual). `forward(n_planes=1)` is the original primary-only
+  behavior.
+- `HFStudentAdapter.residual_params`: list of
+  `torch.nn.Parameter` — one per STE. The adapter creates a
+  single shared tensor between the STE's `residual_weight` and
+  this list, so mutating either reference updates both.
+- `HFAdapterConfig.target_modules`: now matched by suffix; the
+  default covers GPT-2/GPT-Neo's `c_attn` and `c_proj` Conv1Ds.
+- `examples/n_planes_compare.py`: comparison runner that loads a
+  HF model, perturbs the residual weights, and demonstrates
+  n_planes=1 vs n_planes=2 produce different outputs.
+- `examples/hf_adapter_smoke.py --n-planes {1,2}`: CLI flag for
+  the existing smoke to exercise primary-only vs primary+residual.
+
+### Fixed
+
+- The residual-weight tensor was being constructed twice (once
+  passed to `TernarySTE`, once appended to `_residual_params`)
+  with `torch.zeros_like(weight)` returning *separate* tensors.
+  Mutating one didn't affect the other, so perturbing
+  `adapter.residual_params` never reached the STE. Now both
+  references share a single `zero_param`, and perturbation
+  propagates as expected.
+
+# CHANGELOG
+
 ## 0.6.0 — Legion end-to-end + CPU probe
 
 ### Verified

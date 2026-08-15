@@ -11,6 +11,14 @@ you the *function* (`ternary_quantize_with_ste`) and a small
 `TernarySTE` object you can attach to a hidden weight. The actual
 optimizer is left to the trainer, which treats this as a deterministic
 forward-only quantization with a backward hook.
+
+Phase-3 trainer compatibility:
+- `TernarySTE` carries an optional `residual_weight`. When set,
+  `forward(n_planes=2)` returns the sum of two independently
+  quantized ternary weights (primary + residual). When
+  `n_planes=1`, only the primary contributes. This matches
+  `torus.quant.residual.ResidualTernaryPlanes` so the trainer's
+  `n_planes` parameter has the same meaning at the STE level.
 """
 from __future__ import annotations
 
@@ -64,6 +72,14 @@ def ternary_quantize_with_ste(
     return codes_int, scale, quantized
 
 
+def _to_numpy(weight):
+    """Convert torch Parameter / tensor / ndarray to float32 ndarray."""
+    import torch as _torch
+    if isinstance(weight, _torch.Tensor):
+        return weight.detach().cpu().numpy()
+    return np.asarray(weight)
+
+
 @dataclass
 class TernarySTE:
     """Stateful STE wrapper around a learnable full-precision weight.
@@ -77,10 +93,16 @@ class TernarySTE:
         weight: float32 2D array, the learnable parameter.
         group_size: group width for the per-group scale.
         threshold: sparsity threshold (same semantics as `ternary_quantize`).
+        residual_weight: optional float32 2D array; when set, the STE
+            produces a two-plane forward (primary + residual) gated
+            by the `n_planes` argument to `forward()`. The residual
+            weight is itself learnable; the trainer's optimizer
+            updates it via the `_params_np` numpy buffer.
     """
     weight: np.ndarray
     group_size: int = 128
     threshold: float = 0.7
+    residual_weight: np.ndarray | None = None
 
     def __post_init__(self) -> None:
         if self.weight.ndim != 2:
@@ -97,21 +119,41 @@ class TernarySTE:
                 g = n
             # The dataclass is frozen; bypass __setattr__.
             object.__setattr__(self, "group_size", g)
+        if self.residual_weight is not None:
+            if self.residual_weight.shape != self.weight.shape:
+                raise ValueError(
+                    f"residual_weight shape {self.residual_weight.shape} "
+                    f"does not match weight shape {self.weight.shape}"
+                )
 
-    def forward(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Return (codes, scale, quantized_weight)."""
-        # `self.weight` may be a torch Parameter (HF adapter path)
-        # or a plain numpy array (pure-numpy trainer path).
-        import torch as _torch
-        w = self.weight
-        if isinstance(w, _torch.Tensor):
-            w_np = w.detach().cpu().numpy()
-        else:
-            w_np = np.asarray(w)
-        return ternary_quantize_with_ste(
+    def forward(
+        self, n_planes: int = 1
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Return `(codes, scale, quantized_weight)`.
+
+        When `residual_weight is None`, only the primary plane is
+        computed regardless of `n_planes`. When `residual_weight` is
+        present and `n_planes >= 2`, the returned `quantized_weight`
+        is the sum of two independently quantized ternary weights
+        (primary + residual).
+        """
+        w_np = _to_numpy(self.weight)
+        codes, scale, q_primary = ternary_quantize_with_ste(
             w_np, group_size=self.group_size, threshold=self.threshold,
         )
+        if n_planes < 2 or self.residual_weight is None:
+            return codes, scale, q_primary
+
+        r_np = _to_numpy(self.residual_weight)
+        _r_codes, _r_scale, q_residual = ternary_quantize_with_ste(
+            r_np, group_size=self.group_size, threshold=self.threshold,
+        )
+        # Return the combined quantized weight as the "primary"
+        # slot; codes/scale only describe the primary plane.
+        return codes, scale, q_primary + q_residual
 
     def params(self) -> np.ndarray:
-        """Return the learnable weight (the only thing the optimizer updates)."""
+        """Return the learnable primary weight (the only thing the
+        simple optimizer updates). The trainer uses `_params_np` to
+        update both `weight` and `residual_weight` directly."""
         return self.weight

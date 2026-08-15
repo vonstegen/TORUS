@@ -78,7 +78,7 @@ class HFAdapterConfig:
     device: str = "cpu"
 
 
-def _make_forward_stub(ste: TernarySTE, qfn, *, transpose_weight: bool = False, bias_param=None):
+def _make_forward_stub(ste: TernarySTE, qfn, *, transpose_weight: bool = False, bias_param=None, get_n_planes=lambda: 1):
     """Build a forward that re-applies the STE weights on every call.
 
     `transpose_weight=True` is for HF `Conv1D` modules whose weights
@@ -86,6 +86,8 @@ def _make_forward_stub(ste: TernarySTE, qfn, *, transpose_weight: bool = False, 
     `F.linear(x, q_w.T, q_b)` so the math matches the Conv1D contract.
     `bias_param` is an optional torch.nn.Parameter; if present, it's
     used as-is (no quantization) so the bias can stay fp32-trainable.
+    `get_n_planes` is a zero-arg callable the patched forward
+    invokes to discover how many planes should contribute.
     """
     import torch as _torch  # local import to avoid module-level noise
     def fwd(x):
@@ -98,7 +100,8 @@ def _make_forward_stub(ste: TernarySTE, qfn, *, transpose_weight: bool = False, 
             w_np = w.detach().cpu().numpy()
         else:
             w_np = _np.asarray(w)
-        codes, scale, q_w = qfn(w_np, group_size=ste.group_size)
+        n_planes = get_n_planes()
+        codes, scale, q_w = ste.forward(n_planes=n_planes)
         w_t = q_w.T if transpose_weight else q_w
         w_t = _torch.as_tensor(w_t, dtype=x.dtype, device=x.device)
         qb = bias_param if bias_param is not None else None
@@ -146,11 +149,14 @@ class HFStudentAdapter:
         self.model.eval()  # QAT/STE handles quantization
         self._ste_params: list[TernarySTE] = []
         self._bias_params: list = []
+        self._residual_params: list = []
+        self._current_n_planes: int = 1  # set by forward() per call
         self._patched_modules: list[tuple[object, str]] = []
         self._attach_ste()
 
     def _attach_ste(self) -> None:
         """Wrap every Linear or Conv1D under a target module name."""
+        import torch as _torch_t  # for residual_weight init
         import torch.nn as nn  # type: ignore
         from transformers.pytorch_utils import Conv1D  # type: ignore
         from torus.train.ste import ternary_quantize_with_ste
@@ -179,24 +185,35 @@ class HFStudentAdapter:
                 else _nn_param(module.bias.detach().clone())
             )
 
+            # One zero tensor shared between the STE and the adapter's
+            # _residual_params list. Mutating either reference updates
+            # the other; this is what makes `n_planes=2` actually engage.
+            zero_param = _torch_t.zeros_like(weight)
             ste = TernarySTE(
                 weight=_nn_param(weight),
                 group_size=min(128, weight.shape[0]),
+                residual_weight=zero_param,
             )
             self._ste_params.append(ste)
             self._bias_params.append(bias_param)
-
+            self._residual_params.append(zero_param)
             module.forward = _make_forward_stub(
                 ste,
                 ternary_quantize_with_ste,
                 transpose_weight=transpose,
                 bias_param=bias_param,
+                get_n_planes=lambda: self._current_n_planes,
             )  # type: ignore[assignment]
             self._patched_modules.append((module, name))
 
     @property
     def ste_params(self) -> list[TernarySTE]:
         return list(self._ste_params)
+
+    @property
+    def residual_params(self) -> list:
+        """Return the residual-weight nn.Parameters, one per STE."""
+        return list(self._residual_params)
 
     def forward(
         self,
@@ -208,6 +225,8 @@ class HFStudentAdapter:
         for (ste, bias_param), target in zip(
             zip(self._ste_params, self._bias_params), self._patched_modules
         ):
+            # Stash n_planes so the patched forward can read it.
+            self._current_n_planes = int(n_planes)
             module, _name = target
             with torch.no_grad():
                 if module.weight.shape == ste.weight.shape:
