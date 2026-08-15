@@ -352,7 +352,7 @@ def test_trainer_probe_residual_gradients_flow_to_residual() -> None:
         student_params=[ste],
         forward_student=fwd_s,
         forward_teacher=fwd_t,
-        data=iter([batch]),
+        data=iter([batch] * 5),  # 5 batches for 2 steps
         loss_cfg=DistillationConfig(),
         train_cfg=cfg_no_res,
     ).fit()
@@ -381,7 +381,7 @@ def test_trainer_probe_residual_gradients_flow_to_residual() -> None:
         student_params=[ste2],
         forward_student=fwd_s2,
         forward_teacher=fwd_t2,
-        data=iter([batch]),
+        data=iter([batch] * 5),  # 5 batches for 2 steps
         loss_cfg=DistillationConfig(),
         train_cfg=cfg_with_res,
     ).fit()
@@ -424,8 +424,44 @@ def test_trainer_probe_residual_off_does_not_touch_residual() -> None:
         student_params=[ste],
         forward_student=fwd_s,
         forward_teacher=fwd_t,
-        data=iter([batch]),
+        data=iter([batch] * 5),  # 5 batches for 2 steps
         loss_cfg=DistillationConfig(),
         train_cfg=TrainingConfig(n_steps=1, log_every=1),
     ).fit()
     assert len(history) == 1
+
+
+def test_trainer_residual_lr_scale_smoke() -> None:
+    """With probe_residual=True and a residual_lr_scale, the residual
+    SGD is constructed and a step finishes without error.
+    """
+    rng = np.random.default_rng(0)
+    weight = (rng.standard_normal((8, 32)) * 0.05).astype(np.float32)
+    residual = (rng.standard_normal((8, 32)) * 0.01).astype(np.ndarray)
+    ste = TernarySTE(
+        weight=weight, group_size=32, residual_weight=residual,
+    )
+    teacher = TernarySTE(weight=weight.copy(), group_size=32)
+
+    def fwd_s(_b, n_planes):
+        q = ste.forward(n_planes=n_planes)
+        return q[2], None, None
+
+    def fwd_t(_b, _n_planes):
+        q = teacher.forward(n_planes=1)
+        return q[2], None, None
+
+    batch = DistillationBatch(inputs=np.zeros((1, 8), dtype=np.float32))
+
+    history = DistillationTrainer(
+        student_params=[ste],
+        forward_student=fwd_s,
+        forward_teacher=fwd_t,
+        data=iter([batch] * 5),  # 5 batches for 2 steps
+        loss_cfg=DistillationConfig(),
+        train_cfg=TrainingConfig(
+            n_steps=2, log_every=1,
+            probe_residual=True, residual_lr_scale=0.05,
+        ),
+    ).fit()
+    assert len(history) == 2

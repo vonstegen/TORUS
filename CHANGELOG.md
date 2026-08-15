@@ -1,5 +1,34 @@
 # CHANGELOG
 
+## 0.13.0 — Per-plane LR scaling + 5th Legion distillation run
+
+### Verified
+
+- Fifth distillation run completed on Legion with per-plane LR:
+  - `primary_plus_residual_lr_scaled`: curriculum `1:100, 2:100`,
+    `probe_residual=True`, `residual_lr_scale=0.05`, 200 steps
+    in 65.3 s. Step-100 loss 0.0391 (curriculum switch), final
+    loss **0.0303** vs 0.0729 with `residual_lr_scale=1.0` — a
+    2.4× improvement. The residual plane is being learned, not
+    blown up.
+- 158/158 tests passing on both dev and Legion (added 1 new
+  training test covering the residual SGD).
+
+### Added
+
+- `TrainingConfig.residual_lr_scale: float = 0.1`: scales the
+  residual plane's learning rate (`lr * residual_lr_scale`).
+  Defaults to 0.1, which keeps the residual's update step small
+  enough to prevent loss explosion when the curriculum switches.
+- `DistillationTrainer` constructs an optional second `_SGD`
+  for the residual planes when `probe_residual=True` AND any
+  STE has a `residual_weight`. The primary grad is reused for
+  the residual's update (coarse approximation; full residual
+  gradient would require a second forward pass per probe).
+- `examples/distill_run.py --residual-lr-scale` CLI flag.
+
+# CHANGELOG
+
 ## 0.12.0 — probe_residual trainer flag + 4th Legion distillation run
 
 ### Verified

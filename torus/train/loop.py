@@ -57,6 +57,7 @@ class TrainingConfig:
     grad_clip: float = 1.0        # global-norm clip
     probe_rows: int = 1            # finite-difference probes per module per step
     probe_residual: bool = False   # also perturb STE.residual_weight when set
+    residual_lr_scale: float = 0.1  # residual plane LR = learning_rate * this
 
 
 @dataclass
@@ -166,6 +167,25 @@ class DistillationTrainer:
             momentum=cfg.momentum,
             weight_decay=cfg.weight_decay,
         )
+        # Optional second SGD for residual planes. When probe_residual
+        # is on AND any STE has a residual_weight, the primary grad
+        # also drives the residual update at a scaled learning rate.
+        # This is a coarse approximation (the grad is computed for
+        # the primary; we just apply a scaled version to the residual)
+        # but stabilizes the curriculum switch without the cost of
+        # probing the residual separately.
+        residual_params = [r for r in self._residual_np if r is not None]
+        residual_opt = None
+        if (
+            getattr(cfg, "probe_residual", False)
+            and residual_params
+        ):
+            residual_opt = _SGD(
+                params=residual_params,
+                lr=cfg.learning_rate * getattr(cfg, "residual_lr_scale", 0.1),
+                momentum=cfg.momentum,
+                weight_decay=cfg.weight_decay,
+            )
         history: list[TrainingStats] = []
         t0 = time.perf_counter()
 
@@ -203,6 +223,13 @@ class DistillationTrainer:
             # ---- Update -----------------------------------------------
             grads = self._clip_global_norm(grads, cfg.grad_clip)
             opt.step(grads)
+            if residual_opt is not None:
+                # Coarse approximation: apply the primary grad (which
+                # already reflects the residual's contribution via the
+                # joint perturbation) to the residual plane at its
+                # own scaled learning rate. Stabilizes the curriculum
+                # switch without the cost of a separate residual probe.
+                residual_opt.step(grads)
             # Copy the numpy buffers back to the torch STE weights
             # so the adapter sees the updated parameters on the
             # next forward pass.

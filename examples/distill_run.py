@@ -54,6 +54,8 @@ def run_one(
     model_name: str,
     n_steps: int,
     probe_rows: int,
+    probe_residual: bool = False,
+    residual_lr_scale: float = 0.1,
     curriculum_planes: list[int],
     curriculum_steps_per_stage: list[int],
     batch_size: int,
@@ -158,6 +160,10 @@ def main() -> None:
     p.add_argument("--label", default="default")
     p.add_argument("--probe-residual", action="store_true",
                    help="Also perturb STE.residual_weight at the same (r, c)")
+    p.add_argument("--perturb-residual", action="store_true",
+                   help="Initialize residual weights with random noise")
+    p.add_argument("--residual-lr-scale", type=float, default=0.1,
+                   help="Residual plane LR = learning_rate * this")
     args = p.parse_args()
 
     # Parse the curriculum: "1:50,2:150" -> [(1, 50), (2, 150)].
@@ -177,9 +183,12 @@ def main() -> None:
     )
 
     result = run_one(
+        args,
         model_name=args.model,
         n_steps=args.n_steps,
         probe_rows=args.probe_rows,
+        probe_residual=getattr(args, 'probe_residual', False),
+        residual_lr_scale=getattr(args, 'residual_lr_scale', 0.1),
         curriculum_planes=planes,
         curriculum_steps_per_stage=step_counts,
         batch_size=args.batch_size,

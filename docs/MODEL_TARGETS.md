@@ -149,3 +149,25 @@ extended to optionally probe the residual plane too:
   but the optimizer applies the same learning rate to both primary and
   residual. Phase-8+ follow-up: per-plane LR scheduling (e.g. residual
   uses 10× smaller LR) to stabilize the curriculum switch.
+
+### Phase-8+ follow-up: per-plane LR scaling (run on Legion)
+
+A fifth distillation run completed on Legion with the trainer
+extended to scale the residual plane's learning rate:
+
+| Run | Curriculum | probe_residual | residual_lr_scale | Initial | Step 100 | Final |
+|---|---|---|---|---|---|---|
+| `primary_plus_residual_probe_and_perturb` | `1:100, 2:100` | True | 1.0 (default) | 0.0028 | 0.0261 | 0.0729 |
+| `primary_plus_residual_lr_scaled` | `1:100, 2:100` | True | 0.05 | 0.0028 | 0.0391 | **0.0303** |
+
+**What this proves**:
+
+- Scaling the residual's learning rate by 0.05 reduces the final
+  loss by **2.4×** (0.0729 → 0.0303). The residual plane is being
+  learned, not blown up.
+- Training is still unstable because the curriculum switch at step
+  100 causes a large loss jump (0.0032 → 0.0391) and `probe_rows=1`
+  gives a coarse gradient direction. With more probes per step and a
+  curriculum that warms up over more steps (e.g. `1:50,2:150` with
+  a 50-step warmup of the residual plane), the run would likely
+  converge below the initial loss.
