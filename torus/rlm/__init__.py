@@ -15,11 +15,15 @@ from torus.rlm.context import ContextSlice, RecursiveContext
 from torus.rlm.index import PersistentContextIndex
 from torus.rlm.persistent import PersistentContext
 from torus.rlm.repl import ContextREPL
+from torus.rlm.sandbox import SandboxError, SandboxPolicy, SandboxedContextREPL
 
 __all__ = [
     "RecursiveContext",
     "ContextSlice",
     "ContextREPL",
+    "SandboxedContextREPL",
+    "SandboxError",
+    "SandboxPolicy",
     "PersistentContext",
     "PersistentContextIndex",
     "PrimeAgentLoop",

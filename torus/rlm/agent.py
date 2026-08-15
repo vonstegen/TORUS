@@ -96,20 +96,23 @@ class PrimeAgentLoop:
         max_steps: hard cap on iterations.
         prompt_builder: optional override for how the prompt is shaped.
     """
-
     def __init__(
         self,
         context: RecursiveContext,
         model_fn: Callable[[str], str],
         max_steps: int = 8,
         prompt_builder: Callable[..., str] = default_prompt_builder,
+        repl=None,
     ) -> None:
+        # `repl` is a duck-typed object with `.run(code) -> (stdout, last)`.
+        # Defaults to `ContextREPL` for backward compatibility; pass
+        # `SandboxedContextREPL` (or any other `run`-shaped object) for
+        # production use.
         self.context = context
-        self.repl = ContextREPL(context)
+        self.repl = repl if repl is not None else ContextREPL(context)
         self.model_fn = model_fn
         self.max_steps = max_steps
         self.prompt_builder = prompt_builder
-
     def _context_summary(self) -> str:
         if self.context.total == 0:
             return "(empty context)"
@@ -121,7 +124,11 @@ class PrimeAgentLoop:
         )
 
     def run(self, goal: str) -> AgentResult:
-        """Drive the loop until `DONE_SENTINEL`, `max_steps`, or exhaustion."""
+        """Drive the loop until `DONE_SENTINEL`, `max_steps`, or exhaustion.
+
+        Sandbox errors and runtime errors are caught and surfaced
+        as stdout so the model can recover on the next step.
+        """
         history: list[AgentStep] = []
         answer = ""
         for step in range(self.max_steps):
@@ -132,8 +139,17 @@ class PrimeAgentLoop:
                 context_summary=self._context_summary(),
             )
             code = self.model_fn(prompt)
-            stdout, last_value = self.repl.run(code)
-            history.append(AgentStep(step=step, code=code, stdout=stdout, last_value=last_value))
+            try:
+                stdout, last_value = self.repl.run(code)
+            except Exception as e:  # noqa: BLE001
+                # Surface sandbox / parse / runtime errors as stdout
+                # so the model can recover on the next step.
+                stdout = f"{type(e).__name__}: {e}"
+                last_value = ""
+            history.append(AgentStep(
+                step=step, code=code,
+                stdout=stdout, last_value=last_value,
+            ))
             if DONE_SENTINEL in code:
                 # The last-value line is the model's final answer.
                 answer = last_value or stdout.strip()

@@ -570,3 +570,189 @@ def test_index_rebuilds_on_missing_or_stale_file() -> None:
         assert idx.candidates_for("hello") == [0]
     finally:
         shutil.rmtree(root)
+
+
+# --------------------------------------------------------------------------
+# SandboxedContextREPL
+# --------------------------------------------------------------------------
+
+
+def test_sandbox_allows_safe_code() -> None:
+    """Pure-Python safe code (no imports, only context API) runs."""
+    from torus.rlm import SandboxedContextREPL, RecursiveContext
+    ctx = RecursiveContext(["hello world", "goodbye world"])
+    repl = SandboxedContextREPL(ctx)
+    stdout, last = repl.run("len(context)")
+    assert stdout.strip() == "2"
+    assert last == "2"
+
+
+def test_sandbox_blocks_imports() -> None:
+    """`import os` is rejected at AST level (never executed)."""
+    from torus.rlm import SandboxedContextREPL, RecursiveContext, SandboxError
+    ctx = RecursiveContext(["x"])
+    repl = SandboxedContextREPL(ctx)
+    with pytest.raises(SandboxError, match="import statements are not allowed"):
+        repl.run("import os\nos.system('rm -rf /')")
+
+
+def test_sandbox_blocks_exec_call() -> None:
+    """`exec(...)` is in the forbidden-call list."""
+    from torus.rlm import SandboxedContextREPL, RecursiveContext, SandboxError
+    ctx = RecursiveContext(["x"])
+    repl = SandboxedContextREPL(ctx)
+    with pytest.raises(SandboxError, match="call to 'exec'"):
+        repl.run("exec('print(1)')")
+
+
+def test_sandbox_blocks_open() -> None:
+    """`open(...)` is forbidden."""
+    from torus.rlm import SandboxedContextREPL, RecursiveContext, SandboxError
+    ctx = RecursiveContext(["x"])
+    repl = SandboxedContextREPL(ctx)
+    with pytest.raises(SandboxError, match="call to 'open'"):
+        repl.run("open('/etc/passwd')")
+
+
+def test_sandbox_blocks_attribute_access_on_non_context() -> None:
+    """`foo.bar` (where foo isn't `context`) is rejected."""
+    from torus.rlm import SandboxedContextREPL, RecursiveContext, SandboxError
+    ctx = RecursiveContext(["x"])
+    repl = SandboxedContextREPL(ctx)
+    with pytest.raises(SandboxError, match="attribute access on"):
+        repl.run("[].__class__")
+
+
+def test_sandbox_allows_context_subscript_and_method() -> None:
+    """`context.grep(...)` and `context[i]` are allowed."""
+    from torus.rlm import SandboxedContextREPL, RecursiveContext
+    ctx = RecursiveContext(["alpha beta", "gamma alpha"])
+    repl = SandboxedContextREPL(ctx)
+    stdout, last = repl.run("hits = context.grep('alpha')\nprint(len(hits))")
+    assert stdout.strip() == "2"
+    assert last == ""
+
+
+def test_sandbox_blocks_getattr() -> None:
+    """`getattr(...)` is in the forbidden list."""
+    from torus.rlm import SandboxedContextREPL, RecursiveContext, SandboxError
+    ctx = RecursiveContext(["x"])
+    repl = SandboxedContextREPL(ctx)
+    with pytest.raises(SandboxError, match="call to 'getattr'"):
+        repl.run("getattr(context, 'slice')")
+
+
+def test_sandbox_blocks_long_code() -> None:
+    """More than `max_lines` is rejected."""
+    from torus.rlm import (
+        SandboxedContextREPL, RecursiveContext, SandboxError, SandboxPolicy,
+    )
+    ctx = RecursiveContext(["x"])
+    policy = SandboxPolicy(max_lines=5)
+    repl = SandboxedContextREPL(ctx, policy=policy)
+    long_code = "\n".join("print(1)" for _ in range(10))
+    with pytest.raises(SandboxError, match="lines"):
+        repl.run(long_code)
+
+
+def test_sandbox_runs_with_timeout() -> None:
+    """When `timeout_seconds` is set, long-running code reports a timeout."""
+    from torus.rlm import (
+        SandboxedContextREPL, RecursiveContext, SandboxPolicy,
+    )
+    ctx = RecursiveContext(["x"])
+    policy = SandboxPolicy(timeout_seconds=0.05)  # 50 ms
+    repl = SandboxedContextREPL(ctx, policy=policy)
+    # An infinite loop in a daemon thread; the REPL returns a timeout marker.
+    stdout, last = repl.run("while True:\n    pass")
+    assert "timeout" in stdout.lower()
+
+
+def test_sandbox_caps_output() -> None:
+    """Stdout larger than `max_output` is truncated."""
+    from torus.rlm import (
+        SandboxedContextREPL, RecursiveContext, SandboxPolicy,
+    )
+    ctx = RecursiveContext(["x"])
+    policy = SandboxPolicy(max_output=20)
+    repl = SandboxedContextREPL(ctx, policy=policy)
+    stdout, _ = repl.run("print('x' * 1000)")
+    assert len(stdout) <= policy.max_output + 200  # +truncation marker
+    assert "truncated" in stdout
+
+
+def test_sandbox_custom_call_allowlist() -> None:
+    """`extra_allowed_call_names` opens up specific named calls."""
+    from torus.rlm import (
+        SandboxedContextREPL, RecursiveContext, SandboxPolicy,
+    )
+    ctx = RecursiveContext(["x"])
+    # 'sum' is in SAFE_BUILTINS but 'sorted' is too — both work.
+    # The policy lets us add a custom helper.
+    policy = SandboxPolicy(extra_allowed_call_names=frozenset({"my_helper"}))
+    repl = SandboxedContextREPL(ctx, policy=policy)
+    repl.install("my_helper", lambda: 42)
+    stdout, last = repl.run("my_helper()")
+    assert stdout.strip() == "42"
+    assert last == "42"
+
+
+def test_sandbox_blocks_unknown_call() -> None:
+    """Calls to names not in the allowlist are rejected."""
+    from torus.rlm import SandboxedContextREPL, RecursiveContext, SandboxError
+    ctx = RecursiveContext(["x"])
+    repl = SandboxedContextREPL(ctx)
+    with pytest.raises(SandboxError, match="not in the"):
+        repl.run("frobnicate(123)")
+
+
+def test_sandbox_install_blocks_reserved_names() -> None:
+    """`install` refuses to overwrite builtins or reserved names."""
+    from torus.rlm import SandboxedContextREPL, RecursiveContext
+    ctx = RecursiveContext(["x"])
+    repl = SandboxedContextREPL(ctx)
+    with pytest.raises(ValueError):
+        repl.install("len", lambda: None)
+    with pytest.raises(ValueError):
+        repl.install("context", lambda: None)
+
+
+def test_sandbox_allows_subscript_on_local_name() -> None:
+    """Subscript on local names like `hits[0]` is allowed (legitimate indexing)."""
+    from torus.rlm import SandboxedContextREPL, RecursiveContext
+    ctx = RecursiveContext(["alpha beta", "gamma alpha"])
+    repl = SandboxedContextREPL(ctx)
+    code = (
+        "hits = context.grep('alpha')\n"
+        "text = context.slice(hits[0])\n"
+        "print(text[:5])"
+    )
+    stdout, _ = repl.run(code)
+    assert stdout.strip() == "alpha"
+
+
+def test_sandbox_blocks_subscript_on_complex_expression() -> None:
+    """Subscript on something other than a Name (e.g. a Call result) is rejected."""
+    from torus.rlm import SandboxedContextREPL, RecursiveContext, SandboxError
+    ctx = RecursiveContext(["x"])
+    repl = SandboxedContextREPL(ctx)
+    with pytest.raises(SandboxError, match="subscript access"):
+        repl.run("[1, 2, 3][0]")
+
+
+def test_sandbox_blocks_subscript_on_attribute() -> None:
+    """`something.attr[idx]` is rejected because the Attribute check fires first."""
+    from torus.rlm import SandboxedContextREPL, RecursiveContext, SandboxError
+    ctx = RecursiveContext(["x"])
+    repl = SandboxedContextREPL(ctx)
+    with pytest.raises(SandboxError):
+        repl.run("[].__class__[0]")
+
+
+def test_sandbox_blocks_dunder_module_access() -> None:
+    """`something.__class__` etc. are blocked at the Attribute check."""
+    from torus.rlm import SandboxedContextREPL, RecursiveContext, SandboxError
+    ctx = RecursiveContext(["x"])
+    repl = SandboxedContextREPL(ctx)
+    with pytest.raises(SandboxError):
+        repl.run("int.__class__")

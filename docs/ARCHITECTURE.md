@@ -315,80 +315,72 @@ temp directory, then runs the same PrimeAgentLoop pattern against
 it. Storage bytes reported; model grep's the chunk that mentions
 Phase 8 and answers in 1 step.
 
-## Phase 9 — Inverted Index for `PersistentContext.grep`
+## Phase 2 (security) — SandboxedContextREPL
 
-The Phase-8 `PersistentContext.grep` was `O(n)` over every chunk on
-disk. For a context measured in millions of tokens, this is a real
-bottleneck — and the RLM `grep → slice → ask` pattern calls `grep`
-repeatedly. Phase 9 adds an append-only inverted index so `grep`
-becomes `O(log n + matches)` after a one-time index build.
+The Phase-1 `ContextREPL` is `exec(compile(...))` with the model
+emitting Python directly. That's a real attack surface — a
+malformed model output could call `os.system`, read `/etc/passwd`,
+or run arbitrary code.
 
-### Components
+Phase 2 (security sub-phase) replaces `ContextREPL` with
+`SandboxedContextREPL` for any production deployment. The
+sandbox enforces a strict policy at *three* layers:
 
-- `torus.rlm.index.PersistentContextIndex`: token → sorted list of
-  chunk indices. Stored at `<root>/index.json` as a small JSON
-  sidecar. Two variants (case-sensitive, case-insensitive) live in
-  separate files; the index is rebuilt lazily on first access when
-  the sidecar is missing or stale.
+1. **AST whitelist**: before any code runs, we parse it and walk
+   the AST. We reject the code (without running it) if it contains:
+     - `Import` / `ImportFrom` nodes
+     - calls to `exec`, `eval`, `compile`, `__import__`, `open`,
+       `getattr`, `setattr`, `globals`, `locals`, `vars`, `dir`
+     - attribute access on anything other than the bound name
+       `context`
+     - subscript access on anything other than a top-level Name
+       (so `hits[0]` is fine but `__builtins__["eval"]` is not)
 
-### Index behavior
+2. **Restricted builtins**: at run time, the code sees only a
+   safe `__builtins__` dict — `abs`, `all`, `any`, `bool`,
+   `dict`, `enumerate`, `float`, `int`, `isinstance`, `len`,
+   `list`, `max`, `min`, `print`, `range`, `repr`, `reversed`,
+   `round`, `set`, `sorted`, `str`, `sum`, `tuple`, `type`,
+   `zip`. No `os`, no `sys`, no `open`, no `subprocess`.
 
-- **Tokenization**: `re.findall(r"\w+", text)` over each chunk. The
-  regex matches `[A-Za-z0-9_]+` so word boundaries are honored.
-- **ignore_case**: when set, both the pattern and the indexed tokens
-  are lowercased before matching. A separate index file is built
-  for this variant.
-- **Pattern shape**: if the pattern contains no `\w+` tokens (e.g.
-  `"---"` or `"..."`), `candidates_for` returns `None` and the
-  caller falls back to a linear scan. Otherwise `candidates_for`
-  intersects the chunk sets for every token; if any token is
-  missing from the index, it returns `[]` (no possible match).
-- **Append-time updates**: every `add_chunk` extends the
-  in-memory index immediately (so `grep` calls between appends
-  see the new chunks). Saves to disk are debounced to every 64
-  appends, with an explicit `flush_index()` method for callers
-  that need durability before exit.
-- **Cache invalidation**: append-only. Chunks are never removed
-  or edited, so the index never shrinks. If the on-disk chunk
-  count drops below `chunks_indexed` (someone deleted chunk
-  files out of band), the next access rebuilds.
+3. **Resource caps** (per call):
+     - `max_lines` (default 64)
+     - `max_output` (default 16 KB captured stdout)
+     - `max_recursion_depth` (default 16)
+     - `timeout_seconds` (optional; enforced via a daemon-thread
+       watchdog; daemon means a runaway code can't survive process
+       shutdown)
 
-### Why this is the Phase-9 milestone
+The `SandboxedContextREPL` is API-compatible with `ContextREPL`
+(`.run(code) -> (stdout, last)`) so `PrimeAgentLoop` accepts
+either transparently via its `repl=` parameter.
 
-- **Speedup**: on a 2000-chunk context (5 KB chunks, cache_size=16
-  to force disk reads), a unique-needle grep went from 49.8 ms
-  (linear) to 0.04 ms (indexed warm). That's a ~1200× speedup;
-  the first grep pays the one-time index-build cost (~1.2 s for
-  2000 chunks, dominated by reading every chunk to tokenize it).
-- **Drop-in**: `PersistentContext.grep` has the same signature and
-  semantics as before. The index is internal; no caller changes
-  needed.
-- **Opt-out**: `PersistentContext(..., use_index=False)` falls back
-  to the linear scan for tests that want pure linear-scan
-  semantics.
+### Why this is the security milestone
+
+- **Fast-fail at the AST layer.** Dangerous code never runs; the
+  sandbox raises `SandboxError` before any side effect.
+- **Defense-in-depth.** Even if the AST check were bypassed, the
+  runtime `__builtins__` is a curated subset that has no way to
+  reach the OS or filesystem.
+- **Per-REPL policy.** `SandboxPolicy` lets callers loosen
+  individual caps (e.g. longer timeouts for batch jobs) without
+  rebuilding the parser or runtime.
+- **Surface compatible.** `PrimeAgentLoop(repl=...)` accepts a
+  sandbox without API churn; existing `ContextREPL` callers
+  continue to work unchanged.
 
 ### Demo
 
-`examples/persistent_grep_demo.py` builds a context of N chunks
-with unique needles, runs indexed grep + linear grep, and reports
-the speedup. On a 2000-chunk context with a unique-needle query,
-the warm indexed grep is ~1200× faster than linear.
-- **REPL execution** is a security surface — Phase 2 must ship a
-  sandbox before production use.
+`examples/sandbox_demo.py` drives `SandboxedContextREPL` with a
+stub model that emits three dangerous snippets (`import os`,
+`exec(...)`, `open(...).read()`) and one safe one
+(`context.grep(...) + context.slice(...)`). The first three are
+rejected at AST level with `SandboxError` surfaced as stdout; the
+safe snippet executes and produces the final answer.
 
-## Risks and Trade-offs
-
-- **Gate heuristics** (Phase 1) are not learned — they will fire too
-  often on some layers and not enough on others. Phase 3 evaluates
-  this.
-- **Orthogonal quantized residual planes** *can* overfit the training
-  objective if not regularized. Phase 3 explores capability-aware
-  distillation losses specifically designed for residual planes.
-- **CPU-first inference** is good for memory-bound workloads (LLM
-  decoding) but not for compute-bound prefill at long context. Phase 2
-  considers heterogeneous execution.
 - **REPL execution** is a security surface — Phase 2 must ship a
-  sandbox before production use.
+  sandbox before production use. (Resolved in this release via
+  `SandboxedContextREPL`; see Phase 2 above.)
 
 ## Why Python first, hardware later?
 

@@ -1,5 +1,47 @@
 # CHANGELOG
 
+## 0.9.0 — SandboxedContextREPL + REPL injection
+
+### Verified
+
+- 147/147 tests passing on dev (.venv, Py3.12 + CPU torch +
+  Blackwell via numba) and Legion (.venv-py311, Py3.14 + CUDA
+  torch + 2× TITAN RTX).
+- `examples/sandbox_demo.py`: a stub model emits three dangerous
+  snippets (`import os`, `exec(...)`, `open('/etc/passwd').read()`)
+  and one safe snippet. The first three are rejected at AST
+  level with `SandboxError` surfaced as stdout; the safe
+  `context.grep + context.slice` snippet runs and produces the
+  final answer.
+
+### Added
+
+- `torus.rlm.sandbox.SandboxedContextREPL`: drop-in replacement
+  for `ContextREPL` that enforces an AST-level whitelist (no
+  imports, no `exec`/`eval`/`open`/`getattr`, attribute access
+  only on `context`, subscript only on local Names), restricts
+  `__builtins__` to a safe subset, and caps per-call resources
+  (lines, output size, recursion depth, wall-clock timeout).
+- `torus.rlm.sandbox.SandboxPolicy`: per-REPL config object
+  (max_lines, max_output, max_recursion_depth, timeout_seconds,
+  extra_allowed_call_names).
+- `torus.rlm.sandbox.SandboxError`: raised by the AST check
+  when model output violates the policy.
+- `PrimeAgentLoop(repl=...)` parameter: accept a custom REPL
+  (`ContextREPL` for the default untrusted flow; pass
+  `SandboxedContextREPL` for production). `run()` now catches
+  exceptions from `self.repl.run(code)` and surfaces them as
+  stdout so the model can recover on the next step.
+
+### Fixed
+
+- The Phase-2 docs called out REPL execution as an open security
+  risk for the entire session. Phase 2 (security sub-phase) is
+  now resolved: any production deployment uses
+  `SandboxedContextREPL` (see Phase 2 section in ARCHITECTURE.md).
+
+# CHANGELOG
+
 ## 0.8.0 — Phase 9 inverted index for PersistentContext
 
 ### Verified
