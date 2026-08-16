@@ -322,6 +322,67 @@ class HFStudentAdapter:
         ]
         return student_logits_t, hidden_t, route_np, primary_weights, residual_weights
 
+    def apply_eval_mode(self, n_planes: int = 1) -> None:
+        """Switch the patched modules to a fast eval path.
+
+        Quantizes each STE's weight once (numpy → GPU tensor) and
+        replaces the per-call patched forward with a closure that
+        just calls `F.linear(x, q_w, bias)`. The per-step numpy
+        round-trip + STE forward call is gone, so lm-eval runs
+        at native HF model speed.
+
+        `apply_train_mode()` restores the slow train path.
+        """
+        import torch as _torch
+        import torch.nn as nn
+        for ste, target in zip(self._ste_params, self._patched_modules):
+            module, _name = target
+            # Quantitative the weight once on CPU.
+            _, _, q_w = ste.forward(n_planes=n_planes)
+            # Bring it onto the same device as the module.
+            q_w_t = _torch.as_tensor(
+                q_w, dtype=module.weight.dtype, device=module.weight.device
+            )
+            # Stash the quantized weight on the module so the
+            # closure below can find it without a per-call lookup.
+            module._torus_eval_qw = q_w_t
+
+            def _fast_fwd(x, _m=module):
+                weight = _m._torus_eval_qw
+                if _m.weight.shape != weight.shape:
+                    weight = weight.t()  # Conv1D shape mismatch
+                return _F.linear(x, weight, _m.bias)
+
+            module.forward = _fast_fwd  # type: ignore[assignment]
+
+    def apply_train_mode(self) -> None:
+        """Restore the per-call STE quantization path (default)."""
+        for (ste, bias_param), target in zip(
+            zip(self._ste_params, self._bias_params), self._patched_modules
+        ):
+            module, _name = target
+            module.forward = _make_forward_stub(  # type: ignore[assignment]
+                ste,
+                ternary_quantize_with_ste,
+                transpose_weight=False,  # recomputed below
+                bias_param=bias_param,
+                get_n_planes=lambda: self._current_n_planes,
+            )
+        # Re-derive transpose from each module's weight shape
+        # (Conv1D's weight is shape (in, out); nn.Linear's is (out, in)).
+        from transformers.pytorch_utils import Conv1D
+        for (ste, bias_param), target in zip(
+            zip(self._ste_params, self._bias_params), self._patched_modules
+        ):
+            module, _name = target
+            transpose = isinstance(module, Conv1D)
+            module.forward = _make_forward_stub(  # type: ignore[assignment]
+                ste,
+                ternary_quantize_with_ste,
+                transpose_weight=transpose,
+                bias_param=bias_param,
+        )
+
     def forward_teacher_torch(self, batch: DistillationBatch) -> "torch.Tensor":
         """Forward the teacher, returning torch logits on the same device."""
         import torch
@@ -332,16 +393,10 @@ class HFStudentAdapter:
             # The adapter doesn't actually carry a separate teacher
             # model; the student is also the teacher in the autograd
             # sense. We return the student's *un-perturbed* output.
-        ids = torch.as_tensor(
-            batch.inputs, dtype=torch.long, device=self.config.device
-        )
-        # The adapter doesn't actually carry a separate teacher
-        # model; the student is also the teacher in the autograd
-        # sense. We return the student's *un-perturbed* output.
-        # In a real training run the trainer would override this
-        # with the frozen teacher adapter.
-        out = self.model(input_ids=ids)
-        return out.logits
+            # In a real training run the trainer would override this
+            # with the frozen teacher adapter.
+            out = self.model(input_ids=ids)
+            return out.logits
 
     def save_state(self, path: str) -> None:
         """Serialize STE weights + residual weights to a `npz` file.

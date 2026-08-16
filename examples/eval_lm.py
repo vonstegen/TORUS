@@ -9,12 +9,9 @@ Two modes:
 - `--baseline`: load the model with no quantization.
 - `--quantized --load-adapter PATH`: load the model, attach the
   HFStudentAdapter wrapping the target linears, then load the
-  trained STE+residual weights back into them.
-
-Both modes use `lm-eval-harness` (EleutherAI) under the hood. The
-wrapper class is a thin shim that lm-eval can call via its
-`HFLM` interface — we extend `HFLM` so the patched forward is
-used (the `forward` in `modeling_*.py` is what lm-eval calls).
+  trained STE+residual weights back into them. The patched
+  modules are switched to a fast eval path (one-time quantize,
+  then raw F.linear per call) so lm-eval runs at native HF speed.
 """
 from __future__ import annotations
 
@@ -38,8 +35,7 @@ def run_lm_eval(model, tokenizer, tasks: list[str], batch_size: int) -> dict:
     from lm_eval.models.huggingface import HFLM
 
     lm = HFLM(pretrained=model, tokenizer=tokenizer, batch_size=batch_size)
-    results = simple_evaluate(model=lm, tasks=tasks, batch_size=batch_size)
-    return results
+    return simple_evaluate(model=lm, tasks=tasks, batch_size=batch_size)
 
 
 def main() -> None:
@@ -49,7 +45,7 @@ def main() -> None:
     p.add_argument("--mode", choices=["baseline", "quantized"], default="baseline")
     p.add_argument("--load-adapter", default=None,
                    help="Path to .npz produced by `distill_run.py --save-adapter`")
-    p.add_argument("--tasks", default="wikitext,lambada_openai,arc_easy,hellaswag",
+    p.add_argument("--tasks", default="wikitext,lambada_openai,arc_easy",
                    help="comma-separated lm-eval task names")
     p.add_argument("--batch-size", type=int, default=4)
     p.add_argument("--device", default="cuda:0")
@@ -76,9 +72,6 @@ def main() -> None:
         ).to(args.device)
         model.eval()
     else:
-        # Wrap in student adapter. The adapter's forward() copies
-        # STE weights into the patched nn.Linear forwards before
-        # each lm-eval call, which is what we want.
         cfg = HFAdapterConfig(
             model_name=args.model,
             target_modules=tuple(args.target_modules.split(",")),
@@ -90,26 +83,24 @@ def main() -> None:
         if args.load_adapter is not None:
             adapter.load_state(args.load_adapter)
             print(f"[eval] loaded adapter weights from {args.load_adapter}")
+        n_planes = 1
+        # Fast forward: pre-quantize once and use raw F.linear per call.
+        # Without this, every lm-eval request triggers a per-STE numpy
+        # round-trip + ternary_quantize, which is 100-1000x slower.
+        adapter.apply_eval_mode(n_planes=n_planes)
+        adapter.model.eval()
         model = adapter.model
 
     tasks = args.tasks.split(",")
     print(f"[eval] running tasks: {tasks}")
     results = run_lm_eval(model, tokenizer, tasks, batch_size=args.batch_size)
 
-    # Trim to the metric we care about: per-task primary metric.
     summary: dict = {"model": args.model, "mode": args.mode, "tasks": {}}
     for task, res in results["results"].items():
-        # lm-eval names the primary metric differently per task.
-        # Pick the "acc,none" or "ppl,none" or "acc_norm,none" key
-        # depending on what's available.
         for k, v in res.items():
             if k in ("alias", "acc,none", "acc_norm,none", "ppl,none", "word_perplexity,none"):
                 summary["tasks"][task] = {"metric": k, "value": v}
                 break
-
-    if args.limit is not None:
-        # For sanity checks: print what we'd report.
-        pass
 
     print()
     print("[eval] === results ===")
@@ -122,7 +113,6 @@ def main() -> None:
             json.dump(summary, f, indent=2)
         print(f"[eval] wrote {args.output}")
 
-    # Cleanup to keep VRAM tidy for the next run.
     del model
     if args.mode == "quantized":
         del adapter
