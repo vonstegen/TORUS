@@ -332,10 +332,81 @@ class HFStudentAdapter:
             # The adapter doesn't actually carry a separate teacher
             # model; the student is also the teacher in the autograd
             # sense. We return the student's *un-perturbed* output.
-            # In a real training run the trainer would override this
-            # with the frozen teacher adapter.
-            out = self.model(input_ids=ids)
-            return out.logits
+        ids = torch.as_tensor(
+            batch.inputs, dtype=torch.long, device=self.config.device
+        )
+        # The adapter doesn't actually carry a separate teacher
+        # model; the student is also the teacher in the autograd
+        # sense. We return the student's *un-perturbed* output.
+        # In a real training run the trainer would override this
+        # with the frozen teacher adapter.
+        out = self.model(input_ids=ids)
+        return out.logits
+
+    def save_state(self, path: str) -> None:
+        """Serialize STE weights + residual weights to a `npz` file.
+
+        One entry per patched linear: `primary_{i}` and
+        `residual_{i}`. The model name and the target-module list
+        are stashed in a tiny JSON sidecar at `<path>.meta.json`
+        so `load_state` can reconstruct the adapter.
+        """
+        import json
+        import numpy as np
+        arrays: dict = {}
+        for i, (ste, res) in enumerate(
+            zip(self._ste_params, self._residual_params)
+        ):
+            pw = ste.weight
+            arrays[f"primary_{i}"] = (
+                pw.detach().cpu().numpy()
+                if hasattr(pw, "detach")
+                else np.asarray(pw)
+            )
+            if res is not None:
+                arrays[f"residual_{i}"] = (
+                    res.detach().cpu().numpy()
+                    if hasattr(res, "detach")
+                    else np.asarray(res)
+                )
+        np.savez(path, **arrays)
+        meta = {
+            "model_name": self.config.model_name,
+            "target_modules": list(self.config.target_modules),
+            "dtype": self.config.dtype,
+            "attn_implementation": self.config.attn_implementation,
+            "n_ste": len(self._ste_params),
+        }
+        with open(path + ".meta.json", "w") as f:
+            json.dump(meta, f)
+
+    def load_state(self, path: str) -> None:
+        """Restore STE weights + residual weights from a `npz`."""
+        import numpy as np
+        data = np.load(path)
+        for i, (ste, res) in enumerate(
+            zip(self._ste_params, self._residual_params)
+        ):
+            pw = ste.weight
+            if hasattr(pw, "detach"):
+                with __import__("torch").no_grad():
+                    pw.copy_(
+                        __import__("torch").as_tensor(
+                            data[f"primary_{i}"], device=pw.device
+                        )
+                    )
+            else:
+                pw[...] = data[f"primary_{i}"]
+            if res is not None and f"residual_{i}" in data.files:
+                if hasattr(res, "detach"):
+                    with __import__("torch").no_grad():
+                        res.copy_(
+                            __import__("torch").as_tensor(
+                                data[f"residual_{i}"], device=res.device
+                            )
+                        )
+                else:
+                    res[...] = data[f"residual_{i}"]
 
 
 class HFTeacherAdapter:

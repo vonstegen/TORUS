@@ -93,6 +93,9 @@ def run_one(
     )
     print(f"[distill] loading student from {model_name!r} ...")
     student = HFStudentAdapter(cfg)
+    if getattr(args, "load_adapter", None):
+        student.load_state(args.load_adapter)
+        print(f"[distill]   loaded adapter weights from {args.load_adapter}")
     if getattr(args, "perturb_residual", False):
         import torch
         for rp in student.residual_params:
@@ -110,8 +113,6 @@ def run_one(
         teacher = HFTeacherAdapter(teacher_cfg)
     else:
         teacher = HFTeacherAdapter(cfg)
-    print(f"[distill]   teacher loaded in {time.perf_counter() - t0:.1f}s")
-
     vocab = student.model.config.vocab_size
     data = make_data_iter(vocab, batch_size, seq_len, seed=seed)
 
@@ -164,8 +165,10 @@ def run_one(
             f,
             indent=2,
         )
+    if getattr(args, "save_adapter", None):
+        student.save_state(args.save_adapter)
+        print(f"[distill] saved adapter weights to {args.save_adapter}")
     return {
-        "initial_loss": initial_loss,
         "final_loss": final_loss,
         "delta": (initial_loss - final_loss) if (initial_loss is not None and final_loss is not None) else None,
         "elapsed": elapsed,
@@ -209,6 +212,10 @@ def main() -> None:
                    help="Torch dtype for model weights (float32, float16, bfloat16)")
     p.add_argument("--attn-impl", default="eager",
                    help="HF attn_implementation: eager, sdpa, flash_attention_2")
+    p.add_argument("--save-adapter", default=None,
+                   help="At the end of the run, save the trained STE+residual weights to this .npz file")
+    p.add_argument("--load-adapter", default=None,
+                   help="Before training, load STE+residual weights from this .npz file (random init of matched shape skipped)")
     args = p.parse_args()
 
     # Parse the curriculum: "1:50,2:150" -> [(1, 50), (2, 150)].
