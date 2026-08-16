@@ -431,8 +431,15 @@ class DistillationTrainer:
         method (i.e. the STE weights are torch tensors). The
         autograd path is exact and ~10x faster than the
         numerical gradient path.
+
+        `self.forward_student` is the bound method
+        `student.forward`, so `hasattr(forward, "x")` is always
+        False even when the underlying adapter exposes `x`.
+        Unwrap via `__self__` first.
         """
-        return hasattr(self.forward_student, "forward_with_grad")
+        fs = self.forward_student
+        obj = getattr(fs, "__self__", fs)
+        return hasattr(obj, "forward_with_grad")
 
     def _autograd_grads(self, batch) -> tuple:
         """Compute per-STE primary + residual gradients via torch.autograd.grad.
@@ -457,8 +464,13 @@ class DistillationTrainer:
 
         # Adapter gives us torch tensors and the weight lists.
         n_planes = max(1, self._n_planes_safe(batch))
+        # Unwrap the bound method: `forward_with_grad` lives on the
+        # adapter instance, not on the bound method `adapter.forward`.
+        student_adapter = getattr(
+            self.forward_student, "__self__", self.forward_student
+        )
         s_logits, _s_hidden, _route, primary_weights, residual_weights = (
-            self.forward_student.forward_with_grad(batch, n_planes)
+            student_adapter.forward_with_grad(batch, n_planes)
         )
         # Real teacher: a frozen full-precision HF model. Run under
         # `enable_grad` so the KL loss builds a graph through the
@@ -479,7 +491,6 @@ class DistillationTrainer:
             retain_graph=False,
             allow_unused=True,
         )
-
         primary_grads: list = []
         residual_grads: list = []
         g_iter = iter(grads)
@@ -494,11 +505,8 @@ class DistillationTrainer:
                 residual_grads.append(None)
 
         return primary_grads, residual_grads
-
     def _teacher_logits_torch(self, batch):
         """Teacher logits as a torch tensor under enable_grad.
-
-        `forward_teacher` may be either an adapter instance or a
         bound method. We probe for `forward_torch` on both the value
         itself and its `__self__` so existing call sites that pass
         `teacher.forward` keep working.
