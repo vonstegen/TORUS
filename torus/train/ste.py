@@ -19,6 +19,15 @@ Phase-3 trainer compatibility:
   `n_planes=1`, only the primary contributes. This matches
   `torus.quant.residual.ResidualTernaryPlanes` so the trainer's
   `n_planes` parameter has the same meaning at the STE level.
+
+Norm calibration (added 2026-08-16):
+- `ternary_quantize_with_ste(calibrate_norm=True, ref_weight=...)`
+  rescales the per-group `scale` so that the quantized weight's
+  L2 norm matches the FP16 reference. Without this, ternary codes
+  × small per-group scale produce a weight whose norm is 50-70%
+  of the FP16 reference, and the collapse compounds across layers
+  to a ~0.0003 multiplier by the lm_head of a 16-layer model.
+  Calibration preserves the FP16 norm per layer.
 """
 from __future__ import annotations
 
@@ -42,6 +51,8 @@ def ternary_quantize_with_ste(
     weight: np.ndarray,
     group_size: int = 128,
     threshold: float = 0.7,
+    calibrate_norm: bool = False,
+    ref_weight: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Quantize `weight` to ternary codes and the per-group scale.
 
@@ -53,14 +64,22 @@ def ternary_quantize_with_ste(
                           in a forward pass. The backward pass should
                           treat the gradient as flowing through this
                           directly (the STE).
+
+    `calibrate_norm=True` rescales the per-group `scale` so that
+    `||quantized_weight||` matches `||ref_weight||` (defaults to
+    `weight`). This fixes the per-layer norm collapse that
+    otherwise halves the signal every layer in a deep network.
+    The rescale is applied uniformly to `scale` (not per-group),
+    so within-layer structure is preserved.
     """
     if weight.ndim != 2:
         raise ValueError(f"weight must be 2D, got shape {weight.shape}")
-    w = weight.astype(np.float32, copy=False)
+    w = _to_numpy(weight)
     if w.shape[1] % group_size != 0:
         raise ValueError(
             f"in_features={w.shape[1]} not divisible by group_size={group_size}"
         )
+    ref = _to_numpy(ref_weight if ref_weight is not None else weight)
     scale = _absmean_scale(w, group_size)
     w_n = w.reshape(w.shape[0], -1, group_size) / scale[..., None]
     w_n = w_n.reshape(w.shape[0], -1)
@@ -69,6 +88,19 @@ def ternary_quantize_with_ste(
     codes_int = codes.astype(np.int8)
     s_full = np.repeat(scale, group_size, axis=-1)
     quantized = codes_int.astype(np.float32) * s_full
+    if calibrate_norm:
+        ref_norm = float(np.linalg.norm(ref))
+        q_norm = float(np.linalg.norm(quantized))
+        if q_norm > 0 and ref_norm > 0:
+            # Apply the same multiplier to codes and scale so
+            # both stay self-consistent for the STE path.
+            mult = ref_norm / q_norm
+            quantized = quantized * mult
+            scale = scale * mult
+            s_full = s_full * mult
+            codes_int = np.clip(
+                codes_int.astype(np.float32) * mult, -127.0, 127.0
+            ).astype(np.int8)
     return codes_int, scale, quantized
 
 
@@ -98,11 +130,17 @@ class TernarySTE:
             by the `n_planes` argument to `forward()`. The residual
             weight is itself learnable; the trainer's optimizer
             updates it via the `_params_np` numpy buffer.
+        calibrate_norm: when True, rescale each plane's quantized
+            weight so its L2 norm matches the underlying learnable
+            `weight` (or `residual_weight`). Prevents the per-layer
+            norm collapse that otherwise compounds across deep
+            networks (see module docstring).
     """
     weight: np.ndarray
     group_size: int = 128
     threshold: float = 0.7
     residual_weight: np.ndarray | None = None
+    calibrate_norm: bool = True
 
     def __post_init__(self) -> None:
         if self.weight.ndim != 2:
@@ -139,14 +177,22 @@ class TernarySTE:
         """
         w_np = _to_numpy(self.weight)
         codes, scale, q_primary = ternary_quantize_with_ste(
-            w_np, group_size=self.group_size, threshold=self.threshold,
+            w_np,
+            group_size=self.group_size,
+            threshold=self.threshold,
+            calibrate_norm=self.calibrate_norm,
+            ref_weight=self.weight,
         )
         if n_planes < 2 or self.residual_weight is None:
             return codes, scale, q_primary
 
         r_np = _to_numpy(self.residual_weight)
         _r_codes, _r_scale, q_residual = ternary_quantize_with_ste(
-            r_np, group_size=self.group_size, threshold=self.threshold,
+            r_np,
+            group_size=self.group_size,
+            threshold=self.threshold,
+            calibrate_norm=self.calibrate_norm,
+            ref_weight=self.residual_weight,
         )
         # Return the combined quantized weight as the "primary"
         # slot; codes/scale only describe the primary plane.

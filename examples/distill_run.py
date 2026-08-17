@@ -50,8 +50,7 @@ from torus.train.hf_adapter import HFAdapterConfig, HFStudentAdapter, HFTeacherA
 from torus.train.loop import DistillationBatch, DistillationTrainer, TrainingConfig
 from torus.train.losses import DistillationConfig
 
-
-def make_data_iter(vocab_size: int, batch_size: int, seq_len: int, seed: int):
+def make_data_iter_random(vocab_size: int, batch_size: int, seq_len: int, seed: int):
     """Yield token batches drawn uniformly at random from the vocab."""
     rng = np.random.default_rng(seed)
 
@@ -62,6 +61,71 @@ def make_data_iter(vocab_size: int, batch_size: int, seq_len: int, seed: int):
             )
 
     return iter_batches()
+
+def make_data_iter_wikitext(tokenizer, batch_size: int, seq_len: int, seed: int):
+    """Yield real token batches from wikitext-103 train split.
+
+    Bypasses the broken `datasets` library in this Python 3.14 venv
+    (its wikitext hash is unresolvable) by downloading parquet
+    shards directly via `huggingface_hub` and reading with
+    `pyarrow.parquet`. The first call downloads the shards (~500MB)
+    into the HF cache; subsequent calls reuse them.
+    """
+    import os
+    os.environ.setdefault("HF_HUB_ENABLE_HF_TRANSFER", "0")
+    from huggingface_hub import hf_hub_download
+    import pyarrow.parquet as pq
+
+    print("[distill] downloading wikitext-103 train shards ...")
+    paths = [
+        hf_hub_download(
+            repo_id="wikitext",
+            filename=f"wikitext-103-raw-v1/train-{i:05d}-of-00002.parquet",
+            repo_type="dataset",
+        )
+        for i in range(2)
+    ]
+    tables = [pq.read_table(p, columns=["text"]) for p in paths]
+    texts = sum((t.column("text").to_pylist() for t in tables), [])
+    print(f"[distill] wikitext corpus: {len(texts):,} rows")
+
+    # Concatenate non-empty rows into a single token stream.
+    eot = tokenizer.eos_token_id or 0
+    all_ids: list[int] = []
+    for text in texts:
+        if not text.strip():
+            continue
+        ids = tokenizer(text, add_special_tokens=False)["input_ids"]
+        ids.append(eot)
+        all_ids.extend(ids)
+    print(f"[distill] tokenized corpus: {len(all_ids):,} tokens")
+
+    rng = np.random.default_rng(seed)
+    n = batch_size * seq_len
+
+    def iter_batches():
+        # Yield random windows from the tokenized corpus.
+        while True:
+            max_start = len(all_ids) - n - 1
+            if max_start <= 0:
+                return
+            start = int(rng.integers(0, max_start))
+            window = np.asarray(all_ids[start: start + n], dtype=np.int64)
+            window = window.reshape(batch_size, seq_len)
+            yield DistillationBatch(inputs=window)
+
+    return iter_batches()
+
+def make_data_iter(tokenizer, batch_size: int, seq_len: int, seed: int, dataset: str = "random"):
+    """Backwards-compatible wrapper; routes to the right iter."""
+    if dataset == "random":
+        return make_data_iter_random(
+            tokenizer.vocab_size if hasattr(tokenizer, "vocab_size") else 50304,
+            batch_size, seq_len, seed,
+        )
+    if dataset == "wikitext":
+        return make_data_iter_wikitext(tokenizer, batch_size, seq_len, seed)
+    raise ValueError(f"unknown dataset: {dataset}")
 
 
 def run_one(
@@ -111,11 +175,14 @@ def run_one(
             attn_implementation=getattr(args, 'attn_impl', 'eager'),
         )
         teacher = HFTeacherAdapter(teacher_cfg)
-    else:
-        teacher = HFTeacherAdapter(cfg)
     vocab = student.model.config.vocab_size
-    data = make_data_iter(vocab, batch_size, seq_len, seed=seed)
-
+    dataset_name = getattr(args, "dataset", "random")
+    if dataset_name == "wikitext":
+        from transformers import AutoTokenizer
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        data = make_data_iter_wikitext(tokenizer, batch_size, seq_len, seed=seed)
+    else:
+        data = make_data_iter_random(vocab, batch_size, seq_len, seed=seed)
     train_cfg = TrainingConfig(
         n_steps=n_steps,
         log_every=max(1, n_steps // 20),
@@ -169,6 +236,7 @@ def run_one(
         student.save_state(args.save_adapter)
         print(f"[distill] saved adapter weights to {args.save_adapter}")
     return {
+        "initial_loss": initial_loss,
         "final_loss": final_loss,
         "delta": (initial_loss - final_loss) if (initial_loss is not None and final_loss is not None) else None,
         "elapsed": elapsed,
@@ -193,7 +261,7 @@ def main() -> None:
     p.add_argument("--seq-len", type=int, default=16)
     p.add_argument(
         "--curriculum",
-        default="1:50,2:150",
+        default="1:500,2:500",
         help="plane_count:steps_per_stage, comma-separated",
     )
     p.add_argument("--log-dir", default="/tmp/torus_distill_logs")
@@ -216,9 +284,10 @@ def main() -> None:
                    help="At the end of the run, save the trained STE+residual weights to this .npz file")
     p.add_argument("--load-adapter", default=None,
                    help="Before training, load STE+residual weights from this .npz file (random init of matched shape skipped)")
+    p.add_argument("--dataset", default="random", choices=["random", "wikitext"],
+                   help="Training data source. 'wikitext' streams wikitext-103 with the model's tokenizer.")
     args = p.parse_args()
 
-    # Parse the curriculum: "1:50,2:150" -> [(1, 50), (2, 150)].
     planes = []
     step_counts = []
     for entry in args.curriculum.split(","):
@@ -233,7 +302,6 @@ def main() -> None:
     log_path = (
         Path(args.log_dir) / f"{args.label}.json"
     )
-
     result = run_one(
         args,
         model_name=args.model,
