@@ -68,16 +68,25 @@ def parse_per_layer_summary(path: Path) -> dict:
     with open(path) as f:
         s = json.load(f)
     # The driver writes `target_modules` (a list of FQ names) into the
-    # per-arm summary; an `arm` field is not set. Use the first
-    # target_module when present, otherwise fall back to the file stem.
+    # The per-arm summary written by eval_lm.py has `target_modules`
+    # (a list of FQ names) but no `arm` field. Per-layer arms have a
+    # single FQ name in target_modules. Reference arms have either
+    # the legacy short-name list (q_proj,k_proj,...) or no
+    # target_modules. Detect the case and tag with a synthetic arm
+    # name that parse_target() understands.
     arm: str | None
+    mode = s.get("mode")
     tm = s.get("target_modules")
-    if isinstance(tm, list) and tm:
+    if mode == "baseline":
+        arm = "f16_reference"
+    elif mode == "quantized" and isinstance(tm, list) and len(tm) == 1:
         arm = tm[0]
+    elif mode == "quantized" and isinstance(tm, list) and len(tm) > 1:
+        # Multi-target arm: this is the fully-quantized reference.
+        arm = "fully_quantized"
     elif s.get("arm") is not None:
         arm = s["arm"]
     else:
-        # Fall back to the file stem (without the .summary.json suffix).
         arm = path.name[: -len(".summary.json")]
     return {
         "arm": arm,

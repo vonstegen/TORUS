@@ -72,3 +72,35 @@ def test_parse_per_layer_summary_extracts_arm_from_target_modules(tmp_path) -> N
     assert rec["arm"] == "model.layers.0.self_attn.q_proj"
     assert rec["wikitext_ppl"] == 268.02
     assert rec["arc_easy_acc"] == 0.5471
+
+
+def test_parse_per_layer_summary_detects_f16_reference(tmp_path) -> None:
+    mod = _load_audit_module()
+    p = tmp_path / "f16_reference.summary.json"
+    p.write_text(json.dumps({
+        "model": "allenai/OLMo-1B-0724-hf",
+        "mode": "baseline",
+        "tasks": {
+            "wikitext": {"metric": "word_perplexity,none", "value": 13.09},
+            "arc_easy": {"metric": "acc,none", "value": 0.6073},
+        },
+    }))
+    rec = mod.parse_per_layer_summary(p)
+    assert rec["arm"] == "f16_reference"
+
+
+def test_parse_per_layer_summary_detects_fully_quantized_reference(tmp_path) -> None:
+    mod = _load_audit_module()
+    p = tmp_path / "fully_quantized.summary.json"
+    p.write_text(json.dumps({
+        "model": "allenai/OLMo-1B-0724-hf",
+        "mode": "quantized",
+        "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        "no_calibrate": True,
+        "tasks": {
+            "wikitext": {"metric": "word_perplexity,none", "value": 459454.0},
+            "arc_easy": {"metric": "acc,none", "value": 0.2584},
+        },
+    }))
+    rec = mod.parse_per_layer_summary(p)
+    assert rec["arm"] == "fully_quantized"
