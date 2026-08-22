@@ -8,7 +8,7 @@ claims_addressed: []   # establishes the baseline ladder rungs, not a claim
 title: "Reproduce FP16 and PTQ baselines under v2 provenance"
 owner: "research-harness"
 date_proposed: "2026-08-22"
-status: PROPOSED
+status: RUNNING
 decision: null
 grade: null
 

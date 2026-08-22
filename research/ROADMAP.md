@@ -100,12 +100,15 @@ and every run has immutable provenance.
       **Done 2026-08-22: `docs/ROADMAP.md`, `docs/KERNELS.md`, and
       `docs/ARCHITECTURE.md` corrected; Legion `simd_c` figures marked
       unmeasured pending AVX2 re-measurement.**
-- [ ] **0.4** Stand up provenance: `runs/<track>/<experiment_id>/<timestamp-
+- [x] **0.4** Stand up provenance: `runs/<track>/<experiment_id>/<timestamp-
       or-uuid>/` per run (git SHA/branch, full config, model/dataset IDs and
       hashes, seeds, host/hardware/software, commands, timestamps, raw +
       summarized metrics, artifact hashes). `runs/` is git-ignored; manifests
       and result summaries are committed under `research/`. Ban shared
       mutable `/tmp` artifact names and concurrent writers to one namespace.
+      **Done 2026-08-22: EXP-DRILL-000 on Legion — complete run record,
+      duplicate namespace claim rejected, hash round-trip verified.
+      CP0.2 = PASS (`research/registry/drill/EXP-DRILL-000-report.md`).**
 - [x] **0.5** Stand up the claim registry: `claims/*.yaml` with the three
       A-RP claims above in state `UNTESTED`.
       **Done 2026-08-22 (rev 2.1); quantitative thresholds added rev 2.2.**
