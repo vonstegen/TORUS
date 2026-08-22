@@ -481,10 +481,19 @@ class DistillationTrainer:
             temperature=self.loss_cfg.temperature,
         )
 
-        # Flatten the weight list to a single grad call.
-        tensors_to_grad = [
-            t for t in primary_weights + residual_weights if t is not None
-        ]
+        # Flatten the weight list to a single grad call. The order
+        # MUST match the interleaved consumption below (p0, r0, p1,
+        # r1, ...): a previous version flattened primaries-first-
+        # then-residuals while consuming interleaved, which silently
+        # assigned gradients to the wrong slots (and crashed on
+        # mixed shapes). Found by the EXP-A-03x smoke test once real
+        # gradients existed.
+        tensors_to_grad = []
+        for pw, rw in zip(primary_weights, residual_weights):
+            if pw is not None:
+                tensors_to_grad.append(pw)
+            if rw is not None:
+                tensors_to_grad.append(rw)
         grads = torch.autograd.grad(
             loss,
             tensors_to_grad,

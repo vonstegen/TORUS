@@ -108,19 +108,23 @@ def _make_forward_stub(ste: TernarySTE, qfn, *, transpose_weight: bool = False, 
     """
     import torch as _torch  # local import to avoid module-level noise
     def fwd(x):
-        # `ste.weight` may be a torch Parameter; convert to numpy
-        # before handing to the numpy quantizer.
-        import torch as _torch
-        import numpy as _np
-        w = ste.weight
-        if isinstance(w, _torch.Tensor):
-            w_np = w.detach().cpu().numpy()
-        else:
-            w_np = _np.asarray(w)
         n_planes = get_n_planes()
-        codes, scale, q_w = ste.forward(n_planes=n_planes)
-        w_t = q_w.T if transpose_weight else q_w
-        w_t = _torch.as_tensor(w_t, dtype=x.dtype, device=x.device)
+        if isinstance(ste.weight, _torch.Tensor):
+            # Torch path: straight-through quantizer keeps the
+            # autograd graph connected to `ste.weight`, so the
+            # trainer's autograd path receives real gradients.
+            # (The previous numpy round-trip silently broke the
+            # graph; torch.autograd.grad returned None for every
+            # STE weight and no training ever happened.)
+            q_w = ste.forward_torch(n_planes=n_planes)
+            w_t = q_w.t() if transpose_weight else q_w
+            w_t = w_t.to(dtype=x.dtype, device=x.device)
+        else:
+            # Numpy path: STE weight is a plain ndarray (toy tests).
+            import numpy as _np
+            codes, scale, q_w = ste.forward(n_planes=n_planes)
+            w_t = q_w.T if transpose_weight else q_w
+            w_t = _torch.as_tensor(w_t, dtype=x.dtype, device=x.device)
         qb = bias_param if bias_param is not None else None
         return _F.linear(x, w_t, qb)
     return fwd

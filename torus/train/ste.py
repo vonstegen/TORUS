@@ -112,6 +112,66 @@ def _to_numpy(weight):
     return np.asarray(weight)
 
 
+
+def ternary_quantize_ste_torch(
+    weight,
+    group_size: int = 128,
+    threshold: float = 0.7,
+    calibrate_norm: bool = False,
+    ref_weight=None,
+):
+    """Torch-native straight-through ternary quantization.
+
+    Forward values match `ternary_quantize_with_ste`'s returned
+    `quantized_weight` (within float32 tolerance); the backward pass
+    treats the quantizer as the identity (straight-through estimator),
+    so `torch.autograd.grad(loss, [weight])` is well-defined and
+    nonzero. The hard forward (codes, scale, thresholding, optional
+    norm calibration) is computed from a detached copy of `weight`
+    so the STE trick is the only gradient path.
+
+    Returns the graph-connected quantized weight tensor.
+    """
+    import torch
+
+    if not isinstance(weight, torch.Tensor):
+        raise TypeError(
+            "ternary_quantize_ste_torch expects a torch tensor; "
+            "use ternary_quantize_with_ste for numpy arrays"
+        )
+    if weight.ndim != 2:
+        raise ValueError(f"weight must be 2D, got shape {weight.shape}")
+    if weight.shape[1] % group_size != 0:
+        raise ValueError(
+            f"in_features={weight.shape[1]} not divisible by group_size={group_size}"
+        )
+
+    with torch.no_grad():
+        w = weight.detach()
+        ref = (ref_weight if ref_weight is not None else weight).detach()
+        rows, cols = w.shape
+        n_groups = cols // group_size
+        grouped = w.reshape(rows, n_groups, group_size)
+        scale = grouped.abs().mean(dim=-1)
+        scale = torch.clamp(scale, min=1e-8)
+        w_n = (grouped / scale.unsqueeze(-1)).reshape(rows, cols)
+        codes = torch.clamp(torch.round(w_n), -1.0, 1.0)
+        codes = torch.where(
+            w_n.abs() < threshold, torch.zeros_like(codes), codes
+        )
+        s_full = scale.repeat_interleave(group_size, dim=1)
+        quantized = codes * s_full
+        if calibrate_norm:
+            ref_norm = float(ref.norm())
+            q_norm = float(quantized.norm())
+            if q_norm > 0 and ref_norm > 0:
+                quantized = quantized * (ref_norm / q_norm)
+
+    # Straight-through: forward value is `quantized`, gradient is
+    # identity w.r.t. `weight`.
+    return weight + (quantized - weight.detach())
+
+
 @dataclass
 class TernarySTE:
     """Stateful STE wrapper around a learnable full-precision weight.
@@ -197,6 +257,44 @@ class TernarySTE:
         # Return the combined quantized weight as the "primary"
         # slot; codes/scale only describe the primary plane.
         return codes, scale, q_primary + q_residual
+
+    def forward_torch(self, n_planes: int = 1):
+        """Graph-connected quantized weight (torch, straight-through).
+
+        Mirrors `forward(n_planes)`: primary plane only when
+        `n_planes < 2` or no residual is set; otherwise the sum of
+        the two independently quantized planes. Requires `weight`
+        (and `residual_weight` when used) to be torch tensors.
+        """
+        import torch
+
+        if not isinstance(self.weight, torch.Tensor):
+            raise TypeError(
+                "TernarySTE.forward_torch requires a torch tensor weight; "
+                "use forward() for numpy weights"
+            )
+        q_primary = ternary_quantize_ste_torch(
+            self.weight,
+            group_size=self.group_size,
+            threshold=self.threshold,
+            calibrate_norm=self.calibrate_norm,
+            ref_weight=self.weight,
+        )
+        if n_planes < 2 or self.residual_weight is None:
+            return q_primary
+        if not isinstance(self.residual_weight, torch.Tensor):
+            raise TypeError(
+                "TernarySTE.forward_torch requires a torch tensor "
+                "residual_weight when n_planes >= 2"
+            )
+        q_residual = ternary_quantize_ste_torch(
+            self.residual_weight,
+            group_size=self.group_size,
+            threshold=self.threshold,
+            calibrate_norm=self.calibrate_norm,
+            ref_weight=self.residual_weight,
+        )
+        return q_primary + q_residual
 
     def params(self) -> np.ndarray:
         """Return the learnable primary weight (the only thing the

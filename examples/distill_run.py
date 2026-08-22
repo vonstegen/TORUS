@@ -154,6 +154,7 @@ def run_one(
         dtype=dtype,
         device=device,
         attn_implementation=getattr(args, 'attn_impl', 'eager'),
+        calibrate_norm=not getattr(args, 'no_calibrate', False),
     )
     print(f"[distill] loading student from {model_name!r} ...")
     student = HFStudentAdapter(cfg)
@@ -279,6 +280,9 @@ def main() -> None:
                    help="Torch dtype for model weights (float32, float16, bfloat16)")
     p.add_argument("--attn-impl", default="eager",
                    help="HF attn_implementation: eager, sdpa, flash_attention_2")
+    p.add_argument("--no-calibrate", action="store_true",
+                   help="Disable STE norm calibration (calibrate_norm=False) "
+                        "so training quantization matches eval_lm.py --no-calibrate")
     p.add_argument("--save-adapter", default=None,
                    help="At the end of the run, save the trained STE+residual weights to this .npz file")
     p.add_argument("--load-adapter", default=None,
