@@ -7,7 +7,7 @@ quantitative_thresholds:
   - "PASS: the sequential arm beats the best matched joint arm by >2 standard errors on at least one capability metric at equal budget and storage, with no regression beyond 1 standard error on the others."
   - "FAIL: no capability metric separates sequential from the best joint arm by >2 standard errors (sequential is then retained only if simpler; the mechanism claim is abandoned)."
 date_registered: "2026-08-22"
-state: UNTESTED
+state: TESTING
 required_evidence: [AF4, AF8]
 supporting_experiments: []
 unlock_rules_affected: []
@@ -15,4 +15,7 @@ history:
   - date: "2026-08-22"
     transition: "-> UNTESTED"
     cause: "registered per 10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2"
+  - date: "2026-08-22"
+    transition: "UNTESTED -> TESTING"
+    cause: "EXP-A-03x PASS (CP1.2): T1->T2 gain observed with clean provenance, both metric classes reported (wikitext ppl 427.71->41.44, arc_easy 0.5396->0.6313 on model.layers.0.mlp.down_proj; KL 1.51->0.07). Discovery tier only - does not test the claim's equal-budget criterion (AF1)."
 conclusion: ""

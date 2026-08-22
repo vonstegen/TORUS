@@ -1,0 +1,15 @@
+[distill] loading student from 'allenai/OLMo-1B-0724-hf' ...
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:00<00:00, 230.67it/s]
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:00<00:00, 232.80it/s]
+[distill] downloading wikitext-103 train shards ...
+[distill] wikitext corpus: 1,801,350 rows
+[distill] tokenized corpus: 119,882,322 tokens
+[distill] starting trainer: 500 steps, probe_rows=1
+[distill] done: 500 steps in 423.9s (0.85s/step)
+[distill] saved adapter weights to /home/andrew-jochl/TORUS/runs/a/EXP-A-03x/20260822T225835Z/adapter.npz
+
+[distill] initial loss: 1.5096
+[distill] final   loss: 0.0714
+[distill] delta: +1.4382 (improved)
+[distill] log: /home/andrew-jochl/TORUS/runs/a/EXP-A-03x/20260822T225835Z/history.json

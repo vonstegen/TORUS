@@ -7,7 +7,7 @@ quantitative_thresholds:
   - "PASS: at matched physical bytes (including scales and metadata), T2 is within 1 standard error of the best non-ternary control on the primary capability metric, or strictly better on quality-per-physical-bit."
   - "FAIL: any equal-storage non-ternary control beats T2 by >2 standard errors on the primary capability metric."
 date_registered: "2026-08-22"
-state: UNTESTED
+state: TESTING
 required_evidence: [AF2, AF7, AF8]
 supporting_experiments: []
 unlock_rules_affected: ["Track B oracle gating (B1)"]
@@ -15,4 +15,7 @@ history:
   - date: "2026-08-22"
     transition: "-> UNTESTED"
     cause: "registered per 10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2"
+  - date: "2026-08-22"
+    transition: "UNTESTED -> TESTING"
+    cause: "EXP-A-03x PASS (CP1.2): T1->T2 gain observed with clean provenance, both metric classes reported (wikitext ppl 427.71->41.44, arc_easy 0.5396->0.6313 on model.layers.0.mlp.down_proj; KL 1.51->0.07). Discovery tier only - does not test the claim's equal-budget criterion (AF1)."
 conclusion: ""

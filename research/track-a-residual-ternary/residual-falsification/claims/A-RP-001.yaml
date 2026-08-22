@@ -7,15 +7,21 @@ quantitative_thresholds:
   - "PASS: Q(T1+T2) exceeds Q(T1 continued, matched budget) by >2 standard errors on at least one capability metric (ARC-E, LAMBADA, or the registered held-out task), with no regression beyond 1 standard error on the others."
   - "FAIL: no capability metric separates the arms by >2 standard errors, or the T1-continuation arm wins any capability metric by >2 standard errors."
 date_registered: "2026-08-22"
-state: UNTESTED
+state: TESTING
 required_evidence: [AF1, AF3, AF5, AF8]
 supporting_experiments:
   - id: EXP-A-010
     decision: CONTINUE
     effect: "Discovery-tier KL progression 3.42→2.66→1.72→1.60 suggests capacity gain; proxy-only, provenance-limited, no equal-budget control. Motivates, does not confirm."
+  - id: EXP-A-03x
+    decision: PASS
+    effect: "Discovery-tier T1+T2 pipeline confirmation on the worst-tolerance layer (model.layers.0.mlp.down_proj): trained T2 recovers wikitext ppl 427.71→41.44 and arc_easy 0.5396→0.6313 vs the untrained PTQ arm; KL 1.51→0.07 monotone. Both metric classes, clean provenance. No equal-budget T1-continuation control — does not confirm or deny the claim; satisfies the CP1.2 precondition for AF1."
 unlock_rules_affected: ["Track B oracle gating (B1)"]
 history:
   - date: "2026-08-22"
     transition: "-> UNTESTED"
     cause: "registered per 10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2"
+  - date: "2026-08-22"
+    transition: "UNTESTED -> TESTING"
+    cause: "EXP-A-03x PASS (CP1.2): T1->T2 gain observed with clean provenance, both metric classes reported (wikitext ppl 427.71->41.44, arc_easy 0.5396->0.6313 on model.layers.0.mlp.down_proj; KL 1.51->0.07). Discovery tier only - does not test the claim's equal-budget criterion (AF1)."
 conclusion: ""

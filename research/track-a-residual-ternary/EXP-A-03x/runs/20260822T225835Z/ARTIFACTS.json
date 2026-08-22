@@ -1,0 +1,53 @@
+{
+  "experiment_id": "EXP-A-03x",
+  "run_namespace": "/home/andrew-jochl/TORUS/runs/a/EXP-A-03x/20260822T225835Z",
+  "artifacts": [
+    {
+      "path": "runs/a/EXP-A-03x/20260822T225835Z/adapter.npz",
+      "sha256": "40e2c6ab7d8fc97cba2cedeea5fc27dbe7046ec022d3a522051dcee00bfeeb20",
+      "bytes": 134218252
+    },
+    {
+      "path": "runs/a/EXP-A-03x/20260822T225835Z/adapter.npz.meta.json",
+      "sha256": "044aa38bc747aad1caa7e66b1b5a2cdeca49dd8b6e2432ad87b5a1c20175d939",
+      "bytes": 157
+    },
+    {
+      "path": "runs/a/EXP-A-03x/20260822T225835Z/driver.log",
+      "sha256": "65d19adfc81820ffeb9e47f0417b6b053b28a911a438869ab8f2a7a23f5b683b",
+      "bytes": 965
+    },
+    {
+      "path": "runs/a/EXP-A-03x/20260822T225835Z/env-lock.txt",
+      "sha256": "7ede754e95f15b64644def410a3e4b53717eb2d807dbb5ce0876071145e02b9a",
+      "bytes": 2211
+    },
+    {
+      "path": "runs/a/EXP-A-03x/20260822T225835Z/eval-t1t2.summary.json",
+      "sha256": "f68fa432f9683e9c4eac0c0032235999551a45e914f2f568e40c15a67eed61a4",
+      "bytes": 366
+    },
+    {
+      "path": "runs/a/EXP-A-03x/20260822T225835Z/eval-t1t2.summary.json.full.json",
+      "sha256": "72ad7723cd13d08c08e280d8511f61eb1787146bfb8c6bfa6c842361b68d1131",
+      "bytes": 9949758
+    },
+    {
+      "path": "runs/a/EXP-A-03x/20260822T225835Z/eval.log",
+      "sha256": "a3a608b63753e42b93bc7ca4653bb866e62880248992cdd13cf14d7d5c4c1c7e",
+      "bytes": 31649
+    },
+    {
+      "path": "runs/a/EXP-A-03x/20260822T225835Z/history.json",
+      "sha256": "ab8da67b3c4dc6282433a107f9454a079fde3f4def8ca49ab0d865dabd2f07fa",
+      "bytes": 6397
+    },
+    {
+      "path": "runs/a/EXP-A-03x/20260822T225835Z/provenance.json",
+      "sha256": "0caea68300d76aea2eabce819aad01bc78eb3457d6784de227e264b0dbaa2f76",
+      "bytes": 771
+    }
+  ],
+  "retention_note": "adapter.npz (134 MB STE + residual weights) lives on Legion only; committed record keeps the meta sidecar, history, eval summaries, and this index.",
+  "superseded_invalid_run": "runs/a/EXP-A-03x/20260822T220559Z (autograd STE zero-gradient; see INVALID.md, fixed in eac2c04)"
+}

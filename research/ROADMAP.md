@@ -156,7 +156,7 @@ correction.
 - [ ] **1.2** `EXP-A-02x` — **A2 oracle residual.** `R = W − T1`; sweep
       `T1 + αR`, α ∈ {0, .25, .5, .75, 1}. Include equal-storage INT8/INT4/
       mixed-precision residual controls.
-- [ ] **1.3** `EXP-A-03x` — **A3 sequential functional correction
+- [X] **1.3** `EXP-A-03x` — **A3 sequential functional correction
       (discovery).** Establish T1 → freeze → init T2 at ~1e-3 → train T2 with
       independent LR → freeze. T3 only as ablation. Record the exact
       training budget N — Phase 2's AF1 matched-continuation control depends
@@ -173,9 +173,9 @@ correction.
 |---|---|---|
 | CP1.1 | Sensitivity map (A1) | **PASS** — EXP-A-011 CONTINUE (F grade): per-category table published at `research/track-a-residual-ternary/EXP-A-011/runs/20260822T194828Z/sensitivity_table.json`; worst-tolerance categories are `mlp_down` (early) and `attention_k` (early) with max ppl 9278 and 3364; coverage 114/114 arms; FP16 reproduces to 4 decimals. Follow-up `EXP-A-011.b` (paired layers) and Track B per-layer-precision oracle are now unblocked. |
 
-| CP1.2 | Correction signal (A3, discovery) | T1→T2 gain observed with clean provenance, both metric classes reported. Claims A-RP-001/002/003 move to `TESTING`. |
+| CP1.2 | Correction signal (A3, discovery) | **PASS** — EXP-A-03x PASS (grade C): T1→T2 gain observed with clean provenance on `model.layers.0.mlp.down_proj` (wikitext ppl 427.71→41.44, arc_easy 0.5396→0.6313, KL 1.51→0.07 monotone); both metric classes reported (proxy KL + capability ppl/arc). Claims A-RP-001/002/003 move to `TESTING`. Verdict at `research/track-a-residual-ternary/EXP-A-03x/verdict.md`. |
 | CP1.3 | Oracle interpretation (A2) | Data selects one branch: (a) rapid α-recovery → hierarchy headroom; (b) exact residual recovers but trained T2 differs → functional correction, not reconstruction; (c) no recovery until α≈1 → primary plane too destructive. |
-| **G1→2** | **Gate to Phase 2** | CP1.2 passes. Branch (c) dominant at CP1.3 → record Track A ≤D, skip to Phase 6 with A/B failed. |
+| **G1→2** | **Gate to Phase 2** | **OPEN** (2026-08-22) — CP1.2 PASS via EXP-A-03x. CP1.3 (A2 oracle residual) remains open but is not gating: the gate condition "CP1.2 passes" is met; the branch-(c)-dominant downgrade clause applies only once CP1.3 data exists. Phase 2 AF suite is unblocked. |
 
 ---
 

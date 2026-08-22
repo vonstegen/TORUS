@@ -1,0 +1,13 @@
+{
+  "experiment_id": "EXP-A-03x",
+  "git_sha": "eac2c04f60cf57a706a83ca55beb851fe4505f81",
+  "host": "LEGION",
+  "python": "3.14.4",
+  "gpu": "NVIDIA TITAN RTX;NVIDIA TITAN RTX",
+  "model": "allenai/OLMo-1B-0724-hf",
+  "start_utc": "20260822T225835Z",
+  "command_template": "./.venv/bin/python examples/distill_run.py --model allenai/OLMo-1B-0724-hf --target-modules model.layers.0.mlp.down_proj --n-steps 500 --probe-rows 1 --batch-size 4 --seq-len 128 --curriculum 1:500 --dataset wikitext --no-calibrate --device cuda:0 --dtype float32 --save-adapter runs/a/EXP-A-03x/<ts>/adapter.npz --log-dir runs/a/EXP-A-03x/<ts> --label history",
+  "replaces_invalid_runs": [
+    "20260822T220559Z (autograd STE numpy stub -> zero gradients for 500 steps; fixed in eac2c04)"
+  ]
+}
