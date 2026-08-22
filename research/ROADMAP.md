@@ -106,12 +106,15 @@ and every run has immutable provenance.
       summarized metrics, artifact hashes). `runs/` is git-ignored; manifests
       and result summaries are committed under `research/`. Ban shared
       mutable `/tmp` artifact names and concurrent writers to one namespace.
-- [ ] **0.5** Stand up the claim registry: `claims/*.yaml` with the three
+- [x] **0.5** Stand up the claim registry: `claims/*.yaml` with the three
       A-RP claims above in state `UNTESTED`.
-- [ ] **0.6** Retro-register pre-regime runs: `EXP-A-000` (v0.16.0 overnight
+      **Done 2026-08-22 (rev 2.1); quantitative thresholds added rev 2.2.**
+- [x] **0.6** Retro-register pre-regime runs: `EXP-A-000` (v0.16.0 overnight
       distillation) and `EXP-A-000b` (provenance-contaminated session):
       decision `INVALID`, engineering-validation evidence only.
-- [ ] **0.7** Tag the baseline revision (e.g. `research-baseline-2026-08`).
+      **Done 2026-08-22 (registry INDEX).**
+- [x] **0.7** Tag the baseline revision (e.g. `research-baseline-2026-08`).
+      **Done 2026-08-22: annotated tag `research-baseline-2026-08` pushed.**
 - [ ] **0.8** Enact the feature freeze: no nonessential expansion while a
       core hypothesis is unresolved.
 - [ ] **0.9** `EXP-A-001`: reproduce FP16/BF16, uncalibrated PTQ, and
