@@ -166,15 +166,14 @@ def run_one(
             rp.data.add_(torch.randn_like(rp) * 0.05)
         print(f"[distill]   perturbed residual weights with N(0, 0.05) noise")
     t0 = time.perf_counter()
-    if teacher_model_name is not None and teacher_model_name != model_name:
-        teacher_cfg = HFAdapterConfig(
-            model_name=teacher_model_name,
-            target_modules=(),  # teacher is FP, no quantization
-            dtype=dtype,
-            device=device,
-            attn_implementation=getattr(args, 'attn_impl', 'eager'),
-        )
-        teacher = HFTeacherAdapter(teacher_cfg)
+    teacher_cfg = HFAdapterConfig(
+        model_name=teacher_model_name if teacher_model_name is not None else model_name,
+        target_modules=(),  # teacher is FP, no quantization
+        dtype=dtype,
+        device=device,
+        attn_implementation=getattr(args, 'attn_impl', 'eager'),
+    )
+    teacher = HFTeacherAdapter(teacher_cfg)
     vocab = student.model.config.vocab_size
     dataset_name = getattr(args, "dataset", "random")
     if dataset_name == "wikitext":

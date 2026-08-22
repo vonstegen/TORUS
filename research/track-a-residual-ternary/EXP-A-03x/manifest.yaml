@@ -1,0 +1,144 @@
+# Experiment record — EXP-A-03x — A3 sequential functional correction (discovery tier)
+# Preregistered 2026-08-22 BEFORE any run under this ID. Thresholds frozen.
+id: EXP-A-03x
+track: A
+subtrack: "A3 sequential functional correction (discovery)"
+tier: discovery
+claims_addressed: [A-RP-001]
+title: "T1+T2 single-correction-plane pipeline sanity check on the worst-tolerance layer"
+owner: "research-harness"
+date_proposed: "2026-08-22"
+status: PROPOSED
+decision: null
+grade: null
+
+hypothesis: "A single sequentially-trained ternary correction plane added
+  on top of the frozen FP16 base (T1) on `model.layers.0.mlp.down_proj`
+  recovers capability toward FP16 on at least one capability metric and
+  produces a measurable KL drop in the training log. This is a
+  pipeline sanity check: it tests whether the T1+T2 stack actually
+  trains and produces signal before committing to the Phase-2
+  equal-training-budget control (AF1)."
+
+rationale: "EXP-A-011 established that ternarizing
+  `model.layers.0.mlp.down_proj` alone drives wikitext ppl from
+  13.09 (FP16) to 427.7 and drops arc_easy from 0.6073 to 0.540.
+  The cheapest next experiment that probes 'T2 adds useful capacity'
+  is to train a correction plane on exactly that layer and see if
+  the loss and the capability metric recover. If the plane cannot
+  rescue even the worst layer, the correction-plane hypothesis is
+  materially weakened and we should not spend Phase-2 budget on
+  matched-continuation controls."
+
+revision: ""              # filled at RUN — commit hash of the code
+run_namespace: "runs/a/EXP-A-03x/<timestamp>"
+environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt in run_namespace"
+baseline: "EXP-A-011 reference: FP16 ppl 13.0932, arc_easy 0.6073;
+  PTQ-arm on the same layer (model.layers.0.mlp.down_proj) ppl 427.7,
+  arc_easy 0.540. The trained T2 must sit between these two points."
+
+controls:
+  - "FP16 baseline (already measured in EXP-A-011 reference arms; no
+    new compute)."
+  - "Random-init T2 evaluated at the start of training (implicit in
+    the loss trajectory: the KL at step 0 reflects the un-trained
+    plane)."
+  - "T1-only continued training is NOT required for this discovery
+    run; that is the AF1 control, gated on CP1.2 PASS."
+variants:
+  - "single-plane-T2: T1 (frozen FP16) + T2 (ternary correction plane
+    on model.layers.0.mlp.down_proj only)."
+
+dataset_and_samples: "wikitext-103 train split, streamed via
+  transformers AutoTokenizer; same dataset as distill_run.py's
+  --dataset wikitext path. Sample IDs not pinned (streaming); the
+  seed pins the shuffle order."
+seeds: [0]
+
+metrics:
+  - "wikitext word_perplexity (downstream)"
+  - "arc_easy acc (downstream)"
+  - "training-log KL to the FP16 teacher (diagnostic only; never
+    acceptance)"
+evidence_categories: [representation, downstream]
+
+pass_thresholds:
+  - "wikitext ppl after training <= 200 (2.14x recovery from the
+    PTQ-arm's 427.7, i.e. >50% of the way back to FP16)."
+  - "arc_easy acc after training >= 0.55 (within ~1 stddev of the
+    FP16 baseline's 0.6073 given the EXP-A-001 measured stderr of
+    ~0.005 per eval)."
+  - "training-log KL shows a monotone-or-noisy-monotone decline over
+    the N steps (diagnostic signal that the trainer is actually
+    stepping; no numeric threshold, used only to distinguish 'no
+    signal' from 'loss was already at noise floor')."
+
+fail_thresholds:
+  - "wikitext ppl after training >= 285 (less than 1.5x recovery
+    from 427.7; correction plane does not rescue the worst layer)."
+  - "arc_easy acc after training <= 0.55 (correction plane damages
+    capability)."
+  - "training diverges (loss = NaN or inf at any step after step 1)."
+
+kill_criteria:
+  - "Training stalls: the per-step KL does not drop by >10% over the
+    first 100 steps (the plane is not learning)."
+  - "Training diverges: loss = NaN or inf at any step."
+  - "Budget overrun: training exceeds 4 hours wall clock on Legion."
+  - "GPU becomes unavailable mid-run: pause and resume under the same
+    run namespace."
+
+budget: "4 hours wall clock on Legion for the training run plus the
+  evaluation runs (~30 minutes). Discovery tier cap: 8 hours total."
+
+stop_conditions:
+  - "Training completes N=500 steps and final adapter state is saved."
+  - "Kill criterion fires (abort and record INVALID)."
+
+expected_artifacts:
+  - "training history JSONL (per-step loss, KL, components)"
+  - "trained adapter state (.npz of TernarySTE weights + residual
+    plane weights)"
+  - "post-training eval JSONs (arc_easy + wikitext on the trained
+    T1+T2 stack, via eval_lm.py --load-adapter)"
+  - "pre-training eval JSONs (the EXP-A-011 PTQ-arm numbers, copied
+    into the run namespace for reference)"
+  - "provenance.json + env-lock.txt + driver.log"
+  - "ARTIFACTS.json indexing every large artifact with sha256"
+artifact_paths: []            # filled at RUN
+artifacts_manifest: "runs/a/EXP-A-03x/<timestamp>/ARTIFACTS.json"
+contamination_risks:
+  - "Shared /tmp names: none; the run namespace is unique per run."
+  - "Concurrent writers: only the trainer writes into the run
+    namespace; lm-eval reads the .npz adapter but does not modify it."
+  - "Eval leakage: the eval tasks (arc_easy, wikitext test split)
+    are disjoint from the training data (wikitext train split)."
+  - "Packing artifacts: none; this is a single-plane training run."
+
+# Decision block — filled at DECIDE
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""
+
+# ----- freeze exception logged here (OPERATING-PLAN §3, §6) ---------------
+freeze_exception:
+  change: >
+    examples/distill_run.py: `run_one` only constructed the
+    HFTeacherAdapter when `teacher_model_name != model_name`; the
+    default self-distillation path (no --teacher-model) left `teacher`
+    unbound and crashed with UnboundLocalError before the first
+    training step. The teacher is now always constructed, defaulting
+    to the same base model with target_modules=() (pure FP16, no
+    quantization) — which is exactly the T1+T2 stack this experiment
+    specifies: student = base + T2 correction plane(s), teacher =
+    frozen FP16 base.
+  justification: >
+    Required to execute this preregistered A3 experiment: the
+    T1+T2 sequential-correction pipeline cannot run at all without a
+    teacher. No new quantization algorithm or loss is introduced;
+    the fix only makes the default path construct the teacher the
+    experiment design already assumed.
+  approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN §3)"
+supersedes: null
