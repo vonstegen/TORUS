@@ -97,9 +97,14 @@ def main() -> None:
 
     tasks = args.tasks.split(",")
     print(f"[eval] running tasks: {tasks}")
-    results = run_lm_eval(model, tokenizer, tasks, batch_size=args.batch_size)
-
-    summary: dict = {"model": args.model, "mode": args.mode, "tasks": {}}
+    summary: dict = {
+        "model": args.model,
+        "mode": args.mode,
+        "target_modules": list(args.target_modules.split(",")),
+        "no_calibrate": bool(args.no_calibrate),
+        "limit": args.limit,
+        "tasks": {},
+    }
     for task, res in results["results"].items():
         for k, v in res.items():
             if k in ("alias", "acc,none", "acc_norm,none", "ppl,none", "word_perplexity,none"):
@@ -115,7 +120,15 @@ def main() -> None:
         Path(args.output).parent.mkdir(parents=True, exist_ok=True)
         with open(args.output, "w") as f:
             json.dump(summary, f, indent=2)
+        # EXP-A-011: also persist the full lm-eval results dict with
+        # per-task stderrs next to the summary. This fixes the EXP-A-001
+        # audit gap (verdict.md: "per-task lm-eval stderrs were not
+        # persisted"). Sidecar file, same stem as --output.
+        full_path = Path(str(args.output) + ".full.json")
+        with open(full_path, "w") as f:
+            json.dump(results, f, indent=2, default=str)
         print(f"[eval] wrote {args.output}")
+        print(f"[eval] wrote {full_path} (full results with stderrs)")
 
     del model
     if args.mode == "quantized":

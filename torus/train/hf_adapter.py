@@ -77,7 +77,23 @@ class HFAdapterConfig:
     cache_dir: str | None = None
     device: str = "cpu"
     attn_implementation: str | None = None  # "eager", "sdpa", "flash_attention_2"; None = model default
-    calibrate_norm: bool = True  # False reproduces the uncalibrated PTQ arm (EXP-A-001)
+
+def _matches_target(name: str, targets: set[str]) -> bool:
+    """Return True iff `name` matches the target_modules set.
+
+    Matching mode is decided by the targets themselves: if ANY entry
+    contains a dot, every entry is treated as a fully-qualified module
+    name and matched against `name` directly. Otherwise, every entry
+    is a short name and is matched against the trailing component of
+    `name` (the legacy behavior used by EXP-A-001).
+    """
+    if not targets:
+        return False
+    if any("." in t for t in targets):
+        return name in targets
+    short = name.rsplit(".", 1)[-1]
+    return short in targets
+
 
 def _make_forward_stub(ste: TernarySTE, qfn, *, transpose_weight: bool = False, bias_param=None, get_n_planes=lambda: 1):
     """Build a forward that re-applies the STE weights on every call.
@@ -157,17 +173,26 @@ class HFStudentAdapter:
         self._attach_ste()
 
     def _attach_ste(self) -> None:
-        """Wrap every Linear or Conv1D under a target module name."""
+        """Wrap every Linear or Conv1D under a target module name.
+
+        Matching modes (frozen at EXP-A-011):
+          - if ANY entry in `target_modules` contains a dot, every
+            entry is treated as a fully-qualified module name
+            (e.g. `model.layers.0.self_attn.q_proj`) and is matched
+            against the full `name` from `named_modules()`.
+          - otherwise, every entry is a short module name
+            (e.g. `q_proj`) and is matched against the trailing
+            component of `name`. This is the legacy behavior
+            used by EXP-A-001.
+        """
         import torch as _torch_t  # for residual_weight init
         import torch.nn as nn  # type: ignore
         from transformers.pytorch_utils import Conv1D  # type: ignore
         from torus.train.ste import ternary_quantize_with_ste
 
         targets = set(self.config.target_modules)
-
         for name, module in list(self.model.named_modules()):
-            short = name.rsplit(".", 1)[-1]
-            if short not in targets:
+            if not _matches_target(name, targets):
                 continue
             if isinstance(module, nn.Linear):
                 transpose = False

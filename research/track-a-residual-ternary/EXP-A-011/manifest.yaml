@@ -1,0 +1,134 @@
+# EXP-A-011 — A1 layer sensitivity (Track A, Phase 1, discovery tier)
+# Preregistered 2026-08-22 BEFORE any run under this ID. Thresholds frozen.
+id: EXP-A-011
+track: A
+subtrack: "A1 layer sensitivity (roadmap item 1.1)"
+tier: discovery
+claims_addressed: []   # generates the per-layer table; does not attack a claim directly
+title: "Per-layer PTQ sensitivity map for OLMo-1B (q/k/v/o, MLP, embed, head)"
+owner: "research-harness"
+date_proposed: "2026-08-22"
+status: PROPOSED
+decision: null
+grade: null
+
+# ----- hypothesis (one primary falsifiable hypothesis) ----------------------
+hypothesis: >
+  For OLMo-1B at FP16, ternarizing a single targeted linear with the v2 PTQ
+  path (no calibration, --no-calibrate knob from EXP-A-001) is sufficient to
+  drive the model into a non-trivial degradation regime on at least one of
+  the registered capability metrics. The degradation pattern is
+  layer-category-dependent: attention output projections and late-block MLP
+  projections are MORE sensitive than embeddings, attention Q/K projections,
+  and early-block MLP projections, by >2 standard errors on the primary
+  capability metric (wikitext word_perplexity).
+rationale: >
+  Cheapest experiment capable of falsifying the next layer of the
+  representation work. Roadmap item 1.1; needed before any A2/A3
+  training runs so we know where ternarization is destructive.
+  Discovery tier (OPERATING-PLAN §3): one seed, smaller eval sample,
+  shorter budget. No training.
+
+# ----- environment / revision ---------------------------------------------
+revision: "research-baseline-2026-08 (ee62c45) or descendant; exact SHA recorded per run"
+run_namespace: "runs/a/EXP-A-011/<timestamp>/ on legion"
+environment: >
+  legion: x86_64, 2x TITAN RTX 24GB, Python 3.14 venv (.venv), torch
+  2.13.0+cu130, transformers 4.57.6, lm_eval 0.4.3, datasets 5.0.1;
+  pip freeze lock committed at env-lock.txt. Triton bypassed.
+baseline: >
+  allenai/OLMo-1B-0724-hf FP16 (the ladder root). Per-layer
+  sensitivity is reported as a per-layer DELTA relative to the
+  full-precision model; the unaltered FP16 evaluation is the
+  per-experiment reference (rerun each EXP-A-011 run, not reused
+  from EXP-A-001, to keep the comparison same-process).
+controls:
+  - "FP16 reference evaluation under the same eval subset (same --limit, same batch size, same tasks)"
+  - "Full-quantized reference (114 linears: q/k/v/o/gate/up/down_proj) at --no-calibrate"
+variants:
+  - id: f16-reference
+    desc: "FP16 eval; the per-experiment reference point"
+  - id: ptq-fully-quantized
+    desc: "All 114 linears ternarized, --no-calibrate; reproduces the EXP-A-001 uncalibrated arm under the bounded eval subset"
+  - id: single-layer
+    desc: "Exactly ONE fully-qualified module name in target_modules (per-layer sweep); --no-calibrate"
+
+# ----- scope (the per-layer sweep) ----------------------------------------
+dataset_and_samples: >
+  lm_eval 0.4.3 task defaults for wikitext (word_perplexity) and
+  arc_easy (acc); both reported with the full per-task stderr
+  (this fixes the EXP-A-001 audit gap). Bounded subset:
+  --limit 200 examples per task (discovery tier, OPERATING-PLAN §3).
+  Dataset revisions and sample counts are pinned in provenance.json
+  per run.
+seeds: [0]   # PTQ + lm_eval are deterministic given pinned revisions; n=1 justified
+metrics:
+  - "capability: arc_easy acc (with stderr), wikitext word_perplexity (with stderr)"
+  - "diagnostic-only (NEVER acceptance): teacher/logit KL divergence vs FP16 reference, mean L2 weight error, fraction of weight that survives ternarization (mean(|w|)/scale)"
+evidence_categories: [representation, downstream, systems]
+
+# ----- PASS / FAIL / KILL thresholds (frozen at PROPOSE) ------------------
+# These are the preregistered bar. KL is never acceptance; the headline
+# numbers are capability. Standard errors are lm_eval's per-task stderr
+# (now persisted, fixing the EXP-A-001 audit gap).
+pass_thresholds:
+  - "Per-layer sweep COMPLETED for at least 60 of the 64 targeted modules (16 layers x 4 categories - 8 sub-LLM-head embeddings is one entry, not 16)"
+  - "Capability degradation: at least one targeted module causes wikitext word_perplexity to increase by >2x lm_eval stderr vs the FP16 reference, AND at least one other targeted module keeps it within 1x lm_eval stderr (i.e. a meaningful spread, not a flat line)"
+  - "Layer-category spread: the mean delta-perplexity across the 4 late-block attention-o_proj modules is at least 1.5x the mean delta across the 4 early-block mlp-down_proj modules (i.e. late-attn more sensitive than early-mlp, or FAIL)"
+  - "Full-quantized reference reproduces the EXP-A-001 uncalibrated arm directionally (perplexity within 2x of 459,454 under the bounded subset; bounded subset, not exact 4-decimal reproduction)"
+fail_thresholds:
+  - "All targeted modules leave both capability metrics within 1x stderr of the FP16 reference (no signal in the per-layer map; EXP-A-011 is then useless and we move to A2)"
+  - "No layer-category spread: all 8 categories within 0.5x of each other on mean delta (the per-layer map is uninformative)"
+inconclusive_conditions:
+  - "lm_eval task load failure (datasets-lib hashing etc.) blocks a task: document workaround under the same EXP ID only if the workaround does not change model or scoring; else INVALID and rerun"
+  - "Bounded subset noise dominates: if the per-task stderr on the bounded subset is so large that the >2x bar never fires for any layer, the experiment is INVALID — pick a larger --limit and rerun"
+kill_criteria:
+  - "model download or tokenizer mismatch (hash differs from HF revision recorded in provenance)"
+  - "out-of-memory or any other non-deterministic runtime failure on a single targeted module; rerun that single arm under the same EXP ID"
+budget: "8 GPU-hours total on legion. Reference FP16 + full-quantized reference + per-layer sweep (62 single-layer evals). 8h is the discovery-tier ceiling; overrun -> CONTINUE with a smaller subset, never silent extension."
+stop_conditions:
+  - "any single arm exceeding 20 minutes wall-clock (the bounded subset is meant to be fast; if a single arm is slow, diagnose)"
+expected_artifacts:
+  - "per-layer sensitivity table (JSON): {module_fq_name, category, layer_idx, n_params, wikitext_ppl, arc_easy_acc, ppl_stderr, arc_stderr, kl_to_fp16, l2_weight_error, physical_bytes_quantized, mean_abs_qw, ms_per_eval}"
+  - "summary table (Markdown) per category (q/k/v/o, gate/up/down, embed, head, late-attn-o, early-mlp-down)"
+  - "stdout log per arm (FP16 ref, full-quantized ref, every per-layer arm)"
+  - "config.json, provenance.json, env-lock.txt, ARTIFACTS.json"
+artifact_paths: []   # filled at RUN
+artifacts_manifest: "runs/a/EXP-A-011/<timestamp>/ARTIFACTS.json (copy committed here at DECIDE)"
+contamination_risks:
+  - "shared HF cache with other runs (read-only for this experiment; model revision pinned and hashed in provenance)"
+  - "GPU contention on legion: verify nvidia-smi shows no other processes before launch and between arms"
+  - "shared mutable /tmp output paths: every per-layer eval writes into a unique <timestamp>/per_layer/<fq_name>.json, never /tmp/torus_eval_*.json"
+
+# ----- freeze exception logged here (OPERATING-PLAN §3, §6) ---------------
+freeze_exception:
+  change: >
+    (a) hf_adapter.HFStudentAdapter._attach_ste filters target_modules
+    entries by fully-qualified module name when ANY entry contains a
+    dot. Legacy short-name matching (q_proj, k_proj, ...) is preserved
+    for back-compat. (b) examples/eval_lm.py persists the FULL
+    lm_eval results dict (per-task stderrs) when --output is set,
+    in addition to the one-metric-per-task summary. (c) New
+    examples/layer_sensitivity.py driver, a thin wrapper that
+    iterates a list of FQ names, builds an adapter per arm, runs
+    eval_lm.py with the per-layer --target-modules, and assembles
+    the per-layer table. (d) New unit test
+    tests/test_hf_adapter.py::test_attach_ste_filters_by_fqn that
+    validates (a) on a Mock module tree.
+  justification: >
+    Required to execute this preregistered A1 experiment: per-layer
+    PTQ is the experiment; the adapter has to know which single
+    fully-qualified module to patch. Reusing the full-quantized
+    reference path (HFStudentAdapter + apply_eval_mode + the
+    EXP-A-001 --no-calibrate knob) means no new quantization
+    algorithm is introduced; only a one-line filter and an output
+    enrichment for the existing runner.
+  approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN §3)"
+
+# ----- decision block (filled at DECIDE) -----------------------------------
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""
+supersedes: null

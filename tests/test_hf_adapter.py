@@ -113,3 +113,44 @@ def test_real_hf_adapter_imports_when_torch_present() -> None:
     assert hasattr(hf, "HFStudentAdapter")
     assert hasattr(hf, "HFTeacherAdapter")
     assert hasattr(hf, "HFAdapterConfig")
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("torch") is None,
+    reason="torch not installed; the FQN helper itself is pure-Python but is re-exported from the adapter module",
+)
+def test_attach_ste_filters_by_fqn() -> None:
+    """EXP-A-011: ``target_modules`` accepts fully-qualified module names.
+
+    When ANY entry in ``target_modules`` contains a dot, every entry
+    is treated as a fully-qualified module name and matched against
+    the full name from ``named_modules()``. Otherwise, every entry
+    is a short name and is matched against the trailing component
+    (legacy behavior used by EXP-A-001).
+    """
+    from torus.train.hf_adapter import _matches_target
+
+    # Short-name mode (legacy).
+    assert _matches_target("model.layers.0.self_attn.q_proj", {"q_proj"})
+    assert _matches_target("q_proj", {"q_proj"})
+    assert _matches_target("transformer.h.0.q_proj", {"q_proj"})
+    assert not _matches_target("model.layers.0.self_attn.k_proj", {"q_proj"})
+
+    # FQN mode.
+    assert _matches_target(
+        "model.layers.0.self_attn.q_proj",
+        {"model.layers.0.self_attn.q_proj"},
+    )
+    assert not _matches_target(
+        "model.layers.0.self_attn.k_proj",
+        {"model.layers.0.self_attn.q_proj"},
+    )
+
+    # Mixed: any dot -> whole set is FQN; matching is `name in targets`.
+    mixed = {"q_proj", "model.layers.0.self_attn.q_proj"}
+    assert _matches_target("model.layers.0.self_attn.q_proj", mixed)
+    assert _matches_target("q_proj", mixed)
+    assert not _matches_target("model.layers.0.self_attn.k_proj", mixed)
+
+    # Empty.
+    assert not _matches_target("q_proj", set())
