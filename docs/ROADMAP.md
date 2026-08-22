@@ -133,7 +133,7 @@ hardware resource.
 
 The project targets two named environments. Kernel paths are
 identical across both — the C reference works on any ISA, the
-AVX-512 path activates on Legion, and the numba CUDA path activates
+AVX2 path activates on Legion, and the numba CUDA path activates
 on any CUDA-capable GPU.
 
 ### `legion` — production / training host
@@ -144,7 +144,7 @@ on any CUDA-capable GPU.
 | RAM         | 123 GB                                              |
 | GPU         | 2× NVIDIA TITAN RTX (Turing, sm_75), NVLink         |
 | Storage     | 1.8 TB NVMe (1.6 TB free)                           |
-| ISA         | x86-64; AVX2 + AVX-512 available                    |
+| ISA         | x86-64; AVX2 (Zen 2 — **no AVX-512**)                 |
 | Driver      | CUDA 13.0 (580.173.02), compute capability 7.5      |
 
 ### `dev` — this dev box (where the GB10 lives)
@@ -161,7 +161,9 @@ on any CUDA-capable GPU.
 ### Notes
 
 - **Legion** is the original P620-style dev box the docs assume.
-  The AVX-512 kernel path is exercised there.
+  The AVX2 kernel path is exercised there; the 3995WX is Zen 2 and
+  has no AVX-512, so the AVX-512 dispatch path has never run on this
+  hardware.
 - **GB10** is the Jetson-Thor-style ARM dev box the recent
   benchmarking was done on. Only the portable C reference path
   runs (no x86 SIMD).

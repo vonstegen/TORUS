@@ -185,9 +185,12 @@ Notes:
   that's the 10-core Cortex-X925.
 - The gate signal here is even cheaper: if `activate_residual == 0`,
   the runtime skips the second matmul entirely (no kernel launch).
-- On **Legion** (x86-64), the AVX-512 kernel is the active path;
-  AVX2 is the fallback when AVX-512 down-clocks. The portable C
-  reference is the final fallback.
+- On **Legion** (x86-64), the **AVX2 kernel is the active path**. The
+  Threadripper PRO 3995WX is Zen 2 and has **no AVX-512**; the AVX-512
+  dispatch path below has never executed on this hardware, and any
+  AVX-512 performance figures in this document are **unmeasured** until
+  rerun on AVX-512-capable hardware. The portable C reference is the
+  final fallback.
 - On the **dev box** (aarch64), only the portable C reference path
   is exercised; the AVX-512 / AVX2 paths require x86-64. The SVE
   path is a Phase-9 enhancement.
@@ -239,10 +242,11 @@ Reproducible target numbers (per-plane, batch=1) on each host:
 
 | Host | Plane | fp32_dense | dense | unrolled | simd_c | cuda |
 |------|-------|------------|-------|----------|--------|------|
-| Legion (TITAN RTX) | wide FFN 4k→4k | ~0.4 ms | ~75 ms | ~19 ms | ~10 ms (AVX-512) | ~5 ms |
+| Legion (TITAN RTX) | wide FFN 4k→4k | ~0.4 ms | ~75 ms | ~19 ms | ~10 ms (**unmeasured** — labeled AVX-512, but the 3995WX is Zen 2 with no AVX-512; rerun on the AVX2 path) | ~5 ms |
 | dev (GB10)         | wide FFN 4k→4k | ~0.4 ms | ~77 ms | ~20 ms | n/a (no AVX on aarch64) | ~5 ms |
-| Legion             | tall attn 4k→1k | ~0.03 ms | ~4.5 ms | ~4.5 ms | ~10 ms | ~2 ms |
+| Legion             | tall attn 4k→1k | ~0.03 ms | ~4.5 ms | ~4.5 ms | ~10 ms (**unmeasured** — see above) | ~2 ms |
 | dev                | tall attn 4k→1k | ~0.03 ms | ~5 ms   | ~5 ms   | n/a                   | ~2 ms |
 
 These targets are illustrative; final numbers come after Phase-2
-measurements.
+measurements. All Legion `simd_c` figures must be re-measured on the
+AVX2 path before use as experiment baselines.

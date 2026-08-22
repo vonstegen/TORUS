@@ -6,8 +6,18 @@ suite and the claim-driven harness model per
 `docs/TORUS-feedback/10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2.md`.
 Rev 2.0 tracked feedback v2 docs 01–09.
 **Governing directive:** **Isolate. Falsify. Grade. Reproduce. Recombine.**
-**Authority:** `docs/TORUS-feedback/` v2 (01–10). Where documents disagree,
-the higher-numbered v2 document governs.
+**Authority order** (explicit; filename ordering is NOT authority):
+
+1. `research/OPERATING-PLAN.md` — single governing authority for process
+2. `research/ROADMAP.md` — governing authority for sequencing and gates
+3. `docs/TORUS-feedback/08-HARNESS-INSTRUCTIONS-V2.md` — harness behavior
+4. `docs/TORUS-feedback/10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2.md` —
+   Track A-F falsification authority (per the v2.1 integration notes)
+5. Track-specific v2 feedback documents (01–07, 09) — design rationale
+6. Historical documents (v1 feedback, `docs/ROADMAP.md`) — record only
+
+A future feedback document NEVER overrides 1–2 by existing; promotion into
+the authority order requires an explicit edit to this list.
 
 This roadmap replaces feature-driven development with gated, preregistered,
 **claim-driven** experiments. Dependencies are enforced by unlock rules, not
@@ -75,14 +85,21 @@ and every run has immutable provenance.
 
 ### Checklist
 
-- [ ] **0.1** Bump `pyproject.toml` version to match the changelog/commit
+- [x] **0.1** Bump `pyproject.toml` version to match the changelog/commit
       line (stale at `0.3.0`; commits reference v0.16.0).
-- [ ] **0.2** Add `torus.train` to `[tool.setuptools] packages`; wheel smoke
+      **Done 2026-08-22: version = 0.16.0.**
+- [x] **0.2** Add `torus.train` to `[tool.setuptools] packages`; wheel smoke
       test outside the source tree (clean venv install; `import torus.train`;
       C kernel `.so` loads).
-- [ ] **0.3** Correct hardware docs: the Threadripper PRO 3995WX (Zen 2) has
+      **Done 2026-08-22: `torus-0.16.0` wheel built, installed into a clean
+      venv outside the tree; `torus.train` imports; bundled
+      `libtorus_kernel.so` loads via ctypes. CP0.1 = PASS.**
+- [x] **0.3** Correct hardware docs: the Threadripper PRO 3995WX (Zen 2) has
       no AVX-512. Fix `docs/ROADMAP.md` and `docs/KERNELS.md`; mark the
       AVX-512 benchmark column as **unmeasured** pending AVX2 rerun.
+      **Done 2026-08-22: `docs/ROADMAP.md`, `docs/KERNELS.md`, and
+      `docs/ARCHITECTURE.md` corrected; Legion `simd_c` figures marked
+      unmeasured pending AVX2 re-measurement.**
 - [ ] **0.4** Stand up provenance: `runs/<track>/<experiment_id>/<timestamp-
       or-uuid>/` per run (git SHA/branch, full config, model/dataset IDs and
       hashes, seeds, host/hardware/software, commands, timestamps, raw +

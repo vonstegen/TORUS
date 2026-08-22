@@ -1,7 +1,11 @@
 id: A-RP-003
+claim_version: 1
 track: A
 title: "Sequential freezing superior to joint training"
 statement: "Sequentially freezing T1 before learning T2 is necessary or materially superior to matched joint-training alternatives."
+quantitative_thresholds:
+  - "PASS: the sequential arm beats the best matched joint arm by >2 standard errors on at least one capability metric at equal budget and storage, with no regression beyond 1 standard error on the others."
+  - "FAIL: no capability metric separates sequential from the best joint arm by >2 standard errors (sequential is then retained only if simpler; the mechanism claim is abandoned)."
 date_registered: "2026-08-22"
 state: UNTESTED
 required_evidence: [AF4, AF8]

@@ -1,14 +1,22 @@
 # Claim record template — copy to research/track-*/**/claims/<CLAIM-ID>.yaml
-# Required evidence is fixed at registration; strengthening a claim = new claim ID.
+# Claim IDs are stable; content changes are immutable revisions (claim_version).
+# Strengthening or re-scoping a claim = new revision; the old revision is kept
+# in history and never edited.
 id: A-RP-000
+claim_version: 1       # integer; bump on any change to statement/thresholds
 track: A
 title: ""
 statement: ""          # one falsifiable sentence — the program belief under test
+quantitative_thresholds: []  # REQUIRED before TESTING: numeric pass/fail bars,
+                             # e.g. ">2 standard errors on >=1 capability metric,
+                             # no material regression on others". Post-hoc edits
+                             # require a claim_version bump BEFORE results are read.
 date_registered: ""
 state: UNTESTED        # UNTESTED | TESTING | PROVISIONAL_PASS | PROVISIONAL_FAIL
                        # | REPRODUCTION_REQUIRED | CONFIRMED_PASS | CONFIRMED_FAIL | INVALID
 required_evidence: []  # experiment IDs that must contribute (e.g. AF1, AF3, AF5, AF8)
 supporting_experiments: []   # filled as experiments complete: id + decision + one-line effect
 unlock_rules_affected: []    # what this claim gates (see OPERATING-PLAN §5)
-history: []            # dated state transitions with the experiment ID that caused each
+history: []            # dated state transitions AND claim_version bumps, each
+                       # with the experiment ID or rationale that caused it
 conclusion: ""         # filled at CONFIRMED_* / INVALID

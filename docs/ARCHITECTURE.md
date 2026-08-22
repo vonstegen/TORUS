@@ -167,7 +167,7 @@ softmax/head (model-side)
 
 | Aspect                       | Phase 1 (numpy)               | Phase 2 (target)                        |
 |------------------------------|-------------------------------|------------------------------------------|
-| ternary GEMM                 | `x @ (T * s)`                 | Addition-based ternary kernel, AVX-512   |
+| ternary GEMM                 | `x @ (T * s)`                 | Addition-based ternary kernel, AVX2 (Legion's 3995WX is Zen 2 — no AVX-512) |
 | per-token residual gating    | numpy boolean + matmul        | Predicated CUDA / SIMD control flow      |
 | MoE routing                  | Phase-1 heuristic             | Learned gating, expert-aware residuals   |
 | REPL execution               | Local Python                  | Sandboxed exec, model-facing adapter     |

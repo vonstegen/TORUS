@@ -1,7 +1,11 @@
 id: A-RP-001
+claim_version: 1
 track: A
 title: "T2 adds useful capacity beyond equal training time"
 statement: "A second sequentially trained ternary correction plane provides useful model capacity beyond the benefit of equivalent additional training time."
+quantitative_thresholds:
+  - "PASS: Q(T1+T2) exceeds Q(T1 continued, matched budget) by >2 standard errors on at least one capability metric (ARC-E, LAMBADA, or the registered held-out task), with no regression beyond 1 standard error on the others."
+  - "FAIL: no capability metric separates the arms by >2 standard errors, or the T1-continuation arm wins any capability metric by >2 standard errors."
 date_registered: "2026-08-22"
 state: UNTESTED
 required_evidence: [AF1, AF3, AF5, AF8]

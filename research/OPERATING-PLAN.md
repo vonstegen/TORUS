@@ -1,10 +1,14 @@
 # TORUS Operating Plan — How Research Runs From Here
 
-**Revision:** 2.1 (2026-08-22) — adds the claim-driven harness model, compute
-tiers, and unlock rules per
-`docs/TORUS-feedback/10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2.md`.
-Where this document and the v2 harness instructions disagree,
-`08-HARNESS-INSTRUCTIONS-V2.md` (as extended by document 10) governs.
+**Revision:** 2.2 (2026-08-22) — explicit authority order, claim versioning
+with quantitative thresholds, and mandatory ARTIFACTS.json provenance index.
+
+**This document is the single governing authority for TORUS research
+process.** `research/ROADMAP.md` governs sequencing and gates. The
+`docs/TORUS-feedback/` v2 package is design rationale; within it,
+`08-HARNESS-INSTRUCTIONS-V2.md` governs harness behavior and document 10 is
+the Track A-F falsification authority. A conflict is resolved by the
+authority order in `research/ROADMAP.md`, never by filename or recency.
 
 Companion to `research/ROADMAP.md`. The roadmap says *what* happens in each
 phase; this document says *how* work is proposed, executed, judged,
@@ -41,7 +45,13 @@ Currently registered: **A-RP-001** (T2 adds useful capacity beyond equal
 training time; evidence AF1/AF3/AF5/AF8), **A-RP-002** (T2 competitive with
 equal-storage non-ternary correction; AF2/AF7/AF8), **A-RP-003** (sequential
 freeze superior to joint training; AF4/AF8). A claim's required-evidence list
-is fixed at registration; strengthening a claim is a new claim ID.
+is fixed at registration. Claims carry stable IDs with immutable integer
+revisions (`claim_version`); any change to statement or thresholds bumps the
+revision **before** results bearing on it are read, and the prior revision is
+preserved in `history`. Every claim must carry explicit quantitative
+thresholds (numeric pass/fail bars, e.g. ">2 standard errors on ≥1 capability
+metric, no material regression on others") before it may enter `TESTING` —
+"useful" is never left for post-hoc interpretation.
 
 The harness execution loop:
 
@@ -98,6 +108,27 @@ Minimum contents: experiment ID and hypothesis; git SHA and branch; complete
 config; model/checkpoint identifiers and hashes; dataset and sample IDs;
 seeds; hostname/hardware/software; timestamps; commands; raw and summarized
 metrics; artifact hashes.
+
+**Scientific artifacts vs. large training artifacts.** Scientific records
+(manifest, result summary, metrics tables, claim updates) are committed
+under `research/`. Large artifacts (checkpoints, raw logs, datasets) live in
+the git-ignored `runs/` tree or external storage. Every experiment directory
+MUST contain an `ARTIFACTS.json` index so a future harness can determine
+whether the exact model still exists:
+
+```json
+{
+  "experiment_id": "EXP-AF-001",
+  "artifacts": [
+    {"kind": "checkpoint", "path": "runs/a/EXP-AF-001/2026-08-22T.../seed-001/ckpt.npz",
+     "sha256": "…", "bytes": 0, "location": "local|external:<uri>", "exists": true}
+  ]
+}
+```
+
+`exists` is updated (never deleted) when storage is reclaimed; an artifact
+with `"exists": false` means dependent conclusions can no longer be
+re-audited against the raw model, which is stated in any later report.
 
 Contamination rules:
 

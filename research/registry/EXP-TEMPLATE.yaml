@@ -35,6 +35,8 @@ stop_conditions: []
 
 expected_artifacts: []   # logs, raw metrics, hashes, figures
 artifact_paths: []       # filled at RUN; large files by link + checksum
+artifacts_manifest: ""   # path to ARTIFACTS.json indexing every large artifact
+                         # with sha256, bytes, location, exists (OPERATING-PLAN §4)
 contamination_risks: []  # shared /tmp names, concurrent writers, eval leakage, packing artifacts
 
 # Decision block — filled at DECIDE (08-HARNESS-INSTRUCTIONS-V2)
