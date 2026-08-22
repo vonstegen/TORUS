@@ -1,0 +1,69 @@
+# EXP-A-001 — Baseline reproduction (FP16 / PTQ-uncalibrated / PTQ-calibrated)
+# Preregistered 2026-08-22 BEFORE any run under this ID. Thresholds frozen.
+id: EXP-A-001
+track: A
+subtrack: "baselines (roadmap item 0.9)"
+tier: confirmation
+claims_addressed: []   # establishes the baseline ladder rungs, not a claim
+title: "Reproduce FP16 and PTQ baselines under v2 provenance"
+owner: "research-harness"
+date_proposed: "2026-08-22"
+status: PROPOSED
+decision: null
+grade: null
+
+hypothesis: "The pre-regime OLMo-1B baseline numbers reproduce on Legion under the v2 provenance standard: FP16 (ARC-E 0.6073, LAMBADA 0.6095, WikiText ppl 13.09), uncalibrated PTQ collapse (ppl ~465,097), and norm-calibrated PTQ (ppl ~89,557)."
+rationale: "Every later experiment compares against these rungs; if they do not reproduce, all pre-regime evidence is downgraded and the environment is diagnosed before any further run."
+
+revision: "research-baseline-2026-08 (e0dda30) or descendant; exact SHA recorded per run"
+run_namespace: "runs/a/EXP-A-001/<timestamp>/ on legion"
+environment: "legion: x86_64, 2x TITAN RTX 24GB, Python 3.14 venv (.venv), torch 2.13.0+cu130, transformers 4.57.6, lm-eval 0.4.3, datasets<4; pip freeze lock committed at env-lock.txt"
+baseline: "allenai/OLMo-1B-0724-hf FP16 (the ladder root)"
+controls: []
+variants:
+  - id: fp16
+    desc: "--mode baseline, no quantization"
+  - id: ptq-uncalibrated
+    desc: "--mode quantized --no-calibrate (114 linears: q/k/v/o/gate/up/down_proj)"
+  - id: ptq-calibrated
+    desc: "--mode quantized (calibrate_norm=True default)"
+
+dataset_and_samples: "lm-eval 0.4.3 task defaults: wikitext (word_perplexity), lambada_openai (acc), arc_easy (acc); full task sets, no --limit"
+seeds: [0]  # PTQ + eval are deterministic given model/data; n=1 justified, noted in verdict
+metrics:
+  - "capability: arc_easy acc, lambada_openai acc, wikitext word_perplexity"
+  - "per-task lm-eval stderr (CI basis for CP0.3)"
+evidence_categories: [downstream]
+
+pass_thresholds:
+  - "fp16: each metric within 2x lm-eval stderr of the historical value (ARC-E 0.6073, LAMBADA 0.6095, ppl 13.09)"
+  - "ptq-uncalibrated: catastrophic collapse reproduced (wikitext ppl within one order of magnitude of 465,097)"
+  - "ptq-calibrated: wikitext ppl within one order of magnitude of 89,557, and at least 3x better than uncalibrated"
+fail_thresholds:
+  - "fp16: any metric outside 2x stderr of historical -> environment/model-revision diagnosis required before any further experiment"
+inconclusive_conditions:
+  - "task load failures (e.g. datasets-lib hashing) block a task: rerun with documented workaround under the same EXP ID only if the workaround does not change model or scoring; else INVALID"
+kill_criteria:
+  - "model download or tokenizer mismatch (hash differs from HF revision recorded in provenance)"
+budget: "6 GPU-hours total across the three arms on legion"
+stop_conditions:
+  - "any arm exceeding 2 GPU-hours"
+
+expected_artifacts: ["eval JSON per arm", "stdout log per arm", "env-lock.txt", "ARTIFACTS.json"]
+artifact_paths: []
+artifacts_manifest: "runs/a/EXP-A-001/<timestamp>/ARTIFACTS.json (copy committed here at DECIDE)"
+contamination_risks:
+  - "shared HF cache with other runs (read-only for this experiment; model revision pinned and hashed in provenance)"
+  - "GPU contention on legion: verify nvidia-smi shows no other processes before each arm"
+
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: "EXP-A-01x (A1 layer sensitivity) if PASS"
+experiments_blocked: ["all Phase 1+ work if FAIL (G0→1 stays closed)"]
+conclusion: ""
+supersedes: null
+
+freeze_exception:
+  change: "add calibrate_norm knob to HFAdapterConfig + --no-calibrate flag in examples/eval_lm.py"
+  justification: "required to execute the preregistered uncalibrated PTQ arm of this experiment"
+  approved_by: "harness rule: feature work permitted when required to execute a registered experiment"

@@ -50,6 +50,9 @@ def main() -> None:
     p.add_argument("--batch-size", type=int, default=4)
     p.add_argument("--device", default="cuda:0")
     p.add_argument("--dtype", default="float16")
+    p.add_argument("--no-calibrate", action="store_true",
+                   help="Disable norm calibration in the STE (reproduces the "
+                        "uncalibrated PTQ arm, EXP-A-001)")
     p.add_argument("--attn-impl", default="sdpa")
     p.add_argument("--limit", type=int, default=None,
                    help="Optional cap on examples per task (for smoke tests)")
@@ -78,6 +81,7 @@ def main() -> None:
             dtype=args.dtype,
             device=args.device,
             attn_implementation=args.attn_impl,
+            calibrate_norm=not args.no_calibrate,
         )
         adapter = HFStudentAdapter(cfg)
         if args.load_adapter is not None:

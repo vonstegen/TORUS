@@ -77,6 +77,7 @@ class HFAdapterConfig:
     cache_dir: str | None = None
     device: str = "cpu"
     attn_implementation: str | None = None  # "eager", "sdpa", "flash_attention_2"; None = model default
+    calibrate_norm: bool = True  # False reproduces the uncalibrated PTQ arm (EXP-A-001)
 
 def _make_forward_stub(ste: TernarySTE, qfn, *, transpose_weight: bool = False, bias_param=None, get_n_planes=lambda: 1):
     """Build a forward that re-applies the STE weights on every call.
@@ -205,6 +206,7 @@ class HFStudentAdapter:
                 weight=_nn_param(weight),
                 group_size=min(128, weight.shape[0]),
                 residual_weight=zero_param,
+                calibrate_norm=self.config.calibrate_norm,
             )
             self._ste_params.append(ste)
             self._bias_params.append(bias_param)

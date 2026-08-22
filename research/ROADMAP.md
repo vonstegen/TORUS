@@ -115,8 +115,11 @@ and every run has immutable provenance.
       **Done 2026-08-22 (registry INDEX).**
 - [x] **0.7** Tag the baseline revision (e.g. `research-baseline-2026-08`).
       **Done 2026-08-22: annotated tag `research-baseline-2026-08` pushed.**
-- [ ] **0.8** Enact the feature freeze: no nonessential expansion while a
+- [x] **0.8** Enact the feature freeze: no nonessential expansion while a
       core hypothesis is unresolved.
+      **Done 2026-08-22: freeze ACTIVE from `research-baseline-2026-08`.
+      Exceptions are logged per-experiment (first: EXP-A-001's
+      `--no-calibrate` knob, recorded in its manifest).**
 - [ ] **0.9** `EXP-A-001`: reproduce FP16/BF16, uncalibrated PTQ, and
       norm-calibrated PTQ baselines with immutable manifests.
 
