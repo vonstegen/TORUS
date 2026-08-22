@@ -77,6 +77,7 @@ class HFAdapterConfig:
     cache_dir: str | None = None
     device: str = "cpu"
     attn_implementation: str | None = None  # "eager", "sdpa", "flash_attention_2"; None = model default
+    calibrate_norm: bool = True  # False reproduces the uncalibrated PTQ arm (EXP-A-001)
 
 def _matches_target(name: str, targets: set[str]) -> bool:
     """Return True iff `name` matches the target_modules set.

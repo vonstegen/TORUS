@@ -154,3 +154,28 @@ def test_attach_ste_filters_by_fqn() -> None:
 
     # Empty.
     assert not _matches_target("q_proj", set())
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("torch") is None,
+    reason="torch not installed; HFAdapterConfig is a pure-Python dataclass",
+)
+def test_hf_adapter_config_has_calibrate_norm() -> None:
+    """The EXP-A-001 contract: HFAdapterConfig(calibrate_norm=...) is valid.
+
+    The --no-calibrate flag in examples/eval_lm.py passes
+    calibrate_norm=not args.no_calibrate to HFAdapterConfig. If
+    the field is missing the runner TypeErrors on every quantized arm
+    (regression caught in EXP-A-011's first Legion launch).
+    """
+    from torus.train.hf_adapter import HFAdapterConfig
+
+    cfg = HFAdapterConfig(
+        model_name="test",
+        target_modules=["q_proj"],
+        calibrate_norm=False,
+        device="cpu",
+    )
+    assert cfg.calibrate_norm is False
+    # Default is True (calibrated PTQ is the EXP-A-001 calibrated arm).
+    assert HFAdapterConfig().calibrate_norm is True
