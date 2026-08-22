@@ -1,5 +1,9 @@
 # TORUS Testing Harness Instructions v2
 
+> **v2.1 integration note — 2026-08-22:** Track A-F is governed by
+> `10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2.md`. Where earlier guidance
+> conflicts with Track A-F, document 10 takes precedence.
+
 ## Primary directive
 
 **ISOLATE → FALSIFY → GRADE → REPRODUCE → RECOMBINE**
@@ -22,6 +26,30 @@ feature-completion roadmap.
 8.  Mark contaminated/uncertain runs INVALID and rerun cleanly.
 9.  Require reproduction before changing architecture around a result.
 10. Recombine only independently passing components.
+
+## Claim-driven operation
+
+The harness does not follow a fixed linear roadmap. It operates the
+claim-driven experimental DAG defined in
+`10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2.md`, which is the **Track-A
+falsification authority**:
+
+1.  Read the claim registry; select the highest-priority unresolved claim.
+2.  Verify prerequisites and unlock rules before scheduling any experiment.
+3.  Run the cheapest meaningful falsification test first.
+4.  Score proxy, capability and cost metrics separately; grade; update the
+    claim state; unlock or block dependent experiments.
+
+Enforced unlock rules (document 10 §12): Track-B oracle gating requires
+A-RP-001 `CONFIRMED_PASS`, A-RP-002 at least provisionally supported, and
+AF5 above its preregistered threshold; OLMoE adaptive-precision work
+additionally requires useful dense-model oracle savings and T1/T2 survival
+of the A-F suite; routine T3/T4 scaling and large-model Hadamard runs stay
+locked until their respective criteria pass.
+
+The current steering priorities below are subordinate to these unlock
+rules: Priority 1 items run now; Priority 2 items wait for the Track A-F
+verdict regardless of available compute.
 
 ## Current steering priorities
 

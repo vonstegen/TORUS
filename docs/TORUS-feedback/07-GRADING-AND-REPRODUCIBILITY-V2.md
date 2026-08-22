@@ -1,5 +1,9 @@
 # TORUS v2 --- Grading and Reproducibility Standard
 
+> **v2.1 integration note — 2026-08-22:** Track A-F is governed by
+> `10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2.md`. Where earlier guidance
+> conflicts with Track A-F, document 10 takes precedence.
+
 ## Grades
 
 -   **A:** clear, reproduced Pareto improvement or strong independent
@@ -16,6 +20,31 @@
 
 An F is a useful research result. INVALID is not a failure and must be
 rerun.
+
+## Claim states
+
+Program beliefs are tracked as registered claims (see document 10) moving
+through:
+
+``` text
+UNTESTED
+TESTING
+PROVISIONAL_PASS
+PROVISIONAL_FAIL
+REPRODUCTION_REQUIRED
+CONFIRMED_PASS
+CONFIRMED_FAIL
+INVALID
+```
+
+A discovery-tier PASS sets at most `PROVISIONAL_PASS`. `CONFIRMED_PASS`
+requires clean reproduction per document 10 §11: new run ID, independent
+artifact namespace, frozen git SHA, fresh process, verified checkpoint
+hashes, independently generated evaluation output.
+
+**No architecture-changing conclusion may be drawn below CONFIRMED
+status.** If provenance is uncertain, the claim or run is `INVALID` ---
+never PASS or FAIL.
 
 ## Mandatory run provenance
 

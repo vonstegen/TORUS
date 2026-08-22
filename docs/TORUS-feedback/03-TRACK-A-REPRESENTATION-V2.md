@@ -1,5 +1,9 @@
 # Track A v2 --- Efficient Model Representation
 
+> **v2.1 integration note — 2026-08-22:** Track A-F is governed by
+> `10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2.md`. Where earlier guidance
+> conflicts with Track A-F, document 10 takes precedence.
+
 ## Updated evidence
 
 Corrected sequential residual-plane training materially changes the
@@ -47,6 +51,27 @@ limitations.
 Later planes are evaluated as functional corrections, not solely weight
 reconstruction.
 
+## Track A-F --- Residual plane falsification gate
+
+A3's positive result is a discovery-tier signal, not a validated mechanism.
+Before T2 is considered validated --- and before any Track-B work may assume
+T2 is useful --- the residual-plane claims must survive the falsification
+suite defined in `10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2.md`:
+
+-   AF1 equal-training-budget control (T2 vs. training T1 longer);
+-   AF2 equal-storage/bit-budget tournament;
+-   AF3 initialization robustness;
+-   AF4 sequential-vs-joint training;
+-   AF5 downstream-transfer gate;
+-   AF6 dataset/context robustness;
+-   AF7 random-capacity control;
+-   AF8 mandatory clean reproduction.
+
+The registered claims under test are A-RP-001 (T2 beats equal training
+time), A-RP-002 (T2 beats equal-storage non-ternary correction), and
+A-RP-003 (sequential freezing beats joint training). T2 is promoted only
+when the five-condition acceptance bar in document 10 §15 is met.
+
 ## A4 --- Heterogeneous precision map
 
 Use sensitivity data to decide which layers stay FP/INT8/INT4, which
@@ -61,4 +86,6 @@ No Track-A configuration passes on KL alone. It must show:
 -   reproducibility;
 -   competitive physical storage/compute;
 -   comparison against strong INT4/INT8 and relevant ternary baselines;
--   no provenance or evaluation artifact.
+-   no provenance or evaluation artifact;
+-   for any configuration relying on a trained T2: survival of the Track A-F
+    falsification suite (claims A-RP-001 and A-RP-002 at minimum).

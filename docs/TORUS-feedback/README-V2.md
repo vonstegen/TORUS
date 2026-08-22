@@ -43,3 +43,7 @@ TORUS architecture.
 -   `07-GRADING-AND-REPRODUCIBILITY-V2.md`
 -   `08-HARNESS-INSTRUCTIONS-V2.md`
 -   `09-EVIDENCE-UPDATE-2026-08-22.md`
+-   `10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2.md` — Track A-F falsification
+    suite, claim registry, and unlock rules. **v2.1:** documents 03, 05, 07,
+    and 08 carry integration notes deferring to document 10 where guidance
+    conflicts.

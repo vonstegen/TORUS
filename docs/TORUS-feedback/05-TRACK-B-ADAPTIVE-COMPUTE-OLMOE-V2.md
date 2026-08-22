@@ -1,11 +1,27 @@
 # Track B v2 --- Adaptive Computation and OLMoE
 
+> **v2.1 integration note — 2026-08-22:** Track A-F is governed by
+> `10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2.md`. Where earlier guidance
+> conflicts with Track A-F, document 10 takes precedence.
+
 ## Updated status
 
 The prerequisite for beginning oracle gating is provisionally satisfied:
 a correctly trained T2 can provide meaningful representational
 improvement over T1. This does not yet prove downstream utility, so
 gating must be task-aware.
+
+**Track B is locked behind Track A-F.** Per document 10 §12, no Track-B
+experiment may start until its unlock criteria pass:
+
+-   **B1/B2 (oracle and learned gating):** claim A-RP-001 at
+    `CONFIRMED_PASS`; claim A-RP-002 at least provisionally supported; AF5
+    demonstrates task-relevant T2 value above its preregistered threshold.
+-   **B3 (OLMoE):** additionally requires dense-model oracle gating to show
+    useful savings **and** the T1/T2 representation to have survived the
+    full A-F falsification suite.
+
+A discovery-tier KL improvement from T2 does not satisfy these criteria.
 
 ## B1 --- Oracle gating
 
