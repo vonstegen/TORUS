@@ -8,8 +8,8 @@ claims_addressed: []   # establishes the baseline ladder rungs, not a claim
 title: "Reproduce FP16 and PTQ baselines under v2 provenance"
 owner: "research-harness"
 date_proposed: "2026-08-22"
-status: RUNNING
-decision: null
+status: DECIDED
+decision: PASS
 grade: null
 
 hypothesis: "The pre-regime OLMo-1B baseline numbers reproduce on Legion under the v2 provenance standard: FP16 (ARC-E 0.6073, LAMBADA 0.6095, WikiText ppl 13.09), uncalibrated PTQ collapse (ppl ~465,097), and norm-calibrated PTQ (ppl ~89,557)."
@@ -56,11 +56,11 @@ contamination_risks:
   - "shared HF cache with other runs (read-only for this experiment; model revision pinned and hashed in provenance)"
   - "GPU contention on legion: verify nvidia-smi shows no other processes before each arm"
 
-result_summary: ""
-confidence_and_reproduction: ""
-next_permitted_experiment: "EXP-A-01x (A1 layer sensitivity) if PASS"
-experiments_blocked: ["all Phase 1+ work if FAIL (G0→1 stays closed)"]
-conclusion: ""
+result_summary: "All arms reproduce: fp16 exact to 4 decimals (ARC-E 0.60732, LAMBADA 0.60955, ppl 13.0932); uncalibrated PTQ ppl 459,454 (hist 465,097, -1.2%); calibrated PTQ ppl 89,557 (5.13x better than uncalibrated). Anomaly: calibrated arm slightly worse on ARC-E/LAMBADA despite 5x ppl gain."
+confidence_and_reproduction: "n=1 per arm as preregistered (deterministic given pinned revisions); exact reproduction of pre-regime values; stderrs not persisted (recorded as audit note)"
+next_permitted_experiment: "EXP-A-011 (A1 layer sensitivity) — G0→1 OPEN"
+experiments_blocked: []
+conclusion: "Pre-regime baselines are real and reproducible under clean provenance. Baseline ladder root established at E3. Phase 1 unlocked."
 supersedes: null
 
 freeze_exception:

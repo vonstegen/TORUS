@@ -123,8 +123,9 @@ and every run has immutable provenance.
       **Done 2026-08-22: freeze ACTIVE from `research-baseline-2026-08`.
       Exceptions are logged per-experiment (first: EXP-A-001's
       `--no-calibrate` knob, recorded in its manifest).**
-- [ ] **0.9** `EXP-A-001`: reproduce FP16/BF16, uncalibrated PTQ, and
+- [x] **0.9** `EXP-A-001`: reproduce FP16/BF16, uncalibrated PTQ, and
       norm-calibrated PTQ baselines with immutable manifests.
+      **Done 2026-08-22: PASS, all arms (`research/baselines/EXP-A-001/`).**
 
 ### Checkpoints
 
@@ -132,8 +133,8 @@ and every run has immutable provenance.
 |---|---|---|
 | CP0.1 | Packaging integrity | Wheel installs/imports cleanly outside the source tree; `torus.train` present; C kernel loads. `FAIL` blocks everything. |
 | CP0.2 | Provenance drill | A throwaway experiment produces a complete run record end-to-end; a second agent/session cannot write into its namespace. |
-| CP0.3 | Baseline reproduction | FP16 metrics within lm-eval confidence intervals of the historical row; calibrated PTQ ppl within one order of magnitude of 89,557. Larger deviation → `INVALID`; diagnose environment first. |
-| **G0→1** | **Gate to Phase 1** | CP0.1–CP0.3 pass; registry + claims live; freeze in effect; baselines reproduced. |
+| CP0.3 | Baseline reproduction | FP16 metrics within lm-eval confidence intervals of the historical row; calibrated PTQ ppl within one order of magnitude of 89,557. Larger deviation → `INVALID`; diagnose environment first. **PASS 2026-08-22 (EXP-A-001).** |
+| **G0→1** | **Gate to Phase 1** | CP0.1–CP0.3 pass; registry + claims live; freeze in effect; baselines reproduced. **OPEN 2026-08-22.** |
 
 ---
 

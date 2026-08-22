@@ -1,0 +1,18 @@
+{
+  "model": "allenai/OLMo-1B-0724-hf",
+  "mode": "baseline",
+  "tasks": {
+    "arc_easy": {
+      "metric": "acc,none",
+      "value": 0.6073232323232324
+    },
+    "lambada_openai": {
+      "metric": "acc,none",
+      "value": 0.6095478362119154
+    },
+    "wikitext": {
+      "metric": "word_perplexity,none",
+      "value": 13.093198488512625
+    }
+  }
+}

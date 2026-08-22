@@ -1,0 +1,69 @@
+{
+  "experiment_id": "EXP-A-001",
+  "artifacts": [
+    {
+      "kind": "env-lock",
+      "path": "/home/andrew-jochl/TORUS/runs/a/EXP-A-001/20260822T182528Z/env-lock.txt",
+      "sha256": "5a88baac4dcffd61a554cfb507eb62254f150ddf3cec70d364ff2c81d77c250a",
+      "bytes": 2211,
+      "location": "local:legion",
+      "exists": true
+    },
+    {
+      "kind": "metrics",
+      "path": "/home/andrew-jochl/TORUS/runs/a/EXP-A-001/20260822T182528Z/eval-fp16.json",
+      "sha256": "87361c2baa79c134881a50dd26ec79767125110ab9ea253788a2d5a12676da8a",
+      "bytes": 358,
+      "location": "local:legion",
+      "exists": true
+    },
+    {
+      "kind": "metrics",
+      "path": "/home/andrew-jochl/TORUS/runs/a/EXP-A-001/20260822T182528Z/eval-ptq-calibrated.json",
+      "sha256": "51d2f9caad15808c36589aa06300e18dbc16616c6f34a88f5d050df129081b66",
+      "bytes": 363,
+      "location": "local:legion",
+      "exists": true
+    },
+    {
+      "kind": "metrics",
+      "path": "/home/andrew-jochl/TORUS/runs/a/EXP-A-001/20260822T182528Z/eval-ptq-uncalibrated.json",
+      "sha256": "845426c013856722a47a634a51b14c567383e3a856164bbf159a6340663c6740",
+      "bytes": 362,
+      "location": "local:legion",
+      "exists": true
+    },
+    {
+      "kind": "log",
+      "path": "/home/andrew-jochl/TORUS/runs/a/EXP-A-001/20260822T182528Z/log-fp16.txt",
+      "sha256": "d4b368adfa5059cb04e821d00a65a1ba8b3c8c472dee456f671e9a9fe812de8e",
+      "bytes": 57223,
+      "location": "local:legion",
+      "exists": true
+    },
+    {
+      "kind": "log",
+      "path": "/home/andrew-jochl/TORUS/runs/a/EXP-A-001/20260822T182528Z/log-ptq-calibrated.txt",
+      "sha256": "88b061d1cc85b9063ce453ee1c9aa1c34c47f2f3fb7ffb1b7a7a5af584cc673b",
+      "bytes": 57134,
+      "location": "local:legion",
+      "exists": true
+    },
+    {
+      "kind": "log",
+      "path": "/home/andrew-jochl/TORUS/runs/a/EXP-A-001/20260822T182528Z/log-ptq-uncalibrated.txt",
+      "sha256": "cf02acf7e4d90b6e14a510783410b3e0ae67b0fbec1678d2c1329ebce5d7d8af",
+      "bytes": 56903,
+      "location": "local:legion",
+      "exists": true
+    },
+    {
+      "kind": "provenance",
+      "path": "/home/andrew-jochl/TORUS/runs/a/EXP-A-001/20260822T182528Z/provenance.json",
+      "sha256": "be5df4eeac7e361f1c184f36fe1af5f0f0adaac43bade5052844c30568031ff0",
+      "bytes": 393,
+      "location": "local:legion",
+      "exists": true
+    }
+  ]
+}

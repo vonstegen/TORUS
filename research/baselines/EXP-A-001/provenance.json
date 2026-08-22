@@ -1,0 +1,5 @@
+{"experiment_id": "EXP-A-001", "git_sha": "ee62c459f13684a979ca9c573f433f7d5463fcf1",
+ "host": "LEGION", "python": "Python 3.14.4",
+ "gpu": "NVIDIA TITAN RTX;NVIDIA TITAN RTX",
+ "model": "allenai/OLMo-1B-0724-hf", "start_utc": "20260822T182528Z",
+ "command_template": ".venv/bin/python examples/eval_lm.py --tasks wikitext,lambada_openai,arc_easy --batch-size 4 --device cuda:0 [--mode ...]"}
