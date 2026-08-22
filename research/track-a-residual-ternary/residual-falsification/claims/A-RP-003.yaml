@@ -1,0 +1,14 @@
+id: A-RP-003
+track: A
+title: "Sequential freezing superior to joint training"
+statement: "Sequentially freezing T1 before learning T2 is necessary or materially superior to matched joint-training alternatives."
+date_registered: "2026-08-22"
+state: UNTESTED
+required_evidence: [AF4, AF8]
+supporting_experiments: []
+unlock_rules_affected: []
+history:
+  - date: "2026-08-22"
+    transition: "-> UNTESTED"
+    cause: "registered per 10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2"
+conclusion: ""

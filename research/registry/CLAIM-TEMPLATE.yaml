@@ -1,0 +1,14 @@
+# Claim record template — copy to research/track-*/**/claims/<CLAIM-ID>.yaml
+# Required evidence is fixed at registration; strengthening a claim = new claim ID.
+id: A-RP-000
+track: A
+title: ""
+statement: ""          # one falsifiable sentence — the program belief under test
+date_registered: ""
+state: UNTESTED        # UNTESTED | TESTING | PROVISIONAL_PASS | PROVISIONAL_FAIL
+                       # | REPRODUCTION_REQUIRED | CONFIRMED_PASS | CONFIRMED_FAIL | INVALID
+required_evidence: []  # experiment IDs that must contribute (e.g. AF1, AF3, AF5, AF8)
+supporting_experiments: []   # filled as experiments complete: id + decision + one-line effect
+unlock_rules_affected: []    # what this claim gates (see OPERATING-PLAN §5)
+history: []            # dated state transitions with the experiment ID that caused each
+conclusion: ""         # filled at CONFIRMED_* / INVALID

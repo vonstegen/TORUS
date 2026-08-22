@@ -1,0 +1,46 @@
+# Experiment record template — copy to research/track-<x>-*/EXP-<X>-<NNN>/manifest.yaml
+# Every field is required. Thresholds, budgets, and kill criteria freeze at commit.
+id: EXP-X-000            # unique; corrections get a NEW id, never edit in place
+track: X                 # A | B | C | R (recombination)
+subtrack: ""             # e.g. A1 sensitivity | A2 oracle-residual | AF1 budget-control | A5 hadamard | B3 olmoe
+tier: discovery          # discovery | confirmation (OPERATING-PLAN §3)
+claims_addressed: []     # claim IDs this experiment provides evidence for (e.g. A-RP-001)
+title: ""
+owner: ""
+date_proposed: ""
+status: PROPOSED         # PROPOSED | VALIDATED | RUNNING | AUDIT | DECIDED
+decision: null           # PASS | FAIL | INVALID | CONTINUE
+grade: null              # A-F per 07-GRADING-AND-REPRODUCIBILITY-V2
+
+hypothesis: ""           # one primary falsifiable hypothesis per experiment
+rationale: ""            # cheapest experiment capable of falsifying the next claim
+
+revision: ""             # commit; must descend from the tagged research baseline
+run_namespace: ""        # runs/<track>/<experiment_id>/<timestamp-or-uuid>/ — immutable
+environment: ""          # env lock/snapshot (python, torch, CUDA, hardware, hostname)
+baseline: ""             # which strong/simple baseline this is compared against
+controls: []             # required controls (e.g. equal-storage INT4/INT8; stock OLMoE)
+variants: []             # variant ids + one-line descriptions
+
+dataset_and_samples: ""  # dataset revision + explicit sample IDs
+seeds: []                # n >= 3 for any track-advancing PASS
+metrics: []              # downstream/task-relevant metrics AND diagnostics (KL etc.) listed separately
+evidence_categories: []  # subset of: software | representation | downstream | systems | end-to-end
+
+pass_thresholds: []      # numeric, task-relevant; frozen at PROPOSE. KL alone never suffices.
+fail_thresholds: []
+kill_criteria: []        # preregistered abort conditions (mandatory for training runs)
+budget: ""               # max compute/wall-clock; overrun = INVALID or CONTINUE, never silent extension
+stop_conditions: []
+
+expected_artifacts: []   # logs, raw metrics, hashes, figures
+artifact_paths: []       # filled at RUN; large files by link + checksum
+contamination_risks: []  # shared /tmp names, concurrent writers, eval leakage, packing artifacts
+
+# Decision block — filled at DECIDE (08-HARNESS-INSTRUCTIONS-V2)
+result_summary: ""
+confidence_and_reproduction: ""   # seeds, intervals, clean-reproduction status
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""           # strongest supported claim + what remains unknown
+supersedes: null         # prior INVALID id this corrects, if any

@@ -1,0 +1,14 @@
+id: A-RP-002
+track: A
+title: "T2 competitive with equal-storage non-ternary correction"
+statement: "The improvement from T2 is competitive with an equal-storage non-ternary correction mechanism on the quality-per-physical-bit / quality-per-compute Pareto frontier."
+date_registered: "2026-08-22"
+state: UNTESTED
+required_evidence: [AF2, AF7, AF8]
+supporting_experiments: []
+unlock_rules_affected: ["Track B oracle gating (B1)"]
+history:
+  - date: "2026-08-22"
+    transition: "-> UNTESTED"
+    cause: "registered per 10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2"
+conclusion: ""

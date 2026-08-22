@@ -1,5 +1,14 @@
 # Roadmap
 
+> **SUPERSEDED — historical record only.** As of 2026-08-22, TORUS operates
+> under the gated research program in `research/ROADMAP.md` +
+> `research/OPERATING-PLAN.md`, per the review package in
+> `docs/TORUS-feedback/`. The phase plan below documents completed engineering;
+> results it references predate the experimental contract and are
+> **engineering-validation evidence only** (see `research/OPERATING-PLAN.md`
+> §4). Note: this document's claim of AVX-512 on the Threadripper PRO 3995WX
+> is incorrect (Zen 2 has no AVX-512) — correction tracked as roadmap item 0.3.
+
 TORUS is built in five phases. Each phase ends with a runnable
 artifact and an evaluable deliverable — no half-finished layers.
 

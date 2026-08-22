@@ -58,6 +58,7 @@ dmypy.json
 # Project artifacts
 checkpoints/
 experiments/
+runs/
 logs/
 *.log
 *.pt

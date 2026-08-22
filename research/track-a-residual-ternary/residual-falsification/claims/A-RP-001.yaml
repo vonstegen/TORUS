@@ -1,0 +1,17 @@
+id: A-RP-001
+track: A
+title: "T2 adds useful capacity beyond equal training time"
+statement: "A second sequentially trained ternary correction plane provides useful model capacity beyond the benefit of equivalent additional training time."
+date_registered: "2026-08-22"
+state: UNTESTED
+required_evidence: [AF1, AF3, AF5, AF8]
+supporting_experiments:
+  - id: EXP-A-010
+    decision: CONTINUE
+    effect: "Discovery-tier KL progression 3.42→2.66→1.72→1.60 suggests capacity gain; proxy-only, provenance-limited, no equal-budget control. Motivates, does not confirm."
+unlock_rules_affected: ["Track B oracle gating (B1)"]
+history:
+  - date: "2026-08-22"
+    transition: "-> UNTESTED"
+    cause: "registered per 10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2"
+conclusion: ""
