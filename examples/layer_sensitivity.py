@@ -50,7 +50,11 @@ def run_arm(
     """Run `eval_lm.py` once for a single FQN; return (summary_path, full_path)."""
     safe_name = target_module.replace(".", "__")
     summary = out_dir / "per_layer" / f"{safe_name}.summary.json"
-    full = out_dir / "per_layer" / f"{safe_name}.full.json"
+    # eval_lm.py writes the sidecar as <--output>.full.json (not
+    # <safe_name>.full.json) because it appends ".full.json" to the
+    # path it was given via --output. The summary path already ends
+    # in ".summary.json", so the sidecar ends in ".summary.json.full.json".
+    full = Path(str(summary) + ".full.json")
     log = out_dir / "per_layer" / f"{safe_name}.log"
     summary.parent.mkdir(parents=True, exist_ok=True)
 
