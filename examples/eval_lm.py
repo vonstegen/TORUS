@@ -29,13 +29,21 @@ import torch  # noqa: E402
 from torus.train.hf_adapter import HFAdapterConfig, HFStudentAdapter  # noqa: E402
 
 
-def run_lm_eval(model, tokenizer, tasks: list[str], batch_size: int) -> dict:
+def run_lm_eval(model, tokenizer, tasks: list[str], batch_size: int,
+                limit: int | None = None) -> dict:
     """Run lm-eval-harness on the given model and return results."""
     from lm_eval import simple_evaluate
     from lm_eval.models.huggingface import HFLM
 
     lm = HFLM(pretrained=model, tokenizer=tokenizer, batch_size=batch_size)
-    return simple_evaluate(model=lm, tasks=tasks, batch_size=batch_size)
+    # NOTE: prior to EXP-AF-001 the CLI accepted --limit but never
+    # forwarded it here, so every EXP-A-001/EXP-A-011 eval ran the
+    # FULL task set despite the summary JSON recording a limit value.
+    # All those arms used the same (full-task) eval path, so their
+    # comparisons are unaffected; the plumbing is now honest.
+    return simple_evaluate(
+        model=lm, tasks=tasks, batch_size=batch_size, limit=limit
+    )
 
 
 def main() -> None:
@@ -96,7 +104,8 @@ def main() -> None:
         model = adapter.model
 
     tasks = args.tasks.split(",")
-    results = run_lm_eval(model, tokenizer, tasks, batch_size=args.batch_size)
+    results = run_lm_eval(model, tokenizer, tasks, batch_size=args.batch_size,
+                          limit=args.limit)
     summary: dict = {
         "model": args.model,
         "mode": args.mode,

@@ -1,0 +1,175 @@
+# Experiment record — EXP-AF-001 — AF1 equal-training-budget control (confirmation tier)
+# Preregistered 2026-08-22 BEFORE any run under this ID. Thresholds frozen.
+id: EXP-AF-001
+track: A
+subtrack: "AF1 budget-control"
+tier: confirmation
+claims_addressed: [A-RP-001]
+title: "T1+T2 vs T1-continued at matched training budget (equal tokens, batches, data order, optimizer)"
+owner: "research-harness"
+date_proposed: "2026-08-22"
+status: PROPOSED
+decision: null
+grade: null
+
+hypothesis: "At matched training budget (500 steps x batch 4 x seq 128 =
+  256k tokens, identical batches, identical SGD settings, identical
+  next-token CE objective), a frozen FP16 base plus a single ternary
+  correction plane on model.layers.0.mlp.down_proj (arm B, T1+T2)
+  provides useful capability beyond continuing to train the full FP16
+  base (arm A, T1-continued): Q(T1+T2) exceeds Q(T1 continued) by >2
+  standard errors on at least one capability metric, with no regression
+  beyond 1 standard error on the others."
+
+rationale: "A-RP-001's exact test. EXP-A-03x (discovery, grade C) showed
+  the T1+T2 pipeline trains and recovers the worst-tolerance layer vs
+  its untrained PTQ init — but the claim is about *equal training time*,
+  which requires this control. Arm A is the strongest simple baseline:
+  the same model, the same data, the same optimizer, the same tokens —
+  just allowed to train all its weights. If the ternary correction plane
+  cannot beat plain continued training at equal budget, the claim fails
+  and T2 must not be promoted to adaptive-gating experiments."
+
+revision: ""              # filled at RUN — commit hash of the code
+run_namespace: "runs/a/EXP-AF-001/<timestamp>/seed-00X/<arm>/"
+environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt in run namespace"
+baseline: "Arm A IS the baseline (T1-continued). External references:
+  FP16 eval (EXP-A-001: wikitext ppl 13.09, arc_easy 0.6073,
+  lambada_openai 0.6095); untrained PTQ arm on the same layer
+  (EXP-A-011: wikitext ppl 427.71, arc_easy 0.5396); EXP-A-03x trained
+  T1+T2 via KD (wikitext ppl 41.44, arc_easy 0.6313 — KD objective,
+  not this experiment's matched-CE objective)."
+
+controls:
+  - "Arm A (T1-continued) is the preregistered control: identical
+    model, data, order, optimizer, steps, tokens. Only the trainable
+    parameter set differs."
+  - "Data order matched by construction: both arms at seed S sample
+    from the same cached token stream with the same sampler seed
+    (pinned by tests/test_af1_budget_control.py)."
+  - "Arm B base is frozen by construction: requires_grad_(False) on
+    every base parameter; optimizer holds only the STE latents
+    (pinned by tests/test_af1_budget_control.py)."
+variants:
+  - "arm A t1_continued: full FP16 base, all weights trainable."
+  - "arm B t1_t2: FP16 base frozen + T2 ternary correction plane on
+    model.layers.0.mlp.down_proj (the worst-tolerance layer per
+    EXP-A-011 and the EXP-A-03x recovery site)."
+
+objective_note: >
+  Both arms train with next-token cross-entropy on wikitext-103 train.
+  KD-against-frozen-T1 is degenerate for arm A (KD(T1 vs T1) = 0 at
+  init, so arm A cannot move), making matched CE the only honest
+  shared objective. Matched CE is also the conservative choice for
+  the claim: it isolates the T2 *architecture* from the KD training
+  signal that EXP-A-03x used. A T2 win under matched CE is therefore
+  stronger evidence for A-RP-001 than a T2 win under KD; a T2 loss
+  under matched CE does not rule out a KD-specific training-signal
+  advantage (that is AF3/AF5/AF8's refinement, not this experiment).
+
+dataset_and_samples: "wikitext-103 train split, tokenized once and
+  cached (/tmp/wikitext103_train_ids.npy on legion, sha256 recorded in
+  ARTIFACTS.json); random-window sampling, seed per run. Eval: FULL
+  wikitext test, arc_easy, lambada_openai (no --limit; confirmation
+  tier)."
+seeds: [1, 2, 3]   # seed-001/002/003 sub-namespaces per v2 suite layout
+metrics:
+  - "capability: wikitext word_perplexity (lower better), arc_easy acc
+    (higher better), lambada_openai acc (higher better) — full tasks,
+    float16 eval, matching the EXP-A-001 reference ladder"
+  - "diagnostic-only (NEVER acceptance): per-step training CE loss
+    curves"
+evidence_categories: [representation, downstream]
+
+# ----- PASS / FAIL / KILL thresholds (frozen at PROPOSE) ------------------
+# Per A-RP-001 quantitative_thresholds (claims/A-RP-001.yaml, v1).
+# Directions: ppl LOWER is better; acc HIGHER is better.
+pass_thresholds:
+  - "Q(T1+T2) exceeds Q(T1 continued) by >2 stderr-of-difference on at
+    least one capability metric: (mean_A - mean_B) / se_diff > 2 for
+    wikitext ppl, or (mean_B - mean_A) / se_diff > 2 for arc_easy or
+    lambada_openai, where se_diff = sqrt(se_A^2 + se_B^2) over n=3
+    seeds."
+  - "AND no regression beyond 1 stderr-of-difference on the other
+    capability metrics (same formula, opposite direction)."
+
+fail_thresholds:
+  - "No capability metric separates the arms by >2
+    stderr-of-difference."
+  - "OR arm A (T1-continued) beats arm B (T1+T2) by >2
+    stderr-of-difference on any capability metric."
+
+kill_criteria:
+  - "Training diverges in either arm at any seed (loss = NaN or inf)."
+  - "Arm A catastrophic instability: arm A wikitext ppl after training
+    is worse than the untrained PTQ arm's 427.71 (the control itself
+    collapsed; rerun with a lower preregistered LR under a NEW
+    experiment ID, never edited in place)."
+  - "Matched-budget violation: base weights in arm B moved (checked by
+    construction + the test suite; if detected, run is INVALID)."
+  - "Budget overrun: total wall clock exceeds 8h on legion."
+
+budget: "8 GPU-hours total on legion. 6 train+eval runs (2 arms x 3
+  seeds), estimated ~25 min each (500 steps at ~1s + full 3-task eval
+  at ~3-5 min). Confirmation tier cap: 8h."
+
+stop_conditions:
+  - "All 6 arm x seed runs complete with eval summaries and the
+    aggregate.json is written."
+  - "Kill criterion fires: record INVALID and stop."
+
+expected_artifacts:
+  - "per-(seed, arm): history.jsonl (training CE), eval.summary.json,
+    eval.full.json, adapter.npz + meta (arm B only)"
+  - "aggregate.json (per-arm means, stddevs, stderrs, arm differences
+    in stderr units)"
+  - "provenance.json + env-lock.txt + driver.log + ARTIFACTS.json"
+artifact_paths: []
+artifacts_manifest: "runs/a/EXP-AF-001/<timestamp>/ARTIFACTS.json"
+contamination_risks:
+  - "Shared token cache: /tmp/wikitext103_train_ids.npy is read-only
+    after first write; sha256 recorded. One writer (first run); later
+    runs only read."
+  - "Arm A modifies the FP16 base in-process only; each (arm, seed)
+    reloads a fresh model instance. No cross-arm weight leakage."
+  - "Eval leakage: eval tasks (wikitext test, arc_easy, lambada) are
+    disjoint from wikitext-103 train."
+  - "Provenance note (audit finding): the --limit flag in
+    examples/eval_lm.py was accepted but never forwarded to
+    simple_evaluate before this experiment, so EXP-A-001/EXP-A-011
+    evals ran FULL tasks despite their manifests saying '--limit 200'.
+    All those arms used the same full-task path, so their comparisons
+    stand; the plumbing is fixed in this experiment's freeze exception
+    and AF1 runs full tasks by design."
+
+# ----- freeze exception logged here (OPERATING-PLAN §3, §6) ---------------
+freeze_exception:
+  change: >
+    (a) New examples/af1_budget_control.py: shared-loop two-arm
+    driver (arm A full-base SGD; arm B frozen base + STE latents via
+    the torch straight-through STE from eac2c04), cached wikitext-103
+    token stream, matched-seed window sampler, in-process lm-eval,
+    per-(seed, arm) artifacts + aggregate.json. (b) examples/eval_lm.py:
+    run_lm_eval now forwards `limit` to lm_eval.simple_evaluate (the
+    flag was previously accepted but inert). (c) New tests
+    (tests/test_af1_budget_control.py, 5 tests) pinning: sampler
+    determinism (matched batches), train_arm updates only the given
+    parameter set (freeze invariant), CE shift/pad semantics, and the
+    limit-plumbing fix.
+  justification: >
+    Required to execute this preregistered AF1 experiment: the
+    existing trainer (DistillationTrainer) only trains STE correction
+    planes and has no full-base continuation arm; A-RP-001's
+    equal-budget control does not exist without one. The shared-loop
+    design makes the matched budget a construction property rather
+    than a post-hoc claim. The --limit plumbing fix is an honesty
+    repair discovered during this experiment's design audit.
+  approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN §3)"
+
+# ----- decision block (filled at DECIDE) -----------------------------------
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""
+supersedes: null
