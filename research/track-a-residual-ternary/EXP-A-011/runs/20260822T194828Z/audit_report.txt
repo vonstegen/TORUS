@@ -1,0 +1,41 @@
+[audit] FP16 reference: ppl=13.0932, arc_easy=0.6073
+[audit] fully-quantized reference: ppl=459454.0, arc_easy=0.2584
+[audit] 114 per-layer arms
+
+[audit] === per-category aggregates (excluding embed/head) ===
+  category          n     mean_ppl      std_ppl      min_ppl      max_ppl
+  attention_k      16        226.1        810.2         13.8       3363.8
+  attention_o      16         24.3         41.9         13.4        186.8
+  attention_q      16         32.2         61.0         13.7        268.0
+  attention_v      16         16.2         10.0         13.4         54.9
+  mlp_down         16        618.8       2237.9         13.6       9277.6
+  mlp_gate         16         16.5          6.0         13.8         38.8
+  mlp_up           16         14.0          0.5         13.6         15.7
+
+[audit] === per-block aggregates ===
+  layer  0  n=  7  mean_ppl=       622.2  min=        15.7  max=      3363.8
+  layer  1  n=  7  mean_ppl=      1339.0  min=        13.7  max=      9277.6
+  layer  2  n=  7  mean_ppl=        18.7  min=        13.5  max=        33.6
+  layer  3  n=  7  mean_ppl=        16.7  min=        13.5  max=        23.8
+  layer  4  n=  7  mean_ppl=        14.1  min=        13.5  max=        14.8
+  layer  5  n=  7  mean_ppl=        15.9  min=        13.5  max=        20.6
+  layer  6  n=  7  mean_ppl=        13.9  min=        13.4  max=        14.3
+  layer  7  n=  7  mean_ppl=        14.2  min=        13.5  max=        15.1
+  layer  8  n=  7  mean_ppl=        13.7  min=        13.5  max=        13.9
+  layer  9  n=  7  mean_ppl=        14.1  min=        13.5  max=        15.0
+  layer 10  n=  7  mean_ppl=        14.0  min=        13.5  max=        14.8
+  layer 11  n=  7  mean_ppl=        14.1  min=        13.5  max=        14.9
+  layer 12  n=  7  mean_ppl=        13.8  min=        13.5  max=        14.3
+  layer 13  n=  7  mean_ppl=        14.0  min=        13.4  max=        14.7
+  layer 14  n=  7  mean_ppl=        14.1  min=        13.4  max=        14.7
+  layer 15  n=  7  mean_ppl=        14.8  min=        13.6  max=        19.4
+
+[audit] === manifest threshold checks ===
+  late-attn-o mean ppl: 13.5 (n=4)
+  early-mlp-down mean ppl: 2433.4 (n=4)
+  ratio late/early: 0.01  (PASS bar: >= 1.5x)
+  per-layer ppl range: 13.1 .. 9277.6 (spread = 708.6x)
+
+[audit] === verdict (preliminary) ===
+  coverage: 114/114 per-layer arms completed
+  coverage bar: PASS (>= 60)

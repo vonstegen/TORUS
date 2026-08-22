@@ -1,0 +1,29 @@
+=== TOP 10 most sensitive (highest wikitext ppl) ===
+target_module                                        ppl   arc_easy
+model.layers.1.mlp.down_proj                      9277.6      0.295
+model.layers.0.self_attn.k_proj                   3363.8      0.582
+model.layers.0.mlp.down_proj                       427.7      0.540
+model.layers.0.self_attn.q_proj                    268.0      0.547
+model.layers.0.self_attn.o_proj                    186.8      0.573
+model.layers.0.self_attn.v_proj                     54.9      0.603
+lm_head                                             45.7      0.525
+model.layers.0.mlp.gate_proj                        38.8      0.568
+model.layers.2.self_attn.k_proj                     33.6      0.626
+model.layers.2.self_attn.q_proj                     28.3      0.621
+
+=== TOP 10 least sensitive (lowest wikitext ppl) ===
+target_module                                        ppl   arc_easy
+model.layers.7.self_attn.o_proj                     13.5      0.588
+model.layers.9.self_attn.o_proj                     13.5      0.568
+model.layers.4.self_attn.o_proj                     13.5      0.623
+model.layers.8.self_attn.o_proj                     13.5      0.591
+model.layers.14.self_attn.v_proj                    13.4      0.597
+model.layers.6.self_attn.o_proj                     13.4      0.585
+model.layers.13.self_attn.v_proj                    13.4      0.585
+model.layers.14.self_attn.o_proj                    13.4      0.604
+model.layers.13.self_attn.o_proj                    13.4      0.588
+model.embed_tokens                                  13.1      0.607
+
+=== Reference (FP16):               wikitext 13.09, arc_easy 0.6073 ===
+=== Reference (full PTQ, norm):    wikitext 89.56, arc_easy 0.2584 ===
+=== Reference (full PTQ, no-cal):  wikitext 459454, arc_easy 0.2584 ===

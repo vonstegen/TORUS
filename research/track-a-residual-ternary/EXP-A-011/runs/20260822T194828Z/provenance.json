@@ -1,0 +1,15 @@
+{
+  "experiment_id": "EXP-A-011",
+  "git_sha": "b668559545cfee82db34ebbb55879a22159657fa",
+  "host": "LEGION",
+  "python": "Python 3.14.4",
+  "gpu": "NVIDIA TITAN RTX;NVIDIA TITAN RTX",
+  "model": "allenai/OLMo-1B-0724-hf",
+  "start_utc": "20260822T194828Z",
+  "command_template": "./.venv/bin/python examples/layer_sensitivity.py --out-dir runs/a/EXP-A-011/<ts> --tasks wikitext,arc_easy --limit 200 --include-reference --include-fully-quantized",
+  "replaces_invalid_runs": [
+    "20260822T193632Z (eval_lm.py NameError, fixed in 8223bdf)",
+    "20260822T193925Z (HFAdapterConfig.calibrate_norm regression, fixed in 5c434ec)",
+    "20260822T194304Z (driver sidecar path regression, fixed in b668559)"
+  ]
+}

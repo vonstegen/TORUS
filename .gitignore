@@ -56,11 +56,12 @@ coverage.xml
 dmypy.json
 
 # Project artifacts
-checkpoints/
-experiments/
-runs/
-logs/
-*.log
+# Project artifacts - anchored to the workspace root so subdirectories
+# named `runs/` or `experiments/` inside research/ stay tracked.
+/checkpoints/
+/experiments/
+/runs/
+/logs/
 *.pt
 *.bin
 *.safetensors

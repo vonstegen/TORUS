@@ -1,0 +1,464 @@
+[layer_sens] out_dir: /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z
+[layer_sens] targets: 114 modules
+[layer_sens] tasks: wikitext,arc_easy (limit=200)
+[layer_sens] reference arms: f16=True full-quantized=True
+[layer_sens] arm=FP16 reference
+[layer_sens] arm=fully-quantized reference
+[layer_sens] (1/114)
+[layer_sens] arm='model.layers.0.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.0.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 57.7s
+[layer_sens] (2/114)
+[layer_sens] arm='model.layers.0.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.0.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 59.2s
+[layer_sens] (3/114)
+[layer_sens] arm='model.layers.0.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.0.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 60.7s
+[layer_sens] (4/114)
+[layer_sens] arm='model.layers.0.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.0.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.4s
+[layer_sens] (5/114)
+[layer_sens] arm='model.layers.1.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.1.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 58.8s
+[layer_sens] (6/114)
+[layer_sens] arm='model.layers.1.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.1.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 57.9s
+[layer_sens] (7/114)
+[layer_sens] arm='model.layers.1.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.1.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.0s
+[layer_sens] (8/114)
+[layer_sens] arm='model.layers.1.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.1.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.2s
+[layer_sens] (9/114)
+[layer_sens] arm='model.layers.2.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.2.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 58.4s
+[layer_sens] (10/114)
+[layer_sens] arm='model.layers.2.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.2.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 58.0s
+[layer_sens] (11/114)
+[layer_sens] arm='model.layers.2.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.2.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.1s
+[layer_sens] (12/114)
+[layer_sens] arm='model.layers.2.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.2.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.0s
+[layer_sens] (13/114)
+[layer_sens] arm='model.layers.3.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.3.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 58.1s
+[layer_sens] (14/114)
+[layer_sens] arm='model.layers.3.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.3.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 59.2s
+[layer_sens] (15/114)
+[layer_sens] arm='model.layers.3.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.3.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.8s
+[layer_sens] (16/114)
+[layer_sens] arm='model.layers.3.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.3.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.7s
+[layer_sens] (17/114)
+[layer_sens] arm='model.layers.4.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.4.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 58.8s
+[layer_sens] (18/114)
+[layer_sens] arm='model.layers.4.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.4.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 58.6s
+[layer_sens] (19/114)
+[layer_sens] arm='model.layers.4.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.4.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.6s
+[layer_sens] (20/114)
+[layer_sens] arm='model.layers.4.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.4.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.5s
+[layer_sens] (21/114)
+[layer_sens] arm='model.layers.5.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.5.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 58.8s
+[layer_sens] (22/114)
+[layer_sens] arm='model.layers.5.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.5.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 58.1s
+[layer_sens] (23/114)
+[layer_sens] arm='model.layers.5.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.5.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.8s
+[layer_sens] (24/114)
+[layer_sens] arm='model.layers.5.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.5.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.5s
+[layer_sens] (25/114)
+[layer_sens] arm='model.layers.6.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.6.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 58.6s
+[layer_sens] (26/114)
+[layer_sens] arm='model.layers.6.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.6.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 58.2s
+[layer_sens] (27/114)
+[layer_sens] arm='model.layers.6.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.6.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.1s
+[layer_sens] (28/114)
+[layer_sens] arm='model.layers.6.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.6.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.0s
+[layer_sens] (29/114)
+[layer_sens] arm='model.layers.7.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.7.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 59.1s
+[layer_sens] (30/114)
+[layer_sens] arm='model.layers.7.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.7.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 59.1s
+[layer_sens] (31/114)
+[layer_sens] arm='model.layers.7.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.7.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.4s
+[layer_sens] (32/114)
+[layer_sens] arm='model.layers.7.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.7.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.9s
+[layer_sens] (33/114)
+[layer_sens] arm='model.layers.8.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.8.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 59.3s
+[layer_sens] (34/114)
+[layer_sens] arm='model.layers.8.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.8.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 58.3s
+[layer_sens] (35/114)
+[layer_sens] arm='model.layers.8.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.8.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.8s
+[layer_sens] (36/114)
+[layer_sens] arm='model.layers.8.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.8.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 57.9s
+[layer_sens] (37/114)
+[layer_sens] arm='model.layers.9.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.9.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 58.3s
+[layer_sens] (38/114)
+[layer_sens] arm='model.layers.9.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.9.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 57.9s
+[layer_sens] (39/114)
+[layer_sens] arm='model.layers.9.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.9.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.2s
+[layer_sens] (40/114)
+[layer_sens] arm='model.layers.9.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.9.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.5s
+[layer_sens] (41/114)
+[layer_sens] arm='model.layers.10.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.10.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 59.3s
+[layer_sens] (42/114)
+[layer_sens] arm='model.layers.10.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.10.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 58.6s
+[layer_sens] (43/114)
+[layer_sens] arm='model.layers.10.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.10.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.4s
+[layer_sens] (44/114)
+[layer_sens] arm='model.layers.10.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.10.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.4s
+[layer_sens] (45/114)
+[layer_sens] arm='model.layers.11.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.11.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 57.9s
+[layer_sens] (46/114)
+[layer_sens] arm='model.layers.11.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.11.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 58.3s
+[layer_sens] (47/114)
+[layer_sens] arm='model.layers.11.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.11.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.7s
+[layer_sens] (48/114)
+[layer_sens] arm='model.layers.11.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.11.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.1s
+[layer_sens] (49/114)
+[layer_sens] arm='model.layers.12.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.12.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 58.3s
+[layer_sens] (50/114)
+[layer_sens] arm='model.layers.12.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.12.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 59.2s
+[layer_sens] (51/114)
+[layer_sens] arm='model.layers.12.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.12.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 59.1s
+[layer_sens] (52/114)
+[layer_sens] arm='model.layers.12.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.12.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.3s
+[layer_sens] (53/114)
+[layer_sens] arm='model.layers.13.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.13.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 58.3s
+[layer_sens] (54/114)
+[layer_sens] arm='model.layers.13.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.13.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 58.1s
+[layer_sens] (55/114)
+[layer_sens] arm='model.layers.13.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.13.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.7s
+[layer_sens] (56/114)
+[layer_sens] arm='model.layers.13.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.13.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.6s
+[layer_sens] (57/114)
+[layer_sens] arm='model.layers.14.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.14.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 59.0s
+[layer_sens] (58/114)
+[layer_sens] arm='model.layers.14.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.14.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 58.3s
+[layer_sens] (59/114)
+[layer_sens] arm='model.layers.14.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.14.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.4s
+[layer_sens] (60/114)
+[layer_sens] arm='model.layers.14.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.14.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.8s
+[layer_sens] (61/114)
+[layer_sens] arm='model.layers.15.self_attn.q_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.15.self_attn.q_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__q_proj.summary.json --limit 200
+[layer_sens]   done in 59.3s
+[layer_sens] (62/114)
+[layer_sens] arm='model.layers.15.self_attn.k_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.15.self_attn.k_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__k_proj.summary.json --limit 200
+[layer_sens]   done in 58.5s
+[layer_sens] (63/114)
+[layer_sens] arm='model.layers.15.self_attn.v_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.15.self_attn.v_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__v_proj.summary.json --limit 200
+[layer_sens]   done in 58.3s
+[layer_sens] (64/114)
+[layer_sens] arm='model.layers.15.self_attn.o_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.15.self_attn.o_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__o_proj.summary.json --limit 200
+[layer_sens]   done in 58.6s
+[layer_sens] (65/114)
+[layer_sens] arm='model.layers.0.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.0.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 58.5s
+[layer_sens] (66/114)
+[layer_sens] arm='model.layers.0.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.0.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 60.7s
+[layer_sens] (67/114)
+[layer_sens] arm='model.layers.0.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.0.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 58.6s
+[layer_sens] (68/114)
+[layer_sens] arm='model.layers.1.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.1.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 59.3s
+[layer_sens] (69/114)
+[layer_sens] arm='model.layers.1.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.1.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 58.9s
+[layer_sens] (70/114)
+[layer_sens] arm='model.layers.1.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.1.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 59.5s
+[layer_sens] (71/114)
+[layer_sens] arm='model.layers.2.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.2.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 58.6s
+[layer_sens] (72/114)
+[layer_sens] arm='model.layers.2.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.2.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 59.1s
+[layer_sens] (73/114)
+[layer_sens] arm='model.layers.2.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.2.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 59.0s
+[layer_sens] (74/114)
+[layer_sens] arm='model.layers.3.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.3.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 59.3s
+[layer_sens] (75/114)
+[layer_sens] arm='model.layers.3.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.3.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 59.1s
+[layer_sens] (76/114)
+[layer_sens] arm='model.layers.3.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.3.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 59.0s
+[layer_sens] (77/114)
+[layer_sens] arm='model.layers.4.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.4.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 59.0s
+[layer_sens] (78/114)
+[layer_sens] arm='model.layers.4.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.4.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 58.6s
+[layer_sens] (79/114)
+[layer_sens] arm='model.layers.4.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.4.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 59.6s
+[layer_sens] (80/114)
+[layer_sens] arm='model.layers.5.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.5.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 59.1s
+[layer_sens] (81/114)
+[layer_sens] arm='model.layers.5.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.5.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 58.7s
+[layer_sens] (82/114)
+[layer_sens] arm='model.layers.5.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.5.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 58.9s
+[layer_sens] (83/114)
+[layer_sens] arm='model.layers.6.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.6.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 58.8s
+[layer_sens] (84/114)
+[layer_sens] arm='model.layers.6.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.6.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 59.2s
+[layer_sens] (85/114)
+[layer_sens] arm='model.layers.6.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.6.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 58.8s
+[layer_sens] (86/114)
+[layer_sens] arm='model.layers.7.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.7.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 58.4s
+[layer_sens] (87/114)
+[layer_sens] arm='model.layers.7.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.7.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 58.7s
+[layer_sens] (88/114)
+[layer_sens] arm='model.layers.7.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.7.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 59.2s
+[layer_sens] (89/114)
+[layer_sens] arm='model.layers.8.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.8.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 58.9s
+[layer_sens] (90/114)
+[layer_sens] arm='model.layers.8.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.8.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 58.6s
+[layer_sens] (91/114)
+[layer_sens] arm='model.layers.8.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.8.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 59.9s
+[layer_sens] (92/114)
+[layer_sens] arm='model.layers.9.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.9.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 59.3s
+[layer_sens] (93/114)
+[layer_sens] arm='model.layers.9.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.9.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 58.7s
+[layer_sens] (94/114)
+[layer_sens] arm='model.layers.9.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.9.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 59.2s
+[layer_sens] (95/114)
+[layer_sens] arm='model.layers.10.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.10.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 58.7s
+[layer_sens] (96/114)
+[layer_sens] arm='model.layers.10.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.10.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 58.4s
+[layer_sens] (97/114)
+[layer_sens] arm='model.layers.10.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.10.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 58.7s
+[layer_sens] (98/114)
+[layer_sens] arm='model.layers.11.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.11.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 58.4s
+[layer_sens] (99/114)
+[layer_sens] arm='model.layers.11.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.11.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 58.9s
+[layer_sens] (100/114)
+[layer_sens] arm='model.layers.11.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.11.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 58.5s
+[layer_sens] (101/114)
+[layer_sens] arm='model.layers.12.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.12.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 58.5s
+[layer_sens] (102/114)
+[layer_sens] arm='model.layers.12.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.12.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 58.5s
+[layer_sens] (103/114)
+[layer_sens] arm='model.layers.12.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.12.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 59.0s
+[layer_sens] (104/114)
+[layer_sens] arm='model.layers.13.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.13.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 58.6s
+[layer_sens] (105/114)
+[layer_sens] arm='model.layers.13.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.13.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 59.7s
+[layer_sens] (106/114)
+[layer_sens] arm='model.layers.13.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.13.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 58.7s
+[layer_sens] (107/114)
+[layer_sens] arm='model.layers.14.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.14.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 58.7s
+[layer_sens] (108/114)
+[layer_sens] arm='model.layers.14.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.14.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 58.6s
+[layer_sens] (109/114)
+[layer_sens] arm='model.layers.14.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.14.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 58.3s
+[layer_sens] (110/114)
+[layer_sens] arm='model.layers.15.mlp.gate_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.15.mlp.gate_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__mlp__gate_proj.summary.json --limit 200
+[layer_sens]   done in 59.3s
+[layer_sens] (111/114)
+[layer_sens] arm='model.layers.15.mlp.up_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.15.mlp.up_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__mlp__up_proj.summary.json --limit 200
+[layer_sens]   done in 59.1s
+[layer_sens] (112/114)
+[layer_sens] arm='model.layers.15.mlp.down_proj'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.layers.15.mlp.down_proj --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__mlp__down_proj.summary.json --limit 200
+[layer_sens]   done in 59.2s
+[layer_sens] (113/114)
+[layer_sens] arm='model.embed_tokens'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules model.embed_tokens --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/model__embed_tokens.summary.json --limit 200
+[layer_sens]   done in 58.1s
+[layer_sens] (114/114)
+[layer_sens] arm='lm_head'
+[layer_sens]   cmd: /home/andrew-jochl/TORUS/.venv/bin/python /home/andrew-jochl/TORUS/examples/eval_lm.py --model allenai/OLMo-1B-0724-hf --mode quantized --target-modules lm_head --no-calibrate --tasks wikitext,arc_easy --batch-size 4 --device cuda:0 --dtype float16 --output /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/per_layer/lm_head.summary.json --limit 200
+[layer_sens]   done in 62.1s
+[layer_sens] wrote /home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z/sensitivity_table.json
+[layer_sens] total: 6853.5s

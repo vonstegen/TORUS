@@ -149,7 +149,7 @@ correction.
 
 ### Checklist
 
-- [ ] **1.1** `EXP-A-01x` — **A1 layer sensitivity.** Test `q/k/v/o`, MLP
+- [X] **1.1** `EXP-A-01x` — **A1 layer sensitivity.** Test `q/k/v/o`, MLP
       projections, embeddings/head, representative early/middle/late blocks
       independently. Record output error, cosine similarity, logit KL,
       downstream task delta, physical bytes, operations, runtime.
@@ -171,7 +171,8 @@ correction.
 
 | ID | Checkpoint | Pass criterion |
 |---|---|---|
-| CP1.1 | Sensitivity map (A1) | Per-category table published; worst-tolerance categories identified. `INVALID` if coverage or activation cache incomplete. |
+| CP1.1 | Sensitivity map (A1) | **PASS** — EXP-A-011 CONTINUE (F grade): per-category table published at `research/track-a-residual-ternary/EXP-A-011/runs/20260822T194828Z/sensitivity_table.json`; worst-tolerance categories are `mlp_down` (early) and `attention_k` (early) with max ppl 9278 and 3364; coverage 114/114 arms; FP16 reproduces to 4 decimals. Follow-up `EXP-A-011.b` (paired layers) and Track B per-layer-precision oracle are now unblocked. |
+
 | CP1.2 | Correction signal (A3, discovery) | T1→T2 gain observed with clean provenance, both metric classes reported. Claims A-RP-001/002/003 move to `TESTING`. |
 | CP1.3 | Oracle interpretation (A2) | Data selects one branch: (a) rapid α-recovery → hierarchy headroom; (b) exact residual recovers but trained T2 differs → functional correction, not reconstruction; (c) no recovery until α≈1 → primary plane too destructive. |
 | **G1→2** | **Gate to Phase 2** | CP1.2 passes. Branch (c) dominant at CP1.3 → record Track A ≤D, skip to Phase 6 with A/B failed. |

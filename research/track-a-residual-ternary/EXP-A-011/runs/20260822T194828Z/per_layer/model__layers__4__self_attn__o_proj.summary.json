@@ -1,0 +1,19 @@
+{
+  "model": "allenai/OLMo-1B-0724-hf",
+  "mode": "quantized",
+  "target_modules": [
+    "model.layers.4.self_attn.o_proj"
+  ],
+  "no_calibrate": true,
+  "limit": 200,
+  "tasks": {
+    "arc_easy": {
+      "metric": "acc,none",
+      "value": 0.622895622895623
+    },
+    "wikitext": {
+      "metric": "word_perplexity,none",
+      "value": 13.460099629114751
+    }
+  }
+}

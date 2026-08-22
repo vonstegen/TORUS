@@ -1,0 +1,1784 @@
+{
+  "artifacts": {
+    "driver_log": {
+      "bytes": 60789,
+      "path": "a/EXP-A-011/20260822T194828Z/driver.log",
+      "sha256": "6646167ea02716c9744e1497e757bf7aed58bca6dcc0b2d83819c9958c39f73a"
+    },
+    "env_lock": {
+      "bytes": 2211,
+      "path": "a/EXP-A-011/20260822T194828Z/env-lock.txt",
+      "sha256": "d986186d2d3db7bb3586c94bf8afa8f396eddf2cc33982384b421cf151b84266"
+    },
+    "per_layer_full_results": [
+      {
+        "bytes": 9948190,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/f16_reference.summary.json.full.json",
+        "sha256": "ba238d5b38be353bcb1d13087677b41f2c1fe01a28ca85043bf990a3203b4208"
+      },
+      {
+        "bytes": 9926107,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/fully_quantized.summary.json.full.json",
+        "sha256": "518d70ca3b3359ff29a91995c36269de32f591c0887cc20fe95f1cac3a5aad88"
+      },
+      {
+        "bytes": 9942920,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/lm_head.summary.json.full.json",
+        "sha256": "c920be0dd8c75f15e06ef3335fcded054cccb39a938c167b4ed5cb815603e580"
+      },
+      {
+        "bytes": 9948190,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__embed_tokens.summary.json.full.json",
+        "sha256": "9bfb81354f1689ce6123f87fafb8de00445ac11f51522b87344bd7b1f816ccae"
+      },
+      {
+        "bytes": 9945730,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__mlp__down_proj.summary.json.full.json",
+        "sha256": "b46286eca6a558e71a9d4a0bd351baadb95577c36a853b65eb6d629d722542a3"
+      },
+      {
+        "bytes": 9946563,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__mlp__gate_proj.summary.json.full.json",
+        "sha256": "cb031b604e4ca8176619d5b8754363d7629e68ccae3d377645265d1554e93632"
+      },
+      {
+        "bytes": 9948151,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__mlp__up_proj.summary.json.full.json",
+        "sha256": "1232e971f88aa667eb6369133e8e40da57db9c87e3c00ca50fa056b08794c2cd"
+      },
+      {
+        "bytes": 9945833,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__k_proj.summary.json.full.json",
+        "sha256": "76ed2929e91f3304c934fe621b1d62c87d97034241ea00a45b8c3fb3c2658fd6"
+      },
+      {
+        "bytes": 9946572,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__o_proj.summary.json.full.json",
+        "sha256": "a967cd9a719cf7c0d048c6c63ebe8a7a54fcd6af20bd980351ea40d96f749c77"
+      },
+      {
+        "bytes": 9946903,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__q_proj.summary.json.full.json",
+        "sha256": "1220f33e510bae0eeeb40432bae392faaf3091a8ad7b4f0fcbe3c69f38768f86"
+      },
+      {
+        "bytes": 9947793,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__v_proj.summary.json.full.json",
+        "sha256": "43d1690edf8433683c29cdacf9494e944ff22c626974f7aefcfab83f62d4c4a1"
+      },
+      {
+        "bytes": 9947218,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__mlp__down_proj.summary.json.full.json",
+        "sha256": "1302b262a84ddefc157a8e8f1edc1c7e55381eb6e525f77f3ad8166620acb009"
+      },
+      {
+        "bytes": 9947978,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__mlp__gate_proj.summary.json.full.json",
+        "sha256": "4dfa0fef1152506fe44b0129da4c7de79c0c3f31e412ef415759a0f7a003ec64"
+      },
+      {
+        "bytes": 9947520,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__mlp__up_proj.summary.json.full.json",
+        "sha256": "0f4844fe6747aced498c8c4e73c13bc6bfa621dcf3324ee83b91c0e89031bdec"
+      },
+      {
+        "bytes": 9947156,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__k_proj.summary.json.full.json",
+        "sha256": "02067dbb90d750cf5b305312512e3912336fdd6acd1ad85890cfa37428ad6c84"
+      },
+      {
+        "bytes": 9947742,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__o_proj.summary.json.full.json",
+        "sha256": "bdd4eb83ba2a8c16f18ae4d01e903dfca766823dd085adf4ff9a75be784ce0bf"
+      },
+      {
+        "bytes": 9947690,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__q_proj.summary.json.full.json",
+        "sha256": "3a766d346905a250dcec5df0a9a927cb8454e9e782e0da34d02fecd107619c3b"
+      },
+      {
+        "bytes": 9947651,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__v_proj.summary.json.full.json",
+        "sha256": "094eb17ad02ae93da5018bcc98d837814c65ac73d9de90719c7fd7d2e93d030b"
+      },
+      {
+        "bytes": 9947324,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__mlp__down_proj.summary.json.full.json",
+        "sha256": "89235e42158a70e520cff57795916fbea4b301c563ee6a3d3fa4cdbf386b093d"
+      },
+      {
+        "bytes": 9947668,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__mlp__gate_proj.summary.json.full.json",
+        "sha256": "0edd52a70a23dc1df8e71076c9ca105895f5b372da8986563c69c89df4302941"
+      },
+      {
+        "bytes": 9947088,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__mlp__up_proj.summary.json.full.json",
+        "sha256": "829dfb6e52f8aba5804b57e7d4712bd7e1caaa5349d6d7742e84a500f2bc8aed"
+      },
+      {
+        "bytes": 9947586,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__k_proj.summary.json.full.json",
+        "sha256": "320e1166940d701fb25632ac422f148b82c9350089eb8eef3aa42554dd868140"
+      },
+      {
+        "bytes": 9947885,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__o_proj.summary.json.full.json",
+        "sha256": "bffaf516f4473e2b887d12b76792491a9a5ae052532c048297ee88026e374350"
+      },
+      {
+        "bytes": 9947640,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__q_proj.summary.json.full.json",
+        "sha256": "eaa5bc9f44de670601172cc037ed3339c3abbb580e7ce52ab27da91ac39a65dc"
+      },
+      {
+        "bytes": 9947186,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__v_proj.summary.json.full.json",
+        "sha256": "60242b63c39f438ec8297b1b43f79e3de005692130beae4880c79afd25b8f340"
+      },
+      {
+        "bytes": 9947319,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__mlp__down_proj.summary.json.full.json",
+        "sha256": "04391d72fb76451ff1676656450ff723392b7187f39df290beb84384f2c01def"
+      },
+      {
+        "bytes": 9947850,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__mlp__gate_proj.summary.json.full.json",
+        "sha256": "3ee08b5492ed4c2c8eb8b556f733af68ab460c3b808fdc52155fe3cd6f215de7"
+      },
+      {
+        "bytes": 9948003,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__mlp__up_proj.summary.json.full.json",
+        "sha256": "cb15c319eacfb300d2d5172aa2f6115f7fc1929dd03a4254f5d738f703ffe3ca"
+      },
+      {
+        "bytes": 9947975,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__k_proj.summary.json.full.json",
+        "sha256": "9dada20d5173cbdbcc6b5eb5961f1708caa4e5b7599d0c7ee8206d61f7e76655"
+      },
+      {
+        "bytes": 9948043,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__o_proj.summary.json.full.json",
+        "sha256": "493f2c47158ce27abd25a4a055a5aba7efee67c9521abcc568c4436f741dd852"
+      },
+      {
+        "bytes": 9947549,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__q_proj.summary.json.full.json",
+        "sha256": "da9961f0e682789edc5178d6b125ffe17cc754e3afbe3ca4f4d982d9f868ef27"
+      },
+      {
+        "bytes": 9947637,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__v_proj.summary.json.full.json",
+        "sha256": "75ac6e99d8044499d5b66a6d2c54613d746ce2fc2d19f564a3beaad035863553"
+      },
+      {
+        "bytes": 9948196,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__mlp__down_proj.summary.json.full.json",
+        "sha256": "985f7cc1234bc8474ad22b02aa66416fb21fd0092aafe0c10607cca0a95e6f43"
+      },
+      {
+        "bytes": 9948295,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__mlp__gate_proj.summary.json.full.json",
+        "sha256": "a41c37ccd82247771073ef2c80aabf9c10c4ea74619c9a2c014200d5bc539c1c"
+      },
+      {
+        "bytes": 9947748,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__mlp__up_proj.summary.json.full.json",
+        "sha256": "6be8a650c723f3559615beb729969d912d83d0fe424e941a7a07b3ea53af530c"
+      },
+      {
+        "bytes": 9947781,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__k_proj.summary.json.full.json",
+        "sha256": "38ac746d29936f540d0fa277c81eaa864ad89d84e55988ac5eb6276f5d5a355e"
+      },
+      {
+        "bytes": 9947681,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__o_proj.summary.json.full.json",
+        "sha256": "785d668361166ea9848824825c286ee78ed1ef4cdd774332b1e643dab7715b9b"
+      },
+      {
+        "bytes": 9947869,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__q_proj.summary.json.full.json",
+        "sha256": "d4469ef4cf715ca641efe592b6403939f27e97157f50a9f9b8b2101e0c765c1e"
+      },
+      {
+        "bytes": 9948147,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__v_proj.summary.json.full.json",
+        "sha256": "7ff624f73081b8997b7a742f4f5c6d9cad2edec374db42f3b87f09acbfee92e5"
+      },
+      {
+        "bytes": 9948252,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__mlp__down_proj.summary.json.full.json",
+        "sha256": "46a328794dd78fceaf6ce15aafc9a4e05af375a7f813e49f1754a5c8fd2947e8"
+      },
+      {
+        "bytes": 9947941,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__mlp__gate_proj.summary.json.full.json",
+        "sha256": "7bb506d5b1cd0b1d17fe038eb136763b59d7e0fb8b11473b6c82f3e463e48564"
+      },
+      {
+        "bytes": 9948628,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__mlp__up_proj.summary.json.full.json",
+        "sha256": "aa67c6bd9d626e9edbe00840bd04c93ddfd5dd88309e9bcb07de2ff4e8dbfa7d"
+      },
+      {
+        "bytes": 9947604,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__k_proj.summary.json.full.json",
+        "sha256": "f49e13110d514f8075b7b0b5023b1b2c974a014d152d191c2457157724d1dde6"
+      },
+      {
+        "bytes": 9947576,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__o_proj.summary.json.full.json",
+        "sha256": "2f28d4cf330649cfe45d9db623f26c5143251df671c0b950ace6e303a81eed80"
+      },
+      {
+        "bytes": 9947687,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__q_proj.summary.json.full.json",
+        "sha256": "0046db2a065efda9851c2325400b2e1934dda0e8fe3b51cf6bfe1f58172762f7"
+      },
+      {
+        "bytes": 9948271,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__v_proj.summary.json.full.json",
+        "sha256": "00df5507785d13724cc5f7b89e92568d0379ec8eca334cc9c11309566c284a0f"
+      },
+      {
+        "bytes": 9947320,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__mlp__down_proj.summary.json.full.json",
+        "sha256": "acc2002643c3b840a1a51dab1a9aab7ef4003c92cdddf88b5d90abe157962e59"
+      },
+      {
+        "bytes": 9944046,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__mlp__gate_proj.summary.json.full.json",
+        "sha256": "1ed312285797d6cc0d8961dbff773a72dd0671f1726566a24435008b25797ab0"
+      },
+      {
+        "bytes": 9946318,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__mlp__up_proj.summary.json.full.json",
+        "sha256": "4623592a96aa6c3d03dac0187b5024e74e13ea979be2b0ca8bdc3d4254134726"
+      },
+      {
+        "bytes": 9948115,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__k_proj.summary.json.full.json",
+        "sha256": "5069743f4e760b510e910583661cb0733345400caa2f54b3ef3d8aa1c017b659"
+      },
+      {
+        "bytes": 9947814,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__o_proj.summary.json.full.json",
+        "sha256": "9773079f510465dc6b7395671727bfd63024e0ebae329051e9d175ee32eedd17"
+      },
+      {
+        "bytes": 9947734,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__q_proj.summary.json.full.json",
+        "sha256": "fd66f228724aa415bbb282ff652254e809b4a9c00b4f267f8fa67f1a51af5bd3"
+      },
+      {
+        "bytes": 9947906,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__v_proj.summary.json.full.json",
+        "sha256": "70c599c559d3776f118bfddda482349e33f6ac23f702551729ed84b7b53a700e"
+      },
+      {
+        "bytes": 9936039,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__mlp__down_proj.summary.json.full.json",
+        "sha256": "797b061e5ed7182e2057cc7810ca52728de7b933d935edcff6e2b3a5fb3a7588"
+      },
+      {
+        "bytes": 9946661,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__mlp__gate_proj.summary.json.full.json",
+        "sha256": "dcf80badb70125f8afb8107e1ef134d39d4b73efae999d8153ddc50f9b10c450"
+      },
+      {
+        "bytes": 9948585,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__mlp__up_proj.summary.json.full.json",
+        "sha256": "288bf2a4b8c31786252546ba7a72326a89c9cfbeb48fc4efa46bc1d0a47e0dbf"
+      },
+      {
+        "bytes": 9949464,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__k_proj.summary.json.full.json",
+        "sha256": "5c12909029c4a64645e4b87ac2cbbbe8a81800d1f1283583a7b826cc97b4c740"
+      },
+      {
+        "bytes": 9949382,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__o_proj.summary.json.full.json",
+        "sha256": "69c3cca3399d372842ed633b195197f84c480b45bf55cc033042aa298bd5c8a7"
+      },
+      {
+        "bytes": 9948797,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__q_proj.summary.json.full.json",
+        "sha256": "359980731d9c9f556b1b81711491e0eff0e9685e25a0d5f4b0f0399e029351eb"
+      },
+      {
+        "bytes": 9949046,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__v_proj.summary.json.full.json",
+        "sha256": "707860c90f8accdd0e8ae6de1d3da6d2e727a7c735c01e71cfe882388b73ba45"
+      },
+      {
+        "bytes": 9947357,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__mlp__down_proj.summary.json.full.json",
+        "sha256": "e4dbd9e2c31f08a2f31a60fc4db13e0b40ce01009ab1ea96dd362992cae03faa"
+      },
+      {
+        "bytes": 9948354,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__mlp__gate_proj.summary.json.full.json",
+        "sha256": "89023d2ca423968322491f3cce309f87dd1a5a31987d1065d76869e1ee39a135"
+      },
+      {
+        "bytes": 9947319,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__mlp__up_proj.summary.json.full.json",
+        "sha256": "4f9f192ffed3d2316c18f5acb37fb8f1d5c97da05699dc2ff5a03e7f2d56d133"
+      },
+      {
+        "bytes": 9948709,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__k_proj.summary.json.full.json",
+        "sha256": "69cd0eb43fad15a4e71b1675432e665a9db59cbde7a06a414f1bfec9f15a89c3"
+      },
+      {
+        "bytes": 9948171,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__o_proj.summary.json.full.json",
+        "sha256": "6bf2ec9ea10b9a0837a072b85b30ae19a357c81d552c70776d1709c2fd90ca8f"
+      },
+      {
+        "bytes": 9949451,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__q_proj.summary.json.full.json",
+        "sha256": "822df44aa185a3f4bb75049713ba632e1dcde6f643520c4f75193c90bdda38a2"
+      },
+      {
+        "bytes": 9948227,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__v_proj.summary.json.full.json",
+        "sha256": "24dadbad2f367372fd1add4513c5e0481b486c2d54be968317b365dde5d94091"
+      },
+      {
+        "bytes": 9947207,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__mlp__down_proj.summary.json.full.json",
+        "sha256": "af145ec162c1af437ba0d65e39f047bf767e7836fe0248b05672823b42dfecff"
+      },
+      {
+        "bytes": 9947561,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__mlp__gate_proj.summary.json.full.json",
+        "sha256": "7e1ce787df978532f7570897f32054568cb65552946cacbcc478af89159c4a8d"
+      },
+      {
+        "bytes": 9948823,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__mlp__up_proj.summary.json.full.json",
+        "sha256": "dde0c0d87bd73f4102df2a34320816f1809009b8b073e050228ab70d36a00ac6"
+      },
+      {
+        "bytes": 9948600,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__k_proj.summary.json.full.json",
+        "sha256": "095b51b2fbe9738e0cff68080881e8f626a902735682df7b84f273b7a57dd4d0"
+      },
+      {
+        "bytes": 9947821,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__o_proj.summary.json.full.json",
+        "sha256": "4973636f5efbd9d9b789104f1e47b2004e74e1c43936c60d07cfa0ab332f906c"
+      },
+      {
+        "bytes": 9948610,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__q_proj.summary.json.full.json",
+        "sha256": "38e957e58c8cb857063defd1746cd0819d83c89903ab0053645d914ae1a402ae"
+      },
+      {
+        "bytes": 9948659,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__v_proj.summary.json.full.json",
+        "sha256": "f1b973b2c5ae83ee5404d6db634051100dbf7c0c4f4cd2c37da8791a6b58d907"
+      },
+      {
+        "bytes": 9947696,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__mlp__down_proj.summary.json.full.json",
+        "sha256": "9ec37bf86b85eac171eae6b4fbccff1f11c8670dbf5dc024ddcc6aaab426995c"
+      },
+      {
+        "bytes": 9948910,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__mlp__gate_proj.summary.json.full.json",
+        "sha256": "e60705af475b9488175508d40851316bd5ff0e08c5f663813384a954257386be"
+      },
+      {
+        "bytes": 9947716,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__mlp__up_proj.summary.json.full.json",
+        "sha256": "e75832336ae5b468f6cc40a7933a8b44a1a435aa464a28f1ecd5c4b25eed03cc"
+      },
+      {
+        "bytes": 9947862,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__k_proj.summary.json.full.json",
+        "sha256": "96b35d03046319814f98855de9ba830b14890d5889fca10e626aa4b781cd5ae7"
+      },
+      {
+        "bytes": 9948445,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__o_proj.summary.json.full.json",
+        "sha256": "43f32bd5588415bff8fec44b6a39f33faec0779493f2eccafd70c4ecd0283253"
+      },
+      {
+        "bytes": 9947608,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__q_proj.summary.json.full.json",
+        "sha256": "4caa05b40f1ca3989eec3ab0f14ed35a3183c707f7a4653fd8520ba210fb0f22"
+      },
+      {
+        "bytes": 9948060,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__v_proj.summary.json.full.json",
+        "sha256": "2f0146497c67a3cfbd8d859bae8f0d47a615976888151eba564f73ec82322c58"
+      },
+      {
+        "bytes": 9947260,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__mlp__down_proj.summary.json.full.json",
+        "sha256": "4886ffb6d671b6cc8205596234071d80a5a39f9fe05557996c18d7ed81871b35"
+      },
+      {
+        "bytes": 9947524,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__mlp__gate_proj.summary.json.full.json",
+        "sha256": "10091adc5b5a66f760795b593f8b4e5d1d23f30d6996f3a21465360ec30542dc"
+      },
+      {
+        "bytes": 9947718,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__mlp__up_proj.summary.json.full.json",
+        "sha256": "6cd26bc86343c3dd3f21ba9e544aa1c7a87715481f6ab99237a9b7ea86f1e87e"
+      },
+      {
+        "bytes": 9947749,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__k_proj.summary.json.full.json",
+        "sha256": "bef377ab670ee13997a82d05ce63809c1a5ddd71fd321776ca7215912a9f3329"
+      },
+      {
+        "bytes": 9947949,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__o_proj.summary.json.full.json",
+        "sha256": "0e0ed2a153a2d3413615c69db51f8ce5b02c83b5c3d5b96851b1b5607d61b6b3"
+      },
+      {
+        "bytes": 9946911,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__q_proj.summary.json.full.json",
+        "sha256": "8fbc0b525cf6ec4aac948752b31b40c218fa6f229046adca2ddd2c8751063164"
+      },
+      {
+        "bytes": 9948219,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__v_proj.summary.json.full.json",
+        "sha256": "04ccd9f796649cc6c2a9b6987ad6fa6ef1d018e7137b407bf756b3e19c0157cf"
+      },
+      {
+        "bytes": 9947269,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__mlp__down_proj.summary.json.full.json",
+        "sha256": "1e8233532aa33467650de166b6dca6f38121dcabea6140bb5b33c87d2d140ed8"
+      },
+      {
+        "bytes": 9948468,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__mlp__gate_proj.summary.json.full.json",
+        "sha256": "ca29bc6bc3e417bd8250520597e3c34c67152e5f9d4982ba289cc90cbcc55a8b"
+      },
+      {
+        "bytes": 9947214,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__mlp__up_proj.summary.json.full.json",
+        "sha256": "21ef3936dfdbd64b1301f277c4130fb7a01d4c5463eff55d37a45615195eb9d8"
+      },
+      {
+        "bytes": 9947841,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__k_proj.summary.json.full.json",
+        "sha256": "6c6ec83ba0eb7edecee8cb2668f4e5fe6943655c51642260d559906f3173fd6d"
+      },
+      {
+        "bytes": 9947931,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__o_proj.summary.json.full.json",
+        "sha256": "68e115d02e4850000e5dd1bcf0eeb06b43f9057edbed96da6a60c1c28ea3c5ab"
+      },
+      {
+        "bytes": 9947377,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__q_proj.summary.json.full.json",
+        "sha256": "ed57f740fd4f1a10c51795690ae6fc67cd1f6a0d63778dc3b7b959cb429a7a17"
+      },
+      {
+        "bytes": 9947526,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__v_proj.summary.json.full.json",
+        "sha256": "e17373df83b84c73f2752cc9a662a3cc5690f9e5e3f19a0866fcd73f1fef8062"
+      },
+      {
+        "bytes": 9948426,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__mlp__down_proj.summary.json.full.json",
+        "sha256": "6bda2d0bc12dab4f83eb56554627dccdb6378b1f1d9b585f2840154d84a24a2b"
+      },
+      {
+        "bytes": 9948300,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__mlp__gate_proj.summary.json.full.json",
+        "sha256": "686a9e18c88d18d8ca74aac6d154e61781e4c771a3b1b5c5f9a27de862903cf4"
+      },
+      {
+        "bytes": 9948345,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__mlp__up_proj.summary.json.full.json",
+        "sha256": "3fb897a44956e8c91a78cac4c3adb89741b97d732e1279560e373f8d9b5ea292"
+      },
+      {
+        "bytes": 9947203,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__k_proj.summary.json.full.json",
+        "sha256": "6fdcc6a3930f8c7431578d2c3eea3f66e7fc172926e3440b05bceb18231e076b"
+      },
+      {
+        "bytes": 9947617,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__o_proj.summary.json.full.json",
+        "sha256": "a9157645c36e5cd55ccca998f801655812a1f227579b411a232cf9cd55622465"
+      },
+      {
+        "bytes": 9946812,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__q_proj.summary.json.full.json",
+        "sha256": "2c55a1a6c8fdbab0e0d8069f2aa785954944a2a21ff960786531669e4bd397bd"
+      },
+      {
+        "bytes": 9946767,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__v_proj.summary.json.full.json",
+        "sha256": "7b051f6e1df36851b192965a0c333cd3ff9baf5061cada3bf16e140af36a86aa"
+      },
+      {
+        "bytes": 9947596,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__mlp__down_proj.summary.json.full.json",
+        "sha256": "45f2326a9c13f6af534a253ebf8670f1b2e1ed8ac361d1e17e9735851feedbab"
+      },
+      {
+        "bytes": 9947866,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__mlp__gate_proj.summary.json.full.json",
+        "sha256": "cdb6802d84006fe5b7718d0b4ecb43bbddbb1e1029fd40185c2a64e4608ffc5f"
+      },
+      {
+        "bytes": 9947775,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__mlp__up_proj.summary.json.full.json",
+        "sha256": "8500a43111f361e5ce017fa47a9189d909a5b70eda44088028d99788af2a55bc"
+      },
+      {
+        "bytes": 9948133,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__k_proj.summary.json.full.json",
+        "sha256": "77d9f2f3ac43b5c251f02da777db879676596f6296bb2d582227f0af0c9b40ec"
+      },
+      {
+        "bytes": 9947362,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__o_proj.summary.json.full.json",
+        "sha256": "111b31c29d3d9e0e7e72ecb437d8363e3226ec4dc480d6ad950ef48a6210e517"
+      },
+      {
+        "bytes": 9947944,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__q_proj.summary.json.full.json",
+        "sha256": "2e26081f520844a3f72cd0fdc9b8e2b9e1f02c0c4ce088252f01ccbfae0af9b1"
+      },
+      {
+        "bytes": 9947333,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__v_proj.summary.json.full.json",
+        "sha256": "527c574a52364a0aff5fa51f5778fcbd1a9f9a33376733ab48c0bc6c3f14d7ca"
+      },
+      {
+        "bytes": 9948209,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__mlp__down_proj.summary.json.full.json",
+        "sha256": "47e2bf41a45c9f1bee6be72d5e6f8bbe1410e00e68330a1b0a11222d33332238"
+      },
+      {
+        "bytes": 9948248,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__mlp__gate_proj.summary.json.full.json",
+        "sha256": "cc8a964ae7566e99c3b63f7b0e7991ce827f384cb81e89ad8dafb0091766a520"
+      },
+      {
+        "bytes": 9948095,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__mlp__up_proj.summary.json.full.json",
+        "sha256": "7251fedfb1e6440214d4ea7e7b7faeb84635efa5729159f9ab8680b953061cfe"
+      },
+      {
+        "bytes": 9947350,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__k_proj.summary.json.full.json",
+        "sha256": "2e66fccb06f1ccffa4128dfddc2c5f8c925540d49fb975ba3d77e6f96020a2d8"
+      },
+      {
+        "bytes": 9947574,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__o_proj.summary.json.full.json",
+        "sha256": "af55c15d0b5b195f5862aa362ff8b002f941e838825d6951ee0d58e3b831e0bf"
+      },
+      {
+        "bytes": 9947185,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__q_proj.summary.json.full.json",
+        "sha256": "c8fb329d83b4a38b4fa21978129f784d425bd16818c8e6378e55f165d3707ba9"
+      },
+      {
+        "bytes": 9946851,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__v_proj.summary.json.full.json",
+        "sha256": "e12ef5d87de697d8271af6bc278b6c6c9cac07800f6030cd9ee94aff8bb3ab2e"
+      }
+    ],
+    "per_layer_logs": [
+      {
+        "bytes": 60789,
+        "path": "a/EXP-A-011/20260822T194828Z/driver.log",
+        "sha256": "6646167ea02716c9744e1497e757bf7aed58bca6dcc0b2d83819c9958c39f73a"
+      },
+      {
+        "bytes": 31674,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/f16_reference.log",
+        "sha256": "c6e6e0b54ff063a7c199a4f68a17d50cd7e7ab155368b02577ad9a277a5698ae"
+      },
+      {
+        "bytes": 31783,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/fully_quantized.log",
+        "sha256": "35b2304989526ac14f8c325ef42be66654492943f5dd1b53e3cd5f7c79391aef"
+      },
+      {
+        "bytes": 31647,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/lm_head.log",
+        "sha256": "63929b920994658a9c0a4d17e3d091c11f70e1f363968bc0788f15cb282e5c67"
+      },
+      {
+        "bytes": 31873,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__embed_tokens.log",
+        "sha256": "d4a19b0dc837816bf469f2f028d463fa9db1356f7183586c4286f6b127bfeb8f"
+      },
+      {
+        "bytes": 31896,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__mlp__down_proj.log",
+        "sha256": "19a58daa171b6f4b871481bc707abe3eea7f3c9ed47a085edbbdf53a7233ba78"
+      },
+      {
+        "bytes": 31794,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__mlp__gate_proj.log",
+        "sha256": "8fc26d6a435bfe3f528ee120e9e9ef2165d874f11069f75d42af93ebbae88f0c"
+      },
+      {
+        "bytes": 33104,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__mlp__up_proj.log",
+        "sha256": "1cd5bc73fe6c136c17d9218330a36c0053ec67799f0898485f602d6c8447e8bf"
+      },
+      {
+        "bytes": 32067,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__k_proj.log",
+        "sha256": "e2374c34f7be326642fdc55885d09e43ded4e548cd4d6f3fb2737048d573aa25"
+      },
+      {
+        "bytes": 31888,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__o_proj.log",
+        "sha256": "316084d3be9b69b6ebf8d7885fe2c9e42ea2dc71620f6cd606af6252589ac4a8"
+      },
+      {
+        "bytes": 31708,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__q_proj.log",
+        "sha256": "7f54fde0260eb1fbede5d7f434b01054d7230c6c491d790760f85dd8d64b5d10"
+      },
+      {
+        "bytes": 31996,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__v_proj.log",
+        "sha256": "8edf7c5ecb4d4d866550533488ff09b4e129832a79e4b22b86007b4c9d00a969"
+      },
+      {
+        "bytes": 32097,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__mlp__down_proj.log",
+        "sha256": "d0f2f2c650e0582313a62b05fca7b9869381a6c36e5835b72c6021cb96a31288"
+      },
+      {
+        "bytes": 31984,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__mlp__gate_proj.log",
+        "sha256": "ddfdfb4f092c20de8728eee7f8d48ffd78db1432e900441fa2f1a6441a2e1f8d"
+      },
+      {
+        "bytes": 31650,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__mlp__up_proj.log",
+        "sha256": "7a4b1745cafbed49e4740ddbe2650c6ba82d8525b403c38fc4e21201561a41fa"
+      },
+      {
+        "bytes": 32174,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__k_proj.log",
+        "sha256": "430c14df51ecfce21d39a631e5ec0dfcdeb35efcaa1fc296d4395d3b5384b428"
+      },
+      {
+        "bytes": 31802,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__o_proj.log",
+        "sha256": "9f08513c2b9ec360732c149b82dae7840018c146a5343f36723f20518d18bd4f"
+      },
+      {
+        "bytes": 32305,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__q_proj.log",
+        "sha256": "84ae23145eb3467c5804b3b0bebf26b3dc5a5053fafe11dbe69272ecfc2f6c36"
+      },
+      {
+        "bytes": 31899,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__v_proj.log",
+        "sha256": "52823420e7168f6d5d1cd555a06a83c8724a44d624f432b4a668151d67d833c9"
+      },
+      {
+        "bytes": 31689,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__mlp__down_proj.log",
+        "sha256": "87d24659dc3a2142e5a0382850fbb9ae9e493ee7abdf0e4164fd0cc9b44a9c6c"
+      },
+      {
+        "bytes": 31691,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__mlp__gate_proj.log",
+        "sha256": "0a4ecee5f5c7b74f80afd20c1ef23a0ba54297e3a71242f9b5b84b9824676528"
+      },
+      {
+        "bytes": 31788,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__mlp__up_proj.log",
+        "sha256": "2e7718badd3111f7be2184c1763a4affc8289e174de75a5a6528d73c2931ecb7"
+      },
+      {
+        "bytes": 31800,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__k_proj.log",
+        "sha256": "666c95eb171aac9e7522441b3e7aaf63d1bfa72425ac4223618466e97cac37a4"
+      },
+      {
+        "bytes": 31697,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__o_proj.log",
+        "sha256": "3f65e2800f6dce18b408d14f9f3dbe25581e314a0b28c6793c98483d2e567c7a"
+      },
+      {
+        "bytes": 31802,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__q_proj.log",
+        "sha256": "6780f5b4435f08f1d3fd7e9e382b0615de3b25014c3e2bbacaea9a728b93916c"
+      },
+      {
+        "bytes": 32212,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__v_proj.log",
+        "sha256": "75892328b0562b1cc44470a0a54977ad73c054ea736ef3c8794f6ab0b7c019dc"
+      },
+      {
+        "bytes": 32275,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__mlp__down_proj.log",
+        "sha256": "41596787ecd8456c73ba634a96bce3070bfe614f09d3f7ff2972ecb62c262295"
+      },
+      {
+        "bytes": 31598,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__mlp__gate_proj.log",
+        "sha256": "3c5da23b8aeb63774645ada5717bc34e615056c236546ddb1cc58707659aa480"
+      },
+      {
+        "bytes": 31792,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__mlp__up_proj.log",
+        "sha256": "be8491970e55d1bd4a6941849d897460b50248c5045d627fd048ad97a6e3578f"
+      },
+      {
+        "bytes": 31990,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__k_proj.log",
+        "sha256": "3b8a6fcb2818db36efce41c07983bddafa3be03e962e85d5fc59e19ad4e53e88"
+      },
+      {
+        "bytes": 31903,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__o_proj.log",
+        "sha256": "454a6972602dcbb12bbafa52858013cf19fb7690a4a97464b4b896bbc593aaf6"
+      },
+      {
+        "bytes": 31800,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__q_proj.log",
+        "sha256": "89ea939bb423a4fd64ed84a3858d7a7003176fa153cc6e9f9cae14abd17d9bb4"
+      },
+      {
+        "bytes": 31798,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__v_proj.log",
+        "sha256": "a36615101f7aadc15f1ab9e717d0f38e24e0fa1b0ed0ee63807d5d596617c208"
+      },
+      {
+        "bytes": 31689,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__mlp__down_proj.log",
+        "sha256": "8bce053f1c3cd6b568bdf1894b331cc10aeaf55436d7383e53364f832d437d54"
+      },
+      {
+        "bytes": 31798,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__mlp__gate_proj.log",
+        "sha256": "d65c303ff06f7c3e5c497af96ea8ca1dc9732dd0ee509f127a9d17eaa3ecbc97"
+      },
+      {
+        "bytes": 31986,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__mlp__up_proj.log",
+        "sha256": "4a56fadb54560834074079cba05d3dbbb7200e8eff65728b2e71f844c3de19ff"
+      },
+      {
+        "bytes": 31699,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__k_proj.log",
+        "sha256": "d019f220b4d587112b3bbbe0faeba8e10dec19b358f30a82f01b4918880de797"
+      },
+      {
+        "bytes": 31786,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__o_proj.log",
+        "sha256": "5460289582b0b8078153b283d6addb181827730e8198ac7b6597da20beed3bd0"
+      },
+      {
+        "bytes": 31883,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__q_proj.log",
+        "sha256": "e5136014c22e9a2e09dc03baf81122ebd72208067536b8962e32b6e6502e3ab6"
+      },
+      {
+        "bytes": 32068,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__v_proj.log",
+        "sha256": "a4444ad5684cfcfc1a9c190e86fa348d18aaaacdb9a701c654a7bc50d945bd3c"
+      },
+      {
+        "bytes": 31693,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__mlp__down_proj.log",
+        "sha256": "657f3b63bdbcc63151da7f7d8cfd0ffa2da821979f22cedbb828893b92ceb4a6"
+      },
+      {
+        "bytes": 31796,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__mlp__gate_proj.log",
+        "sha256": "cfe459ef8ef5eb9768e37a2fb8b692e75ee041d26247b5eb1f1af877b844e8ea"
+      },
+      {
+        "bytes": 31687,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__mlp__up_proj.log",
+        "sha256": "55221350ca66e3fd7e688b241f0e5f6a455c46ab29e5221861b4486330347429"
+      },
+      {
+        "bytes": 31802,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__k_proj.log",
+        "sha256": "7843417b5699fe0fec144663a7dff95931299c2cc81fc3d521bb032af6ed42a5"
+      },
+      {
+        "bytes": 31879,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__o_proj.log",
+        "sha256": "fcd79e00cf106584ce9d8a09779a663ec3c085af9d9eb97c1f2f39fcc785a4d4"
+      },
+      {
+        "bytes": 31980,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__q_proj.log",
+        "sha256": "53584637ed6920aa6336f2a793cd12b40fcee2491544043fe96ec572254fe339"
+      },
+      {
+        "bytes": 32052,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__v_proj.log",
+        "sha256": "2a16c2fae26bca2326799b07da63a844ce1cafde52dda2fa26b79b0d1f22100b"
+      },
+      {
+        "bytes": 32289,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__mlp__down_proj.log",
+        "sha256": "93ee621b844f693259db7914bbafcd9bb85e27b5fec37161a3687011a8bc8d33"
+      },
+      {
+        "bytes": 31893,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__mlp__gate_proj.log",
+        "sha256": "31f94518e928271c5f36a43ed731f02c8eccf923e5db0953fec692e2fca10d3e"
+      },
+      {
+        "bytes": 32061,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__mlp__up_proj.log",
+        "sha256": "ac3d78db446b424ab6dbc984260bf1c5d16c82790d7116b4518289d9590e3c7d"
+      },
+      {
+        "bytes": 32077,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__k_proj.log",
+        "sha256": "b6dc0392ac0b9dbfea44ff20d3aa8bd745560e40fe038912a5f640ca71fa6794"
+      },
+      {
+        "bytes": 31899,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__o_proj.log",
+        "sha256": "6df995f37580ee8a62f18d59b8778eda7ef575d0ca1d5f09f9d3b3105cf93c43"
+      },
+      {
+        "bytes": 32388,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__q_proj.log",
+        "sha256": "dcd59baf7d70e4783e60542168c1680799e361206beecf1fa26e7f404ff3d4a8"
+      },
+      {
+        "bytes": 31699,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__v_proj.log",
+        "sha256": "8cb3c6630691a3d66cd235bd5383cc305a94159e2d5efa74582f81e5be16f941"
+      },
+      {
+        "bytes": 32099,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__mlp__down_proj.log",
+        "sha256": "a67d39ad1c86deb6a3cde5fb05ed6a08900bb3bec2ca7573d36876eab7f0e531"
+      },
+      {
+        "bytes": 32075,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__mlp__gate_proj.log",
+        "sha256": "2730e7782623bdb35f4e5a230ceee7825ca94bae9adf9cfd6e3b9fbaba6cd0f3"
+      },
+      {
+        "bytes": 31877,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__mlp__up_proj.log",
+        "sha256": "7f11cbcc2703e60bd04638fc0b52a4e1c8698fe3d08713c3cc6f7de56a768177"
+      },
+      {
+        "bytes": 31798,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__k_proj.log",
+        "sha256": "8113ae3bda5b9ff63262fbfd6cd5f8296ff242dab798639665afa138f73af030"
+      },
+      {
+        "bytes": 31800,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__o_proj.log",
+        "sha256": "87965653e3baeca1ac46b6ed2f17f6d2f11b022b5963d9a82ee7f45932e799e5"
+      },
+      {
+        "bytes": 31901,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__q_proj.log",
+        "sha256": "78070cc70b8eb1b2b6d59ef926fd9ae55b95e2d0547a0311e10caf3e4f16dae3"
+      },
+      {
+        "bytes": 31800,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__v_proj.log",
+        "sha256": "fab1c1b7eaed2587fb574f9466c22e1374e8354484392433a5d1cfb03a651d46"
+      },
+      {
+        "bytes": 31976,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__mlp__down_proj.log",
+        "sha256": "d50f1a4bb54a6249e1398e867b2b33b3e226d5fbe777695673921b43908a5fc1"
+      },
+      {
+        "bytes": 31794,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__mlp__gate_proj.log",
+        "sha256": "a04e8fe5188189c8b047888f638ececfb96e0d16c34978463bdc496df4f0da9f"
+      },
+      {
+        "bytes": 32160,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__mlp__up_proj.log",
+        "sha256": "fd7d1afbc7904457b6046162bc1ef115cbda475cc0a306b909235cbddd953971"
+      },
+      {
+        "bytes": 31802,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__k_proj.log",
+        "sha256": "ac5ff7ba005789dfeb1fe2f06f7df1eff1df79c006888a1b9b19c0a2d13bcab4"
+      },
+      {
+        "bytes": 31798,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__o_proj.log",
+        "sha256": "5bcae0d33b24b3f77dae44f34f81315bf15cbb885903a8e3bc530850ea23ca2a"
+      },
+      {
+        "bytes": 31800,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__q_proj.log",
+        "sha256": "de43871af0c0125047fa79a58ddc985a3e857ab69cd6208151d0c13aecc599cf"
+      },
+      {
+        "bytes": 31800,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__v_proj.log",
+        "sha256": "ef3e5ed58b4ab553fb2d02d9714621350713f12cda0199ce116ec699afd2b76f"
+      },
+      {
+        "bytes": 32085,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__mlp__down_proj.log",
+        "sha256": "daa799599f39aa928fa0e64e6895110158926c067118352da514244ebf650910"
+      },
+      {
+        "bytes": 31994,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__mlp__gate_proj.log",
+        "sha256": "dbddb5ee61fc2d2f9eba2aabbba8b2f0618b020fa04ebe337534266ededa3c9f"
+      },
+      {
+        "bytes": 31976,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__mlp__up_proj.log",
+        "sha256": "ff63bf3aa996437a0ead8e724a3536318a0288e1f0b84c20dc492fe1ddb803f7"
+      },
+      {
+        "bytes": 31982,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__k_proj.log",
+        "sha256": "99e0096fada0de6f39e0834c51bda3aecd7fa3f3e20733e897dbac375fbb53c4"
+      },
+      {
+        "bytes": 31802,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__o_proj.log",
+        "sha256": "4fff5be1431b02edf5ad7acbd20e1bf6db2c18cb2ab6560eef0574b7f0d4e626"
+      },
+      {
+        "bytes": 31798,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__q_proj.log",
+        "sha256": "b52791d7b565d2f470a46243d98d1f283f7dadecf5e807501848d4c227e749ea"
+      },
+      {
+        "bytes": 31897,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__v_proj.log",
+        "sha256": "66819229b6beb79dff2cf1a636878b656a7c7f9719451fdde325e54e3be07a1f"
+      },
+      {
+        "bytes": 32275,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__mlp__down_proj.log",
+        "sha256": "5e53fb9f7c1040ce11bf246a7a237be7578ffda7fb962c671d0cfe26ef922618"
+      },
+      {
+        "bytes": 31895,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__mlp__gate_proj.log",
+        "sha256": "3ee537d1f0bdb8f00db178fa90fe8655a45de589e8ca599d36728343612ed280"
+      },
+      {
+        "bytes": 31790,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__mlp__up_proj.log",
+        "sha256": "bd1eecace6e4a4a843f860d832dbdb18108af2d05b7bf7a32952dddf6b44eb15"
+      },
+      {
+        "bytes": 31796,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__k_proj.log",
+        "sha256": "d8ec8830244a0c53827538966a4a7826cdf5dd8a61725cb360dd6060b0fcd85b"
+      },
+      {
+        "bytes": 31796,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__o_proj.log",
+        "sha256": "f637e5a8c68fb42a44142544a8cedf072f411af832cf25f02b07de2e08cd2a22"
+      },
+      {
+        "bytes": 32501,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__q_proj.log",
+        "sha256": "cee409f81b2481647e654f30df1fcadf5e8e196177c90f5a4dca42d799d2ce2f"
+      },
+      {
+        "bytes": 32006,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__v_proj.log",
+        "sha256": "6ae9259f1c07420bef77b80c99f095ba39c9b46e7b020dce22533133478513de"
+      },
+      {
+        "bytes": 31974,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__mlp__down_proj.log",
+        "sha256": "c849e309fa0933bc023ab15a1d03eb85273353892f46313d4aecaa15c155d38d"
+      },
+      {
+        "bytes": 31897,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__mlp__gate_proj.log",
+        "sha256": "bb391b291d52df6e92aedc2172f94e859c7b51200b3cd63a5d6a8ca1b380097a"
+      },
+      {
+        "bytes": 31893,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__mlp__up_proj.log",
+        "sha256": "b17ba4bb98e61dccbcaf6e2d045c9c3d037154d35adb3010ca82cf8bbe8a746e"
+      },
+      {
+        "bytes": 31699,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__k_proj.log",
+        "sha256": "a5a1a33ea5042b92188b3874481d3da3034401e751a6c27149053875f3700b83"
+      },
+      {
+        "bytes": 32167,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__o_proj.log",
+        "sha256": "d0ec2161ec15fb6afa98771b0c4379225e0d47046e23f65198b41ba157ad5207"
+      },
+      {
+        "bytes": 32289,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__q_proj.log",
+        "sha256": "00c0affdb57d89ba66890f7fe301b01874bc4d93f40b19516e97c91aed8b5007"
+      },
+      {
+        "bytes": 32093,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__v_proj.log",
+        "sha256": "d89ce4be31b07819db9e1c604cb114fbc2c75e705a4d9370c6c7196e9b044fbf"
+      },
+      {
+        "bytes": 31598,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__mlp__down_proj.log",
+        "sha256": "b2a10a6771b3b8b4ff1174a395f2f6ef6248c5540d6f183a75bcd89d1b1af633"
+      },
+      {
+        "bytes": 31794,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__mlp__gate_proj.log",
+        "sha256": "9ff509c10a1792e3d1a7a645807f086f3a0e0a1d434929a6fe231390e78431f6"
+      },
+      {
+        "bytes": 32073,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__mlp__up_proj.log",
+        "sha256": "00a00f9151d762b0d86651e292eb7a3641a1a727b8febf0753438f56aebdf8b9"
+      },
+      {
+        "bytes": 31796,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__k_proj.log",
+        "sha256": "3ffc7075824106313d6cdb2d92df1123866eed27d8ecfff0afc881262ea8463a"
+      },
+      {
+        "bytes": 31899,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__o_proj.log",
+        "sha256": "9851b75997738c2711c4ee18037b7c03fbe8032fa6f6685a652793d9fde55cac"
+      },
+      {
+        "bytes": 31895,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__q_proj.log",
+        "sha256": "3347649e7bd81e23ed4a3abdc410916aae7f1b3aa9af1938714c86d99638667e"
+      },
+      {
+        "bytes": 31796,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__v_proj.log",
+        "sha256": "a3a98e32783183aa9db2ba79bb3a8c0cf313e90e76249b22b73403e359caafd6"
+      },
+      {
+        "bytes": 31998,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__mlp__down_proj.log",
+        "sha256": "517599ec40fdd89e0f8742ef1ff4dce2ab35898b581eadc3d7aae5acfd2c1799"
+      },
+      {
+        "bytes": 31697,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__mlp__gate_proj.log",
+        "sha256": "66e412c389bb0dbeacb68f1a051c7340e02bc3a3e5cccb7af96d04607022cdb2"
+      },
+      {
+        "bytes": 31786,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__mlp__up_proj.log",
+        "sha256": "e63d4cf573f55b1db8edf274b6632dd7fffebe268a4443f7e7849d696777c678"
+      },
+      {
+        "bytes": 32429,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__k_proj.log",
+        "sha256": "3cf382535bea97a957dde4644c6f187aef582e6a29ee622a6086b9cf4e118ccb"
+      },
+      {
+        "bytes": 31899,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__o_proj.log",
+        "sha256": "2e049f21f94e5730716006da3c890c6e8d4b7d329c8ff4fd12fa86502fb14efd"
+      },
+      {
+        "bytes": 32299,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__q_proj.log",
+        "sha256": "95716a27ace62882dd0dceeb11aa6a1d814d1836f14f961d0953b7b648c76d8c"
+      },
+      {
+        "bytes": 31901,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__v_proj.log",
+        "sha256": "00efcc19bd6df5dfb1f507ae4ea652ce3adafa25ecd45c3ef1eea5857c532958"
+      },
+      {
+        "bytes": 32095,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__mlp__down_proj.log",
+        "sha256": "44ecadb72d2f46de29bdb28cdea6d1f47af8e6fc2690c7e261c91eab5c86ffc4"
+      },
+      {
+        "bytes": 31693,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__mlp__gate_proj.log",
+        "sha256": "47492e1b67aead86f26fc0e94a0563271cd4a49c5060b960dcad84429c646d01"
+      },
+      {
+        "bytes": 31889,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__mlp__up_proj.log",
+        "sha256": "4236c1fa86817cf6cb373a68665b5dd8696251fb48b147bf1da5ce8e0737d614"
+      },
+      {
+        "bytes": 31798,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__k_proj.log",
+        "sha256": "20ff1363fd99180202c4969a00e3a99e60181c6177a23c1980b7eda8d761b50a"
+      },
+      {
+        "bytes": 31790,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__o_proj.log",
+        "sha256": "9321cec4f3cd5c05b0b0b015367a4fca54e93624ae79ea31106fbc98498fd521"
+      },
+      {
+        "bytes": 32261,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__q_proj.log",
+        "sha256": "08a967c91f8db0912a53c8276926b85d9165ddefd2f5787f1afc5f841524f0ec"
+      },
+      {
+        "bytes": 32081,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__v_proj.log",
+        "sha256": "149f55f27ec59fffcd94580e3182d5107f3a47d2d9715c1574d83b66c29eee91"
+      },
+      {
+        "bytes": 31598,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__mlp__down_proj.log",
+        "sha256": "5bb8e3ee7ac2153dff6bd8a50498b523d56e185f6026e1eb651efe1d93561a88"
+      },
+      {
+        "bytes": 32071,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__mlp__gate_proj.log",
+        "sha256": "2661eeaabb2afbf094e53841d89c5fe7ba7def64c7085c3b2e0568b2223ff74a"
+      },
+      {
+        "bytes": 31790,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__mlp__up_proj.log",
+        "sha256": "de8d69f0320b6df40b9585a20714fd7fedd6c676074b8e7105cdffb81b2181af"
+      },
+      {
+        "bytes": 31697,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__k_proj.log",
+        "sha256": "9ade829b0a69a9a17450e6298b460bc6a256bd07cc657e005e4b70ff2626b8b0"
+      },
+      {
+        "bytes": 32000,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__o_proj.log",
+        "sha256": "b2f95ac84b36b33c3d6518caaba88af24c72f1f8d371c3709b592cc900006486"
+      },
+      {
+        "bytes": 32000,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__q_proj.log",
+        "sha256": "0cd4bbdf2d1f19827864fad144ddbf7f4f88fa199c07c3b0d392d12da638a17c"
+      },
+      {
+        "bytes": 31798,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__v_proj.log",
+        "sha256": "d490527e06968748bb8b290929210934ed8c458f931e7c39cd58c9e3dac230b4"
+      }
+    ],
+    "per_layer_summaries": [
+      {
+        "bytes": 437,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/f16_reference.summary.json",
+        "sha256": "b470b870e1b0a26a3c9d82d880d415058bc91ab638145797b3fd8154484fbb84"
+      },
+      {
+        "bytes": 437,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/fully_quantized.summary.json",
+        "sha256": "a48585e0919608e344861ec053eb9d1499974c76b5b5388063fdbb98468ff203"
+      },
+      {
+        "bytes": 347,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/lm_head.summary.json",
+        "sha256": "670b84337a5f84cc9c9ce4d366d547042273c934a5484446e79c0317e760776a"
+      },
+      {
+        "bytes": 358,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__embed_tokens.summary.json",
+        "sha256": "ee2deba1390960da490caef73e280322d07a39de55ee7dd5fc51a9ef841d201b"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__mlp__down_proj.summary.json",
+        "sha256": "1115970a90e61b39dfa7e2999eedf2da15cf8677b9bc2cf6350cd392be215e4d"
+      },
+      {
+        "bytes": 367,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__mlp__gate_proj.summary.json",
+        "sha256": "47063cd6ccff1110d3a18167b68cf9ef6071af74df20ed157826663df1a1caf7"
+      },
+      {
+        "bytes": 366,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__mlp__up_proj.summary.json",
+        "sha256": "f6d22af2f0fee82ad8628a6fa675aa8c0a0103faa69337a1a3a023496eb31d98"
+      },
+      {
+        "bytes": 370,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__k_proj.summary.json",
+        "sha256": "791cdb1879bfc228e7e5b28a6cc9dfd966bccf1e5f4fc828314c1e02d838645a"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__o_proj.summary.json",
+        "sha256": "83a79d3039bd911191d0062a84b5d2081f9941f4dc1fb3253908f6476f75184f"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__q_proj.summary.json",
+        "sha256": "5a87eb6df2eba4a2625ad78bdb4d125580fbcc284e02aa044e0f14e665fa899e"
+      },
+      {
+        "bytes": 370,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__0__self_attn__v_proj.summary.json",
+        "sha256": "e1432911c892a967e8680fafe05ad17a49f0aa44f6c91ba2cbccd85f634a4a2f"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__mlp__down_proj.summary.json",
+        "sha256": "5d400f4f34f4c6e664c1aa5bdf18b328049fb6a33fc1fe3ca777d4e9a557663b"
+      },
+      {
+        "bytes": 369,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__mlp__gate_proj.summary.json",
+        "sha256": "7ba3595bbfa6e67370376a5c699e8eb74842e38b9b4beb614b421b02cdb6b5f4"
+      },
+      {
+        "bytes": 367,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__mlp__up_proj.summary.json",
+        "sha256": "4fe361e713442e0d5bf4c73716f50b45fbc15a965344a0bbcd69263e313862be"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__k_proj.summary.json",
+        "sha256": "7301af37b6268b5f8974cb65c88542b6ae14094a4a4b4e797cae15ee4b49635a"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__o_proj.summary.json",
+        "sha256": "8512ef23a555ba0921167e3c421b3381f97e27d3710b11a60c2475abab83eb69"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__q_proj.summary.json",
+        "sha256": "4de3b07855c309a5ab727683d1847f78feca2b3370e2ad7c12d999a1cf272094"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__10__self_attn__v_proj.summary.json",
+        "sha256": "b39b534523f4a4016f74d85189eb9a70d6787208ac2ed9b4f56f1b533edba40e"
+      },
+      {
+        "bytes": 369,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__mlp__down_proj.summary.json",
+        "sha256": "c4b6e3ea9cff7df8909f790fa6a1ce752c63b4f05d37823d530d666bd6cde20c"
+      },
+      {
+        "bytes": 369,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__mlp__gate_proj.summary.json",
+        "sha256": "55702eb9c72f7dc484de6b7c9357a632847f75a63585494b6a592b45929a6ff6"
+      },
+      {
+        "bytes": 367,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__mlp__up_proj.summary.json",
+        "sha256": "4d302cd4a44489b981bf32f4aa3360d6e017e85c0b97ef095a0915a7c051fde4"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__k_proj.summary.json",
+        "sha256": "07bdca053b364cb69f88236e3af06d9ed6e3d684f4876e0e7e276d2b86c93114"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__o_proj.summary.json",
+        "sha256": "f17d681d2a2a2277864f227ff1cad20c678a689795a7d160ee4ad81fa7a15c64"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__q_proj.summary.json",
+        "sha256": "167b4585cb0456e413e3befef20e83d95e4662af6069f98b6483e83dbf4bf588"
+      },
+      {
+        "bytes": 370,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__11__self_attn__v_proj.summary.json",
+        "sha256": "28dc5bcb50c06010aa8d811824e8f466381643f807695f24ecb54ad9794f0f94"
+      },
+      {
+        "bytes": 369,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__mlp__down_proj.summary.json",
+        "sha256": "fe6c2dd1205796c4bec7bbe414ec74712abbb9ba3817c67526b1ca8f9dbe6f06"
+      },
+      {
+        "bytes": 369,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__mlp__gate_proj.summary.json",
+        "sha256": "af709007149cf68db1c4c970fa5fda65b2ea4629afdfddff52682fd5d97e2647"
+      },
+      {
+        "bytes": 367,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__mlp__up_proj.summary.json",
+        "sha256": "fbf929fa9670094bd90b271b7677e0551af3640833287de831c3fe438958ee6a"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__k_proj.summary.json",
+        "sha256": "7a01ec1046b3eae22fcb20e440bb31e80490db43c75e9d6092e3051343b04b64"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__o_proj.summary.json",
+        "sha256": "9ef036ac9b240c1a4a47e598eaa2ece980f5e06447a563b186e32ae67d9bfdd3"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__q_proj.summary.json",
+        "sha256": "c78fe9d485e20dce54b2ba0b0356994a752e42402f69ed2142f0e464e9203ccd"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__12__self_attn__v_proj.summary.json",
+        "sha256": "36bda7b218cf98161740bea5d58eff049b30029c16ee278e521390b53bfe603b"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__mlp__down_proj.summary.json",
+        "sha256": "b5ef2ab3510264c513d4b9ed5ccb4c5b5e865ad2449c18866d7c5fdbc3a30144"
+      },
+      {
+        "bytes": 369,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__mlp__gate_proj.summary.json",
+        "sha256": "1d09db79ab3adb8a4a0a3bd28624aca5d8a1bdfa2ee0437a09ba69374b0d465d"
+      },
+      {
+        "bytes": 366,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__mlp__up_proj.summary.json",
+        "sha256": "8a6080f8baf7be09db64a5c13e88e78b776dcd828fd4d15b5d5c73c27ef47859"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__k_proj.summary.json",
+        "sha256": "8d1429c64d5dbb2c30d8fbf181ceedfd7d895831b068a7ba2cec07de45d4c7b8"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__o_proj.summary.json",
+        "sha256": "47a7a280e8d9f7c56614c7e6dcbdaccf03b32927a6a066a4422301ac9218792e"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__q_proj.summary.json",
+        "sha256": "af5bf664ff58428b981caa0a8aa0ae07ac7591a0be9e79b74b3d7db8f1f2a746"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__13__self_attn__v_proj.summary.json",
+        "sha256": "ba79be3885657f5e2e4c67dbe347be167c543e9fd3b15745039517ff2cbf57b4"
+      },
+      {
+        "bytes": 369,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__mlp__down_proj.summary.json",
+        "sha256": "240e6e66e81f2a82dd93a455fed132c5a51a90c0998e5cc045037859661a3e58"
+      },
+      {
+        "bytes": 369,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__mlp__gate_proj.summary.json",
+        "sha256": "bfe7287b5b34bd8c438e06b58760b6571a987d28c1aea55d2ac23023b23beb84"
+      },
+      {
+        "bytes": 367,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__mlp__up_proj.summary.json",
+        "sha256": "9f1a235ccdabc5b378f53689a8b37623325d4c114d5b2f974e68b7b1ee7d8beb"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__k_proj.summary.json",
+        "sha256": "d8a98fe5fcac71d38dc2c9f1a3fb6eb5930cb4ff0a8ce016a42ba51624f6810f"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__o_proj.summary.json",
+        "sha256": "5da6710fcdb3b4bda7f56901cfc56b857abb0ad4d6f780b9b44d86b0e74ab0cd"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__q_proj.summary.json",
+        "sha256": "96d0f2a9819fabbda393073e5b493e5cfefefdfa30a7e3a6ef696c5cc4a87cf4"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__14__self_attn__v_proj.summary.json",
+        "sha256": "eba6f9cc908908e3e15d54095baa94edcb54d9db0bb0d4c40e08bbda1ce8889c"
+      },
+      {
+        "bytes": 369,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__mlp__down_proj.summary.json",
+        "sha256": "9eea62978d779ec56e9b8c284cfc30ab638eb08d9441ac12b6e7dc4c60e963a2"
+      },
+      {
+        "bytes": 367,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__mlp__gate_proj.summary.json",
+        "sha256": "4b777ff3c8b6b57863c6e9229f5f4b52cbf38979fd4e55d1dccd3b4a55c0003d"
+      },
+      {
+        "bytes": 367,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__mlp__up_proj.summary.json",
+        "sha256": "b92791ed00808d0e53b33be50c0ee465f1e472eaa4b24455623cc80e193ccc12"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__k_proj.summary.json",
+        "sha256": "e8cc906a263e8751daf0c3a7541bc3b511a97a4b648de2d3fda78412baefd6d7"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__o_proj.summary.json",
+        "sha256": "2e72aa9953e70eaa60fabb417aeeeb9ec720c12fe9ba63ac1313563516029223"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__q_proj.summary.json",
+        "sha256": "2596ae4f55d03a2ce0c61432c30be537d70dc90dadca6a759ba5429cf3f4d900"
+      },
+      {
+        "bytes": 372,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__15__self_attn__v_proj.summary.json",
+        "sha256": "46a2f880e66d235f4c68eb6e391bd09852704b0c818e8ecc28aa8560632bbd3e"
+      },
+      {
+        "bytes": 367,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__mlp__down_proj.summary.json",
+        "sha256": "586958cac33ca826d797211aedf17bd713b09fa7891ca97b15f4ea955869d7ee"
+      },
+      {
+        "bytes": 366,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__mlp__gate_proj.summary.json",
+        "sha256": "89efdc8096a7195e6e9e352599b86b24f503fde1638b24e8dbab6a234ca8f113"
+      },
+      {
+        "bytes": 365,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__mlp__up_proj.summary.json",
+        "sha256": "f4d9fbd926eacddc84b45a6b611665bd559837338e62ce42570a7d01d36ec2c6"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__k_proj.summary.json",
+        "sha256": "6bf9f83f601af788679476ee17ac2707710c4d5d864b4e82e1f85379f520df50"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__o_proj.summary.json",
+        "sha256": "0b4a2c086c91b3284e179a8f47dea9914a37b582ba5286d0b596edb338be0f2c"
+      },
+      {
+        "bytes": 370,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__q_proj.summary.json",
+        "sha256": "92c77107a6d46d4a41250e70a0aff82d8f1e8ef5bacfb231a7f6a6ba17ef4cea"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__1__self_attn__v_proj.summary.json",
+        "sha256": "9e08903643003a5986250b787662e9a70e0823a705702b018b4e55335083d9b9"
+      },
+      {
+        "bytes": 367,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__mlp__down_proj.summary.json",
+        "sha256": "a0ff44c392321ccad4d67c24fa8f69215fc26b4a2135ee2769e5da3b9ad3e2f0"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__mlp__gate_proj.summary.json",
+        "sha256": "ceeba1da8340a08ac744dc77f9394db7ad5ca79b84b310b0dbd95ff214676be8"
+      },
+      {
+        "bytes": 366,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__mlp__up_proj.summary.json",
+        "sha256": "257fd40b4ede28781be499998afefc252d73ef8bb45c382c220022c60afbb373"
+      },
+      {
+        "bytes": 370,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__k_proj.summary.json",
+        "sha256": "22067eb43e6776706ea339c9d25a66e031be4bd5c8740deb583cf52ce4064250"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__o_proj.summary.json",
+        "sha256": "036974ecfd06cd3d7192f3fdab974b09a98038e39395340470e331f5d341659f"
+      },
+      {
+        "bytes": 370,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__q_proj.summary.json",
+        "sha256": "8b1ef395169d539766fb3fa271103f7b35c0bb25d7b28bba0ab80ee918944f06"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__2__self_attn__v_proj.summary.json",
+        "sha256": "58d5e9c92fc97afcfdc07716ff75899efe67f53c55ecbe230a7051b93e1c6bb0"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__mlp__down_proj.summary.json",
+        "sha256": "a06ff778f67c3d7b842e7f6d806f42597ee1d6555e68b7fd4f5b866ad7426265"
+      },
+      {
+        "bytes": 367,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__mlp__gate_proj.summary.json",
+        "sha256": "0989ff534468511a18e1d3edea4591df713030aa1ac026bfd26701efcea7ce51"
+      },
+      {
+        "bytes": 366,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__mlp__up_proj.summary.json",
+        "sha256": "bce1fd43a36007860c740c8960dc578317b71b16d2bf25205b285bc73a3c7071"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__k_proj.summary.json",
+        "sha256": "f1c6182d7e7bee8d3280a88ead027900f031aeff1191c6e8d313dc858968e414"
+      },
+      {
+        "bytes": 370,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__o_proj.summary.json",
+        "sha256": "9880a9734932ed26b19692c30fb3593bf615efd952d2e4f8abc52f7ef4277dcd"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__q_proj.summary.json",
+        "sha256": "732c9dd75817bb7e58b3896f64de0949285a5c09e86759015437842d2ac525f1"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__3__self_attn__v_proj.summary.json",
+        "sha256": "9ca982b6de398bf5030f7fc53bc53fd9419c5fa573f54ed31ed5cf1552f5e852"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__mlp__down_proj.summary.json",
+        "sha256": "eba414c73255729c3a4414b8f9e7e6411956c7c25dcb871df89aa072d5f76fb9"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__mlp__gate_proj.summary.json",
+        "sha256": "87f258d2c64a5b56021f91c741451e04b7b14a3f17012415a76dc55ea6455b17"
+      },
+      {
+        "bytes": 366,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__mlp__up_proj.summary.json",
+        "sha256": "cff5e0f9eed29a2d50b7f6b3ed9e94d7b53ed6cdc4c1039686d3f3ae482ab55d"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__k_proj.summary.json",
+        "sha256": "b3cb286b232ae052650627db97903789e40758f897c49cc378fb046d96d7d812"
+      },
+      {
+        "bytes": 370,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__o_proj.summary.json",
+        "sha256": "d7b2d53a0965792b0081e97b90645d9227b10cee19f761a03a97e6178f95926d"
+      },
+      {
+        "bytes": 370,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__q_proj.summary.json",
+        "sha256": "4d5e00fe76857b929550a08eaf5e85a3e47d18812b5ebad9ecc2e8a4ec15e691"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__4__self_attn__v_proj.summary.json",
+        "sha256": "5eeecd9c6749ab30866f86d0156677ed2acf705b2172395a9943645e90eef9f0"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__mlp__down_proj.summary.json",
+        "sha256": "9f99bb0c66cbf27f08b633c625b0478385d589f91da133bb378b3c0fd572ea1c"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__mlp__gate_proj.summary.json",
+        "sha256": "dc4fd8e4dd07fda1651b64b3b9c01540c579316a67e3965d607b5cf84d5e36e3"
+      },
+      {
+        "bytes": 366,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__mlp__up_proj.summary.json",
+        "sha256": "285f03eb524c2b7c2ca6c4bc1972d5e66a16240cd760e7e9bd96519b649af12e"
+      },
+      {
+        "bytes": 370,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__k_proj.summary.json",
+        "sha256": "aa66aa22c8d0330ecc71cad40540f9b11a96d0b5e8aa3a2e7be6b6abb7c69f6c"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__o_proj.summary.json",
+        "sha256": "01b604fafdbb3df4950dcc11fce6d2c2c120fa368385f17494df61a5eb65c014"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__q_proj.summary.json",
+        "sha256": "6d6b00869a2a63f750aa1967010b0d3d32fd3cf92d766f67262366fd8574266f"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__5__self_attn__v_proj.summary.json",
+        "sha256": "e1562868bea233c24d63641656ee7c8ed1213002576ca47dc988cb102faf9a87"
+      },
+      {
+        "bytes": 367,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__mlp__down_proj.summary.json",
+        "sha256": "32828200d479324f393a91036d0c69a0b1ff158a4a06e120ac7c322a96aeec8c"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__mlp__gate_proj.summary.json",
+        "sha256": "e06770bafc99642784ceebd9668fe94d61c71a1998e73479848a3e6ef1de34e2"
+      },
+      {
+        "bytes": 366,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__mlp__up_proj.summary.json",
+        "sha256": "cbb0f94fd57d95f84b1291718aa0ce904ad8fea8ae9c07fd5669e460976c617e"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__k_proj.summary.json",
+        "sha256": "f9b211e5c04288e2fc6c5c7e2a780c30c25c7e2258a046e17de24fabfa6eda16"
+      },
+      {
+        "bytes": 370,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__o_proj.summary.json",
+        "sha256": "3926636e733494e2b510ae9c94ac26d51e6c1a60f836d7e615b8ec322ab78758"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__q_proj.summary.json",
+        "sha256": "ead9272cc1a6f99599c347ba3ba4618f8f386960a42d22bb2198e7203a5c45c8"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__6__self_attn__v_proj.summary.json",
+        "sha256": "040d2cf6c9b18d8716dfcac07145d6fc11ed5e368cd8b0f9a4ada192bcb867bb"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__mlp__down_proj.summary.json",
+        "sha256": "0e69729ccc2cf3334f4b8452acf3b4dff1ff23528bd6c4107fab31060f1950a4"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__mlp__gate_proj.summary.json",
+        "sha256": "d302ac027c6eff47ff7d32f2c3288a2f4a59e60e8477d2806b8b9238306530f1"
+      },
+      {
+        "bytes": 364,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__mlp__up_proj.summary.json",
+        "sha256": "a348b0939ce90c15891e90e018a83b9ab69c229e14f4cbde49592626bc44aee3"
+      },
+      {
+        "bytes": 370,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__k_proj.summary.json",
+        "sha256": "efbcb09bf9b1e9e942683f6819841c11f78fff1ff6a909268a82ab7075e2aee7"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__o_proj.summary.json",
+        "sha256": "c04ad53ad937a96b2a00100fb970d8f015e7fe7ef6c4233e83df0085bf957938"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__q_proj.summary.json",
+        "sha256": "9db7b641957b326b413e5a89ac9e1e72a86f8fda0d5d72d4c54b6e7ec32dc6ab"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__7__self_attn__v_proj.summary.json",
+        "sha256": "3dc8c5f6dab6aa78b8d1405c22d8f2d488d0499d23e19c27bb2670bfb2e66e6e"
+      },
+      {
+        "bytes": 367,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__mlp__down_proj.summary.json",
+        "sha256": "0f8012e6edbfb7da3a343225411c5878f55171fa42a2a30973340e07cb53fbf6"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__mlp__gate_proj.summary.json",
+        "sha256": "75405da3707d8705c47f477d3db0c043bcf1d48bc794a5593744eab7d1fddaed"
+      },
+      {
+        "bytes": 366,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__mlp__up_proj.summary.json",
+        "sha256": "4d44f52e62edc0fdb4a44c24fee9338c8905df9c4761c542a454b1c8050a7af1"
+      },
+      {
+        "bytes": 370,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__k_proj.summary.json",
+        "sha256": "99e4a839dda96e2672a1ebc371a57e43a27709e953c335b147c8fe6c16c6b655"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__o_proj.summary.json",
+        "sha256": "2a19ae463e37942dc6baae924db564d9acf5125da60b0f00eecec15a152ee21e"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__q_proj.summary.json",
+        "sha256": "dc6b525aa96d10c4cbe5bc73967cb85b04430e63899ef1425d675a645fdd82b3"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__8__self_attn__v_proj.summary.json",
+        "sha256": "88d69492ae5a9dbbf8a143fe976b2e6f5a79bbc0f27c5d2f5dcddc819ff15548"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__mlp__down_proj.summary.json",
+        "sha256": "1a4184b9b8fefc1a121ce25271bce5d8ce6e06691c08971436004713e3f07efb"
+      },
+      {
+        "bytes": 368,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__mlp__gate_proj.summary.json",
+        "sha256": "6522651cb6e4f23c8950e8ba91ef88cd418938c2898038daf4af32643177d70b"
+      },
+      {
+        "bytes": 366,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__mlp__up_proj.summary.json",
+        "sha256": "d924c1623cd40afc8d7d36f2cff760a0c5a80aaa6c56c7be23f4f247ec9b1c04"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__k_proj.summary.json",
+        "sha256": "f10617f223b483183e6c9defd563a32916b76b3998e46c9b7c549291035357a8"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__o_proj.summary.json",
+        "sha256": "83bfcff419554c08da110601580833943a5e6ea580cfcf49a2cf14c7fd41b28c"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__q_proj.summary.json",
+        "sha256": "fcc196a9629cd8234ebe233896fe7da0875d4217973d9f0bc24bd78aed2eea16"
+      },
+      {
+        "bytes": 371,
+        "path": "a/EXP-A-011/20260822T194828Z/per_layer/model__layers__9__self_attn__v_proj.summary.json",
+        "sha256": "200bdfdc228ddc27965ab4e133ef51a893db9ec875a39caa25cd205a6d9cef09"
+      }
+    ],
+    "provenance": {
+      "bytes": 709,
+      "path": "a/EXP-A-011/20260822T194828Z/provenance.json",
+      "sha256": "2b17a451de0132ce83370d773c219b646feb928157192ff3dab9492edc5b6e50"
+    },
+    "sensitivity_table": {
+      "bytes": 57608,
+      "path": "a/EXP-A-011/20260822T194828Z/sensitivity_table.json",
+      "sha256": "742af1177d9ca92e283ecde5fdeaa6eee60918edd25270ce128cdce2e3ba77e8"
+    }
+  },
+  "experiment_id": "EXP-A-011",
+  "retention_note": "Full per-arm lm-eval results (9.5 MB each, 114 arms, ~1 GB total) are NOT committed. They live under runs/a/EXP-A-011/<ts>/per_layer/ on Legion and can be reproduced by re-running the driver with the original git SHA and the same env-lock.txt.",
+  "run_namespace": "/home/andrew-jochl/TORUS/runs/a/EXP-A-011/20260822T194828Z",
+  "summary_counts": {
+    "full_results_files": 116,
+    "log_files": 117,
+    "summary_files": 116,
+    "total_bytes": 1157767743
+  }
+}

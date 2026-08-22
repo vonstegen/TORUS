@@ -1,0 +1,25 @@
+{
+  "model": "allenai/OLMo-1B-0724-hf",
+  "mode": "baseline",
+  "target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "gate_proj",
+    "up_proj",
+    "down_proj"
+  ],
+  "no_calibrate": false,
+  "limit": 200,
+  "tasks": {
+    "arc_easy": {
+      "metric": "acc,none",
+      "value": 0.6073232323232324
+    },
+    "wikitext": {
+      "metric": "word_perplexity,none",
+      "value": 13.093198488512625
+    }
+  }
+}

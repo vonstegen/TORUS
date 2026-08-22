@@ -1,0 +1,2344 @@
+{
+  "model": "allenai/OLMo-1B-0724-hf",
+  "tasks": [
+    "wikitext",
+    "arc_easy"
+  ],
+  "limit": 200,
+  "no_calibrate": true,
+  "elapsed_seconds": 6853.468591213226,
+  "rows": [
+    {
+      "arm": "f16_reference",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "baseline",
+      "target_modules": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "no_calibrate": false,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6073232323232324
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.093198488512625
+        }
+      }
+    },
+    {
+      "arm": "fully_quantized",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.25841750841750843
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 459454.0413097647
+        }
+      }
+    },
+    {
+      "arm": "model.layers.0.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.0.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5471380471380471
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 268.02134396901664
+        }
+      }
+    },
+    {
+      "arm": "model.layers.0.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.0.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5816498316498316
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 3363.784432675969
+        }
+      }
+    },
+    {
+      "arm": "model.layers.0.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.0.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6031144781144782
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 54.86851629631532
+        }
+      }
+    },
+    {
+      "arm": "model.layers.0.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.0.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5732323232323232
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 186.76720045417656
+        }
+      }
+    },
+    {
+      "arm": "model.layers.1.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.1.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6300505050505051
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 17.47585617045721
+        }
+      }
+    },
+    {
+      "arm": "model.layers.1.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.1.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6388888888888888
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 17.783654310232702
+        }
+      }
+    },
+    {
+      "arm": "model.layers.1.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.1.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6498316498316499
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.718649924158655
+        }
+      }
+    },
+    {
+      "arm": "model.layers.1.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.1.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6418350168350169
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.857909971451082
+        }
+      }
+    },
+    {
+      "arm": "model.layers.2.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.2.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6207912457912458
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 28.29574502995318
+        }
+      }
+    },
+    {
+      "arm": "model.layers.2.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.2.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6258417508417509
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 33.61813576760298
+        }
+      }
+    },
+    {
+      "arm": "model.layers.2.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.2.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6178451178451179
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.573651044256497
+        }
+      }
+    },
+    {
+      "arm": "model.layers.2.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.2.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6005892255892256
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.470761382601095
+        }
+      }
+    },
+    {
+      "arm": "model.layers.3.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.3.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6081649831649831
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 23.763775495620013
+        }
+      }
+    },
+    {
+      "arm": "model.layers.3.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.3.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6127946127946128
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 21.711949706252106
+        }
+      }
+    },
+    {
+      "arm": "model.layers.3.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.3.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6174242424242424
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.523631328758102
+        }
+      }
+    },
+    {
+      "arm": "model.layers.3.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.3.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6127946127946128
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.55084657375708
+        }
+      }
+    },
+    {
+      "arm": "model.layers.4.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.4.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5841750841750841
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.67667128024303
+        }
+      }
+    },
+    {
+      "arm": "model.layers.4.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.4.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5879629629629629
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.843356876356713
+        }
+      }
+    },
+    {
+      "arm": "model.layers.4.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.4.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6056397306397306
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.789035470884848
+        }
+      }
+    },
+    {
+      "arm": "model.layers.4.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.4.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.622895622895623
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.460099629114751
+        }
+      }
+    },
+    {
+      "arm": "model.layers.5.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.5.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5757575757575758
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 20.451188295279053
+        }
+      }
+    },
+    {
+      "arm": "model.layers.5.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.5.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5816498316498316
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 20.61444293032566
+        }
+      }
+    },
+    {
+      "arm": "model.layers.5.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.5.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6207912457912458
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.533475052104455
+        }
+      }
+    },
+    {
+      "arm": "model.layers.5.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.5.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6052188552188552
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.549742052258784
+        }
+      }
+    },
+    {
+      "arm": "model.layers.6.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.6.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6052188552188552
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.154255831347545
+        }
+      }
+    },
+    {
+      "arm": "model.layers.6.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.6.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6052188552188552
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.335289660949588
+        }
+      }
+    },
+    {
+      "arm": "model.layers.6.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.6.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5765993265993266
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.679362993860249
+        }
+      }
+    },
+    {
+      "arm": "model.layers.6.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.6.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5845959595959596
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.44455259901583
+        }
+      }
+    },
+    {
+      "arm": "model.layers.7.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.7.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5618686868686869
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 15.004640049797363
+        }
+      }
+    },
+    {
+      "arm": "model.layers.7.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.7.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.585016835016835
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 15.105149313941064
+        }
+      }
+    },
+    {
+      "arm": "model.layers.7.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.7.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5698653198653199
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.755806956348243
+        }
+      }
+    },
+    {
+      "arm": "model.layers.7.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.7.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5883838383838383
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.470560353214427
+        }
+      }
+    },
+    {
+      "arm": "model.layers.8.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.8.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5951178451178452
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.737766650916573
+        }
+      }
+    },
+    {
+      "arm": "model.layers.8.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.8.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5980639730639731
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.81781985895264
+        }
+      }
+    },
+    {
+      "arm": "model.layers.8.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.8.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5808080808080808
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.545376608334655
+        }
+      }
+    },
+    {
+      "arm": "model.layers.8.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.8.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5909090909090909
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.453704624521038
+        }
+      }
+    },
+    {
+      "arm": "model.layers.9.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.9.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5656565656565656
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.658516082320727
+        }
+      }
+    },
+    {
+      "arm": "model.layers.9.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.9.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5664983164983165
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 15.002902692683067
+        }
+      }
+    },
+    {
+      "arm": "model.layers.9.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.9.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5488215488215489
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.634712997913757
+        }
+      }
+    },
+    {
+      "arm": "model.layers.9.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.9.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5677609427609428
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.468575076598968
+        }
+      }
+    },
+    {
+      "arm": "model.layers.10.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.10.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5875420875420876
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.404546931524827
+        }
+      }
+    },
+    {
+      "arm": "model.layers.10.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.10.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5913299663299664
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.833839116725933
+        }
+      }
+    },
+    {
+      "arm": "model.layers.10.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.10.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.577020202020202
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.614108486959609
+        }
+      }
+    },
+    {
+      "arm": "model.layers.10.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.10.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5888047138047138
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.485219375522096
+        }
+      }
+    },
+    {
+      "arm": "model.layers.11.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.11.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5808080808080808
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.548619963590035
+        }
+      }
+    },
+    {
+      "arm": "model.layers.11.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.11.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.585016835016835
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.883109214878507
+        }
+      }
+    },
+    {
+      "arm": "model.layers.11.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.11.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.57996632996633
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.618795427967255
+        }
+      }
+    },
+    {
+      "arm": "model.layers.11.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.11.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5909090909090909
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.50152933638218
+        }
+      }
+    },
+    {
+      "arm": "model.layers.12.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.12.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5980639730639731
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.164212848916986
+        }
+      }
+    },
+    {
+      "arm": "model.layers.12.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.12.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6001683501683501
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.266740392020248
+        }
+      }
+    },
+    {
+      "arm": "model.layers.12.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.12.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5858585858585859
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.506177956889603
+        }
+      }
+    },
+    {
+      "arm": "model.layers.12.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.12.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5917508417508418
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.490318296711528
+        }
+      }
+    },
+    {
+      "arm": "model.layers.13.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.13.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5997474747474747
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.316108891947241
+        }
+      }
+    },
+    {
+      "arm": "model.layers.13.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.13.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5968013468013468
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.704491272981096
+        }
+      }
+    },
+    {
+      "arm": "model.layers.13.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.13.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5845959595959596
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.433453665336357
+        }
+      }
+    },
+    {
+      "arm": "model.layers.13.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.13.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5879629629629629
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.375421008433083
+        }
+      }
+    },
+    {
+      "arm": "model.layers.14.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.14.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5892255892255892
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.451927983053372
+        }
+      }
+    },
+    {
+      "arm": "model.layers.14.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.14.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5938552188552189
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.736994153105718
+        }
+      }
+    },
+    {
+      "arm": "model.layers.14.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.14.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5972222222222222
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.446741970302513
+        }
+      }
+    },
+    {
+      "arm": "model.layers.14.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.14.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6035353535353535
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.396454397461799
+        }
+      }
+    },
+    {
+      "arm": "model.layers.15.self_attn.q_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.15.self_attn.q_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6077441077441077
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.839154243248645
+        }
+      }
+    },
+    {
+      "arm": "model.layers.15.self_attn.k_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.15.self_attn.k_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6064814814814815
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.990230300943649
+        }
+      }
+    },
+    {
+      "arm": "model.layers.15.self_attn.v_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.15.self_attn.v_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5993265993265994
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.713155727188687
+        }
+      }
+    },
+    {
+      "arm": "model.layers.15.self_attn.o_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.15.self_attn.o_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5896464646464646
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.579971619139274
+        }
+      }
+    },
+    {
+      "arm": "model.layers.0.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.0.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5677609427609428
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 38.82382821713312
+        }
+      }
+    },
+    {
+      "arm": "model.layers.0.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.0.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5963804713804713
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 15.675457648023363
+        }
+      }
+    },
+    {
+      "arm": "model.layers.0.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.0.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5395622895622896
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 427.71174860421075
+        }
+      }
+    },
+    {
+      "arm": "model.layers.1.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.1.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.561026936026936
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 17.79786347423374
+        }
+      }
+    },
+    {
+      "arm": "model.layers.1.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.1.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6199494949494949
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.73550530476715
+        }
+      }
+    },
+    {
+      "arm": "model.layers.1.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.1.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.29503367003367004
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 9277.60929919641
+        }
+      }
+    },
+    {
+      "arm": "model.layers.2.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.2.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6388888888888888
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.297456419662083
+        }
+      }
+    },
+    {
+      "arm": "model.layers.2.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.2.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5854377104377104
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.819994854531583
+        }
+      }
+    },
+    {
+      "arm": "model.layers.2.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.2.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6052188552188552
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.78060595203899
+        }
+      }
+    },
+    {
+      "arm": "model.layers.3.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.3.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5618686868686869
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 16.30867160849502
+        }
+      }
+    },
+    {
+      "arm": "model.layers.3.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.3.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6123737373737373
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.707165414375327
+        }
+      }
+    },
+    {
+      "arm": "model.layers.3.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.3.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5787037037037037
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.386638934928472
+        }
+      }
+    },
+    {
+      "arm": "model.layers.4.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.4.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6132154882154882
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.111676083512696
+        }
+      }
+    },
+    {
+      "arm": "model.layers.4.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.4.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6064814814814815
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.772198973837995
+        }
+      }
+    },
+    {
+      "arm": "model.layers.4.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.4.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6094276094276094
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.837134800766123
+        }
+      }
+    },
+    {
+      "arm": "model.layers.5.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.5.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5959595959595959
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 15.688146396941058
+        }
+      }
+    },
+    {
+      "arm": "model.layers.5.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.5.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5761784511784511
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.778537959949798
+        }
+      }
+    },
+    {
+      "arm": "model.layers.5.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.5.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5871212121212122
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.785767918541415
+        }
+      }
+    },
+    {
+      "arm": "model.layers.6.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.6.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6287878787878788
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.207021484161848
+        }
+      }
+    },
+    {
+      "arm": "model.layers.6.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.6.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5669191919191919
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.734475678556642
+        }
+      }
+    },
+    {
+      "arm": "model.layers.6.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.6.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5551346801346801
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.87535790830162
+        }
+      }
+    },
+    {
+      "arm": "model.layers.7.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.7.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6195286195286195
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.758996155982922
+        }
+      }
+    },
+    {
+      "arm": "model.layers.7.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.7.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6098484848484849
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.5754395462115
+        }
+      }
+    },
+    {
+      "arm": "model.layers.7.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.7.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6123737373737373
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.600201306037741
+        }
+      }
+    },
+    {
+      "arm": "model.layers.8.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.8.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6022727272727273
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.864031688344818
+        }
+      }
+    },
+    {
+      "arm": "model.layers.8.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.8.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5892255892255892
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.692579392193082
+        }
+      }
+    },
+    {
+      "arm": "model.layers.8.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.8.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5892255892255892
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.68367593785716
+        }
+      }
+    },
+    {
+      "arm": "model.layers.9.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.9.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6216329966329966
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.001036397578964
+        }
+      }
+    },
+    {
+      "arm": "model.layers.9.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.9.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5963804713804713
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.793758074890881
+        }
+      }
+    },
+    {
+      "arm": "model.layers.9.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.9.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5867003367003367
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.014134408217767
+        }
+      }
+    },
+    {
+      "arm": "model.layers.10.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.10.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6018518518518519
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.152545467493882
+        }
+      }
+    },
+    {
+      "arm": "model.layers.10.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.10.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5892255892255892
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.797517044548654
+        }
+      }
+    },
+    {
+      "arm": "model.layers.10.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.10.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5896464646464646
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.93036867069868
+        }
+      }
+    },
+    {
+      "arm": "model.layers.11.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.11.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5946969696969697
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.183178169515411
+        }
+      }
+    },
+    {
+      "arm": "model.layers.11.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.11.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5959595959595959
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.063974533542718
+        }
+      }
+    },
+    {
+      "arm": "model.layers.11.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.11.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6073232323232324
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.237022685275507
+        }
+      }
+    },
+    {
+      "arm": "model.layers.12.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.12.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5968013468013468
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.847773783327446
+        }
+      }
+    },
+    {
+      "arm": "model.layers.12.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.12.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6018518518518519
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.793356648707254
+        }
+      }
+    },
+    {
+      "arm": "model.layers.12.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.12.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5993265993265994
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.819998880961773
+        }
+      }
+    },
+    {
+      "arm": "model.layers.13.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.13.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5867003367003367
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.119317151966488
+        }
+      }
+    },
+    {
+      "arm": "model.layers.13.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.13.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.593013468013468
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.097093598231572
+        }
+      }
+    },
+    {
+      "arm": "model.layers.13.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.13.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5892255892255892
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.25107819649138
+        }
+      }
+    },
+    {
+      "arm": "model.layers.14.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.14.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5858585858585859
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.702918606839015
+        }
+      }
+    },
+    {
+      "arm": "model.layers.14.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.14.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5955387205387206
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.963680731970777
+        }
+      }
+    },
+    {
+      "arm": "model.layers.14.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.14.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5968013468013468
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.189445410650997
+        }
+      }
+    },
+    {
+      "arm": "model.layers.15.mlp.gate_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.15.mlp.gate_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.57996632996633
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 19.373400093725536
+        }
+      }
+    },
+    {
+      "arm": "model.layers.15.mlp.up_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.15.mlp.up_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5976430976430976
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.637633334635026
+        }
+      }
+    },
+    {
+      "arm": "model.layers.15.mlp.down_proj",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.layers.15.mlp.down_proj"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6073232323232324
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 14.233724541341287
+        }
+      }
+    },
+    {
+      "arm": "model.embed_tokens",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "model.embed_tokens"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.6073232323232324
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 13.093198488512625
+        }
+      }
+    },
+    {
+      "arm": "lm_head",
+      "model": "allenai/OLMo-1B-0724-hf",
+      "mode": "quantized",
+      "target_modules": [
+        "lm_head"
+      ],
+      "no_calibrate": true,
+      "limit": 200,
+      "tasks": {
+        "arc_easy": {
+          "metric": "acc,none",
+          "value": 0.5252525252525253
+        },
+        "wikitext": {
+          "metric": "word_perplexity,none",
+          "value": 45.674883910133005
+        }
+      }
+    }
+  ]
+}
