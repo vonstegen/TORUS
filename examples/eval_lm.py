@@ -96,7 +96,7 @@ def main() -> None:
         model = adapter.model
 
     tasks = args.tasks.split(",")
-    print(f"[eval] running tasks: {tasks}")
+    results = run_lm_eval(model, tokenizer, tasks, batch_size=args.batch_size)
     summary: dict = {
         "model": args.model,
         "mode": args.mode,
