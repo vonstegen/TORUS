@@ -1,0 +1,285 @@
+# Experiment record - EXP-AF-002 - AF2 equal-storage tournament (confirmation tier)
+# Preregistered 2026-08-22 BEFORE any run under this ID. Thresholds frozen.
+# Central Track-A falsifier under OPERATING-PLAN rev 2.3 §11
+# decision-axis revision (cost-vector framing).
+id: EXP-AF-002
+track: A
+subtrack: "AF2 equal-storage tournament"
+tier: confirmation
+claims_addressed: [A-RP-002]
+title: "T2 ternary vs INT4 / INT8 / LoRA / small dense adapter + random controls at matched deployed bytes (cost vector)"
+owner: "research-harness"
+date_proposed: "2026-08-22"
+status: PROPOSED
+decision: null
+grade: null
+authoritative_design: "research/track-a-residual-ternary/residual-falsification/experiments/AF2/design-note.md"
+
+hypothesis: >
+  At matched **deployed-bytes** (packed weights + scales + metadata,
+  measured as file size on disk) on
+  `model.layers.0.mlp.down_proj` (8192 x 2048) of OLMo-1B, the
+  ternary T2 correction plane (`t2_ternary`) is **Pareto-competitive**
+  with the strongest matched-storage non-ternary competitor
+  (`dense_adapter`): on at least one capability metric
+  (wikitext ppl, arc_easy, lambada_openai) the T2 arm is within 2
+  stderr-of-difference of the dense_adapter arm AND no metric
+  regresses by more than 2 stderr. A stronger conclusion (PASS+) is
+  permitted if T2 **dominates** the dense_adapter by >2 stderr on at
+  least one capability metric while matched-bytes by construction.
+
+rationale: >
+  EXP-A-03x demonstrated the T1+T2 representation can recover a
+  badly damaged layer (ppl 427 -> 41); A-RP-001 falsified the equal-
+  training-time defense of T2 under AF8 governance
+  (EXP-AF-001 + EXP-AF-001-R, commits 39be76c + 4238568). The
+  remaining claim worth testing is **storage Pareto**: does T2 win
+  on quality per serialized byte against matched-storage
+  competitors? AF2 attacks A-RP-002 directly.
+
+  Two untrained controls (random_t2_ternary, random_lora) are added
+  per the v2 feedback suite (10 §15) "similar improvement -> the
+  conclusion is only 'additive correction helps'; T2 must win on
+  quality-per-bit/compute to support ternary specifically." They
+  appear in a SEPARATE panel of the audit; they are NOT averaged into
+  the trained-arms summary stats.
+
+revision: ""
+run_namespace: "runs/a/EXP-AF-002/<timestamp>/seed-00X/<arm>/"
+environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt in run namespace"
+baseline: >
+  EXP-AF-001-R reference ladder:
+  T1-continued (matched storage in AF1 sense; not part of A-RP-002):
+    wikitext ppl 14.10, arc_easy 0.649, lambada 0.618.
+  Externally for the same layer:
+    untrained PTQ arm (EXP-A-011): wikitext ppl 427.71,
+    arc_easy 0.5396 (collapsed; provides the floor).
+  EXP-A-03x trained T2 (KD objective, not this AF2's matched-CE
+  objective): wikitext ppl 41.44, arc_easy 0.6313.
+
+# ----- site, source, and matched cost axis ----------------------------------
+site:
+  layer: "model.layers.0.mlp.down_proj"
+  shape: [8192, 2048]
+  weight_elements: 16777216
+  model: "allenai/OLMo-1B-0724-hf"
+
+cost_axis_definitions:
+  deployed_bytes: >
+    Size in bytes of the packed serialized file written to disk
+    (the .npz plus its manifest / metadata headers, all sha256
+    recorded). Reported as the ACtual byte count, not a theoretical
+    "bits/weight" floor.
+  training_flops: >
+    Analytic count for the matched training loop:
+      6 * N_steps * batch * seq_len * (hidden * intermediate + hidden^2)
+      = 6 * 500 * 4 * 128 * (8192 * 2048 + 2048^2) per arm.
+      Reported per arm; identical across trained arms.
+  inference_ops_per_token: >
+    Analytic count of the residual matrix-mult at the layer per token.
+      t2_ternary / int4_residual / int8_residual: full (8192 * 2048)
+        when corrected; column-masked variants reduce this proportionally
+        (recorded as the column mask fraction).
+      lora: rank-r dual matmul = (2048 * r + r * 8192) per token.
+      dense_adapter: bottleneck (2048 * 192 + 192 * 8192) per token.
+  memory_traffic_per_token: >
+    Bytes loaded per token at the layer; packed weights + scales for
+    ternary/INT-N; fp16 weights + scales for fp16 arms.
+  latency_per_token_titan_rtx: >
+    Median of 100 forward-pass measurements on the fitted (trained)
+    arm at float16, batch 1, seq 128, isolation mode. Reported only
+    when the on-legion timing run is successful; otherwise noted
+    "unmeasured".
+  energy_per_token: >
+    Reported only if `nvidia-smi --query-gpu=power.draw` yields data.
+    Otherwise "unmeasured"; cost-vector still complete without it.
+
+# ----- arms ----------------------------------------------------------------
+# 5 trained arms + 2 untrained structure controls. Each trained arm reports
+# the full cost vector; untrained arms report only deployed_bytes.
+arms:
+  trained:
+    - id: t2_ternary
+      parameterized_forward: >
+        Resid = T2(ste(r)) where T2 is signed-{-1, 0, +1} via STE
+        on a latent real-valued matrix of shape (8192, 2048).
+      representation: >
+        2 bpw signed ternary, packed 4 values per byte; per-row fp16
+        scale (8192 entries). Manifest header carries sha256 of the
+        packed file.
+      target_deployed_bytes: 4194404
+      cost_vector_note: "T2 ternary, full layer; cheapest to deploy (1.58 bpw floor)."
+
+    - id: int4_residual
+      parameterized_forward: >
+        Resid = T4(ste(r)) where T4 is signed-INT4 with per-row
+        fp16 scale and per-row fp16 zero-point.
+      representation: >
+        4 bpw signed INT4, packed 2 values per byte; per-row
+        fp16 scale (8192) + per-row fp16 zero-point (8192).
+      column_mask_fraction: 0.5
+      target_deployed_bytes: 4194404
+      cost_vector_note: "INT4 residual at 50% column mask to match t2_ternary footprint."
+
+    - id: int8_residual
+      parameterized_forward: >
+        Resid = T8(ste(r)) where T8 is signed-INT8 with per-row
+        fp16 scale and per-row fp16 zero-point.
+      representation: >
+        8 bpw signed INT8; per-row fp16 scale (8192) + per-row
+        fp16 zero-point (8192).
+      column_mask_fraction: 0.25
+      target_deployed_bytes: 4194404
+      cost_vector_note: "INT8 residual at 25% column mask to match t2_ternary footprint."
+
+    - id: lora
+      parameterized_forward: >
+        Resid = (x @ W_down) @ W_up where W_down: 2048 -> r,
+        W_up: r -> 8192. Inserted as a parallel branch on the layer.
+      rank: 216
+      representation: "fp16 weights + zero metadata (pure fp16)."
+      target_deployed_bytes: 4423680
+      cost_vector_note: "r=216 fp16 LoRA at the same site; bytes 20480 * 216 = 4,419,840."
+
+    - id: dense_adapter
+      parameterized_forward: >
+        Resid = x @ W_down @ W_up where W_down: 2048 -> 192,
+        W_up: 192 -> 8192. Inserted as a parallel branch.
+      representation: "fp16 weights."
+      target_deployed_bytes: 3932160
+      cost_vector_note: "192-rank bottleneck fp16 adapter at the same site; bytes ~(2048 * 192 + 192 * 8192) * 2 = 3,932,160."
+
+  untrained_controls:
+    - id: random_t2_ternary
+      parameterized_forward: "Same as t2_ternary but weights drawn from a fixed seed and never trained."
+      representation: "2 bpw signed ternary, packed; per-row fp16 scale."
+      reported_in: "untrained panel only (separate from trained summary)"
+
+    - id: random_lora
+      parameterized_forward: "Same as lora but W_down, W_up drawn from a fixed seed and never trained."
+      representation: "fp16."
+      reported_in: "untrained panel only (separate from trained summary)"
+
+# ----- training recipe (matched across trained arms) -----------------------
+training:
+  corpus: "wikitext-103 train split"
+  token_cache: "runs/a/EXP-AF-002/<ts>/wikitext103_train_ids.npy (sha256 recorded)"
+  shared_across_arms_in_same_seed: true
+  data_order_matched_by_construction: true
+  optimizer: "SGD lr=1e-3 momentum=0.9 grad-clip=1.0"
+  objective: "next-token cross-entropy"
+  n_steps: 500
+  batch_size: 4
+  seq_len: 128
+  base_frozen: true
+  freeze_method: "requires_grad_(False) on every base parameter; optimizer holds only the trainable adapter parameters"
+  eval_dtype: "float16"
+  eval_tasks: ["wikitext", "arc_easy", "lambada_openai"]
+  eval_limit: null
+
+# ----- matched-bytes tolerance (manifest locks this before run) ------------
+matched_bytes_tolerance_pct: 1.0
+# Each trained arm's actual on-disk file size must be within +/- 1% of
+# the target_deployed_bytes. Arms outside tolerance fail the
+# matched-storage invariant and are INVALID.
+
+# ----- A-RP-002 thresholds (frozen at PROPOSE) -----------------------------
+quantitative_thresholds:
+  id: A-RP-002-v1
+  pass:
+    - >
+      On AT LEAST ONE of {wikitext ppl, arc_easy, lambada_openai}
+      the trained t2_ternary arm is within 2 stderr-of-difference
+      (se_diff = sqrt(se_t2^2 + se_dense^2)) of the dense_adapter
+      arm AND no metric regresses by more than 2 stderr below it.
+      Note: ppl "within" means <=, arc/lambada "within" means >=
+      minus 2 stderr.
+  pass_plus:
+    - >
+      On at least one capability metric the t2_ternary arm EXCEEDS
+      the dense_adapter's mean by >2 stderr-of-difference. Matched-
+      bytes is by construction.
+  fail:
+    - >
+      Either (a) the t2_ternary arm is dominated across all three
+      capability metrics by the dense_adapter (>2 stderr lower on
+      every metric), OR (b) every other matched-storage competitor
+      fails the matched-bytes tolerance.
+  passthrough_invalidation:
+    - >
+      If any trained arm's deployed-bytes is outside the +/- 1%
+      tolerance, that arm's row in the audit is INVALIDATED and the
+      remaining arms compete afresh.
+
+decision_logic_summary: >
+  Build Pareto frontier over (deployed_bytes, capability) for the
+  trained arms; t2_ternary must lie on or near the frontier. Compare
+  the trained t2_ternary directly against the trained dense_adapter
+  on the A-RP-002 thresholds. Random-ternary / random-lora are
+  reported in a separate panel; if EITHER untrained control lands
+  at or near the trained t2_ternary's quality, the structure is not
+  doing the work and A-RP-002 -> PROVISIONAL_FAIL.
+
+stop_conditions:
+  - "All 18 (6 arms x 3 seeds; with controls = 8 x 3 = 24) runs
+    complete; cost-vector aggregate.json produced."
+  - "Any matched-bytes tolerance violation (>1%) triggers an
+    INVALIDATED verdict and stop; the next experiment must redesign
+    the byte-matching strategy."
+
+budget: "12 GPU-hours total on legion. Expected: 24 runs at ~15 min
+  each = 6h; 2x buffer for warm cache, eval re-runs."
+
+expected_artifacts:
+  - "per-(seed, arm): history.jsonl, eval.summary.json, eval.full.json,
+    adapter.npz + meta (or per-arm equivalent), deployed_bytes.json"
+  - "aggregate.json: trained-arms summary, untrained-arms panel,
+    cost-vector table, Pareto frontier points, A-RP-002 verdict"
+  - "provenance.json + env-lock.txt + driver.log + ARTIFACTS.json"
+artifact_paths: []
+artifacts_manifest: "runs/a/EXP-AF-002/<timestamp>/ARTIFACTS.json"
+contamination_risks:
+  - "Token cache under runs/a/EXP-AF-002/; sha256 captured; one writer per namespace."
+  - "Legion torch determinism is the same as AF1-R; matched batches by construction."
+  - "Eval leakage: same disjointness rule (wikitext test disjoint from train)."
+
+# ----- freeze exception (OPERATING-PLAN §3, §6) ----------------------------
+freeze_exception:
+  change: >
+    (a) New examples/af2_storage_tournament.py: shared-loop multi-arm
+    driver covering the 6 trained + 2 untrained arms listed above.
+    Reuses the AF1 train_arm forward/path design and adds:
+      - INT4/INT8 packing (numpy uint4/uint8 backed by half size /
+        quarter-width column masks; per-row scale + zero-point
+        metadata);
+      - LoRA r=216 fp16 adapter (down + up matmul);
+      - dense_adapter 192-rank fp16 bottleneck adapter;
+      - uniform random T2 / LoRA generators for the untrained controls;
+      - per-arm deployed-bytes writer with sha256 fingerprint;
+      - cost-vector reporter: deployed_bytes, training_flops (analytic),
+        inference_ops/token, memory_traffic/token; latency measured at
+        apply time and recorded in eval.summary.json.
+    (b) tests/test_af2_storage_tournament.py: tokenizer-free tests
+    pinning: matched-bytes tolerance, packing round-trip (random
+    quantization -> dequantize gives within +/-1 quantization step),
+    random-control determinism (same seed -> same serialized bytes),
+    cost-vector columns populated for every arm, deployed_bytes
+    fingerprint matches recorded sha256.
+
+  justification: >
+    Required to execute this preregistered AF2 experiment. The AF1
+    driver only handles the T2 ternary arm vs full-base continued
+    arms; A-RP-002's equal-storage tournament needs the full arm
+    list. The new code is a strict superset of AF1 (reuses train_arm
+    + window_sampler + deterministic eval) plus the new arm
+    implementations and the cost-vector reporter.
+
+  approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN §3)"
+
+# ----- decision block (filled at DECIDE) -----------------------------------
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""
+supersedes: null
