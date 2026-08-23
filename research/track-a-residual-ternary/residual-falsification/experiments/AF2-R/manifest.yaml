@@ -1,0 +1,210 @@
+# Experiment record - EXP-AF-002-R - clean reproduction of EXP-AF-002 (confirmation tier)
+# Preregistered 2026-08-23 BEFORE any run under this ID. Thresholds frozen.
+# Required by OPERATING-PLAN rev 2.3 §11 / ROADMAP rev 2.4 §2.11
+# to transition A-RP-002 from PROVISIONAL_PASS to CONFIRMED_PASS.
+id: EXP-AF-002-R
+track: A
+subtrack: "AF2-R clean reproduction"
+tier: confirmation
+claims_addressed: [A-RP-002]
+title: "Clean reproduction of EXP-AF-002 under AF8 governance (new namespace, frozen SHA, fresh process, independent token cache)"
+owner: "research-harness"
+date_proposed: "2026-08-23"
+status: PROPOSED
+decision: null
+grade: null
+
+hypothesis: >
+  The EXP-AF-002 result (commit `0529749`, run `20260823T030918Z`)
+  reproduces under AF8 governance: at matched deployed-bytes (~4.2 MB)
+  on `model.layers.0.mlp.down_proj` (OLMo-1B), the trained `t2_ternary`
+  arm ties the strongest fp16 comparator (`dense_adapter` r=192) on
+  every capability metric within +/-2 stderr-of-difference, the
+  matched-bytes tolerance holds for every trained arm, and the
+  random_t2_ternary control remains within noise of the trained
+  t2_ternary on a calibrated FP16 base.
+
+rationale: >
+  EXP-AF-002 promoted A-RP-002 to PROVISIONAL_PASS under OPERATING-PLAN
+  rev 2.3 lifecycle. CONFIRMED_PASS only after a clean reproduction.
+  AF2-R is that reproduction. If the new run reproduces the headroom
+  pattern (t2 ties dense on every metric, dominates lambada by >2
+  sigma, random controls remain in noise), A-RP-002 -> CONFIRMED_PASS.
+  If it does NOT reproduce (e.g. arm-mean difference changes sign on
+  any capability metric, matched-bytes tolerance fails, random
+  controls now beat trained), A-RP-002 -> INVALIDATED, reopen to
+  TESTING, and the v2.3 cost-vector framing reverts to TESTING state.
+
+revision: "0529749"          # FROZEN - the AF2 commit. No code edits.
+run_namespace: "runs/a/EXP-AF-002-R/<timestamp>/seed-00X/<arm>/"
+environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt recorded at run start"
+baseline: >
+  EXP-AF-002 reference ladder (from git 0529749, run 20260823T030918Z;
+  verdict.md §"Audit's main finding"):
+    trained t2_ternary     (4,199,318 B) wikitext ppl 13.10, arc 0.572,
+                            lambada 0.611
+    fp16 dense_adapter r=192 (3,932,771 B)    13.10,        0.569,
+                                            0.608
+    fp16 LoRA r=216        (4,424,265 B)    13.11,        0.577,
+                                          0.609
+  Thresholds preregistered here so they cannot be rewound in light
+  of run output.
+
+# ----- what is new in AF2-R vs AF2 (the AF8 governance checklist) -----------
+# The whole point of the reproduction is to enumerate explicitly what
+# differs from AF2 and what stays identical. Everything that stays
+# identical must be reproducible from the frozen `revision`; everything
+# that is new must be independently generated.
+
+new_in_this_run:
+  - "New experiment ID: EXP-AF-002-R (no supersession of EXP-AF-002)."
+  - "New run namespace: runs/a/EXP-AF-002-R/<ts>/ (no reuse of AF2's). One writer per namespace."
+  - "Fresh Python process on legion (nohup + disown; not a fork of the AF2 driver)."
+  - "Independently generated wikitext-103 token cache. The cache used
+    by AF2 (sha256 reproducible from re-tokenization by construction;
+    AF2 driver.log records it) MUST NOT be linked to. The new cache
+    is re-tokenized from the wikitext-103 parquet shards (re-read
+    from the HF cache, sha256 of each shard recorded) and stored at
+    a new path. Its sha256 may equal AF2's (cache is a deterministic
+    function of inputs); the audit captures the relationship either
+    way and refuses to overwrite an existing file."
+  - "Independently generated eval output (full lm-eval-harness runs
+    on the same three tasks; results are regenerated, not copied)."
+  - "Independently generated random-control seeds: random_t2_ternary
+    and random_lora use a fresh seed drawn at run start and recorded
+    in the audit (NOT reused from AF2's seed)."
+  - "env-lock.txt regenerated from `.venv/bin/pip freeze` at run start."
+
+identical_to_af2:
+  - "Code: git checkout at sha 0529749, no working-tree edits."
+  - "Command: the exact same driver invocation as AF2 (same model,
+    same target module, same n_steps, same batch/seq, same lr, same
+    optimizer, same objective, same eval tasks, same dtype,
+    same matched-bytes tolerance)."
+  - "Arm set: 5 trained arms (t2_ternary, int4_residual, int8_residual,
+    lora r=216, dense_adapter r=192) + 2 untrained structure controls
+    (random_t2_ternary, random_lora)."
+  - "Preregistered thresholds: PASS bar (t2_ternary within +/-2 stderr
+    of dense_adapter on at least one capability metric AND no
+    metric regresses by more than 2 stderr); PASS+ bar (t2 dominates
+    dense by >2 stderr on at least one metric); FAIL bar (t2
+    dominated across all three metrics OR matched-bytes tolerance
+    fails for any arm); random-control diagnostic (any untrained
+    control at or near the trained t2's quality -> PROVISIONAL_FAIL)."
+  - "Seeds for the trained arms: [1, 2, 3]. Same seeds as AF2."
+  - "Driver-side invariants: matched batches by construction (shared
+    token stream, identical sampler seed); base frozen by
+    construction (requires_grad_(False)); matched-bytes tolerance
+    pinned by tests/test_af2_storage_tournament.py."
+
+# ----- thresholds (literal copy of AF2, frozen) ----------------------------
+# OPERATING-PLAN rev 2.3 §11 makes explicit that REPRODUCTION is set at
+# the same transition that moves TESTING -> PROVISIONAL_PASS; this
+# section is what CONFIRMED_PASS must satisfy on the new run.
+pass_thresholds_reproduction:
+  - "PASS direction reproduces (the bar required for CONFIRMED_PASS):
+    on EVERY capability metric, mean(t2_ternary - dense_adapter) /
+    se_diff is within +/-2 stderr-of-difference of the AF2 arm
+    means, AND the lambada_openai +2.18 sigma dominance direction
+    is preserved (t2 > dense on lambada), AND matched-bytes
+    tolerance holds for every trained arm (no +/-1% violations)."
+  - "OR, more stringently: the arm-mean values reproduce within
+    +/-2 stderr-of-difference of the AF2 arm means (variation
+    consistent with random sampling noise)."
+
+fail_thresholds_reproduction:
+  - "On any capability metric, the sign of (t2 - dense) flips vs AF2
+    (t2 now loses on lambada_openai), OR a matched-bytes tolerance
+    violation occurs for any arm, OR an untrained random_t2_ternary
+    control now beats the trained t2_ternary by >2 stderr on any
+    capability metric (architecture-vs-training-signal diagnostic
+    inverted). In any of these cases A-RP-002 -> INVALIDATED and the
+    claim reopens to TESTING."
+
+kill_criteria:
+  - "Same as AF2: NaN/Inf loss in any arm; base movement (caught by
+    the test suite); matched-bytes tolerance violation; 24h
+    wall-budget overrun."
+
+budget: "12 GPU-hours. Same as AF2; the new run should be at parity
+  (token cache re-tokenization is identical, only the path differs),
+  well inside the budget envelope."
+
+# ----- subset-mismatch rationale (provenance honesty) ---------------------
+# EXP-A-002 / AF2 manifest and driver use full eval tasks (no --limit).
+# AF2-R runs the same FULL tasks; no --limit. Comparison vs AF2 is
+# apples-to-apples for both arms.
+evaluation: >
+  FULL evals on wikitext test, arc_easy, lambada_openai; float16
+  throughout. No --limit. Same as AF2.
+
+# ----- decision output rule (governance) ----------------------------------
+# The decision is structured so that the reproduction verdict can be
+# computed by inspection. Reproducibility is the entire point.
+required_decision_outputs:
+  - "Per-(seed, arm): history.jsonl, eval.summary.json, eval.full.json,
+    adapter.npz + meta (or per-arm equivalent), deployed_bytes.json,
+    cost_vector.json."
+  - "Aggregate arm means, stddevs, stderrs per metric."
+  - "Per-arm (t2 - dense) / se_diff and its SIGN on each capability
+    metric."
+  - "Per-seed evals (full JSON), not just aggregates."
+  - "Comparison table vs AF2 (`git show 0529749 ... aggregate.json`):
+    arm means and (t2 - dense) signs on every metric."
+  - "Matched-bytes table: every trained arm's actual deployed_bytes
+    vs target_deployed_bytes +/-1%."
+  - "Untrained-control panel: random_t2_ternary vs trained t2_ternary
+    on every metric, with (random - trained) / se_diff sign."
+  - "New token-cache sha256 vs AF2's recorded sha256 (identity is the
+    expected outcome)."
+  - "Reproduce verdict: REPRODUCED (CONFIRMED_PASS materializes) or
+    NOT REPRODUCED (-> INVALIDATED, reopen TESTING)."
+
+# ----- freeze exception logged (OPERATING-PLAN §3, §6) --------------------
+# Audit script must NOT be an experiment run; it is offline tooling that
+# generates the wikitext cache and verifies the cache does not match
+# AF2's, before the driver is launched.
+freeze_exception:
+  change: >
+    (a) New example/audit/audit_af2_reproduction.py: builds the
+    cached wikitext-103 token stream in a fresh path on legion, records
+    sha256 of every input shard and the cache file, fails loudly if
+    the target path already exists (provenance notary). Mirrors
+    audit_af1_reproduction.py.
+    (b) New manifest in research/track-a-residual-ternary/residual-falsification/experiments/AF2-R/manifest.yaml.
+  justification: >
+    Required to execute this preregistered AF2-R reproduction. The
+    audit script makes the AF8 governance check (independent token
+    cache) a hard precondition rather than a checklist item. The
+    AF2 driver is reused as-is from the frozen `revision` (0529749).
+  approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN §3)"
+
+revision_field_reason: >
+  revision is the AF2 commit (0529749), not a new commit, because the
+  experiment must reproduce AF2 under identical code. Any change to
+  the driver between AF2 and AF2-R would invalidate the comparison.
+  The audit script is the only new artifact; it runs before the
+  driver and does not modify it.
+
+artifact_paths: []
+artifacts_manifest: "runs/a/EXP-AF-002-R/<timestamp>/ARTIFACTS.json"
+contamination_risks:
+  - "The shared tok cache from runs/a/EXP-AF-002/<ts>/wikitext103_train_ids.npy (AF2).
+    Its sha256 is recorded in AF2's ARTIFACTS.json; identity is the
+    expected outcome of a clean reproduction (cache is a deterministic
+    function of the inputs). Enforced by audit_af2_reproduction.py."
+  - "Concurrent writers: AF2-R writer is the only process touching
+    runs/a/EXP-AF-002-R/. AF2 namespace is read-only after its
+    DECIDE commit."
+  - "Eval leakage: same disjointness as AF2 (eval tasks disjoint from
+    wikitext-103 train)."
+  - "Random-control seed reuse: random_t2_ternary and random_lora in
+    AF2 used a fresh seed drawn at AF2 run start; AF2-R draws a NEW
+    fresh seed and records it. Identity across runs is informational,
+    not required."
+supersedes: null
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""
