@@ -194,11 +194,12 @@ and checkpoint SHA-256.
 
 ### Checklist
 
-- [ ] **2.1** `EXP-AF-001` — **AF1 equal-training-budget control.** Arm A:
+- [x] **2.1** `EXP-AF-001` — **AF1 equal-training-budget control.** Arm A:
       T1 trained N steps + T1 continued N more steps. Arm B: T1 trained N
       steps → freeze → T2 trained N steps. Match tokens, batches, data order,
       optimizer budget, compute accounting. Compare `Q(T1 continued)` vs.
       `Q(T1+T2)`. No material T2 advantage → downgrade A-RP-001.
+      **Done 2026-08-22: DECIDED FAIL.** T1+T2 loses to T1-continued on every capability metric (wikitext ppl +9.09 stderr in favor of A, arc_easy -2.23, lambada_openai -6.24, n=3 seeds, matched CE, git `39be76c`). A-RP-001 transitioned to `DECIDED FAIL`. Track B stays locked; CP2.1 cannot pass; EXP-AF-002 (equal-storage) is the next-priority falsifier for A-RP-002.
 - [ ] **2.2** `EXP-AF-002` — **AF2 equal-storage tournament.** T2 ternary vs.
       INT4 residual, smaller INT8 residual, low-rank correction, learned
       group scales, small dense adapter — at matched physical bytes incl.

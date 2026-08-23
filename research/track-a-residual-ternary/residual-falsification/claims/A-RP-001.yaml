@@ -7,7 +7,8 @@ quantitative_thresholds:
   - "PASS: Q(T1+T2) exceeds Q(T1 continued, matched budget) by >2 standard errors on at least one capability metric (ARC-E, LAMBADA, or the registered held-out task), with no regression beyond 1 standard error on the others."
   - "FAIL: no capability metric separates the arms by >2 standard errors, or the T1-continuation arm wins any capability metric by >2 standard errors."
 date_registered: "2026-08-22"
-state: TESTING
+state: DECIDED
+status: FAIL
 required_evidence: [AF1, AF3, AF5, AF8]
 supporting_experiments:
   - id: EXP-A-010
@@ -23,5 +24,7 @@ history:
     cause: "registered per 10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2"
   - date: "2026-08-22"
     transition: "UNTESTED -> TESTING"
-    cause: "EXP-A-03x PASS (CP1.2): T1->T2 gain observed with clean provenance, both metric classes reported (wikitext ppl 427.71->41.44, arc_easy 0.5396->0.6313 on model.layers.0.mlp.down_proj; KL 1.51->0.07). Discovery tier only - does not test the claim's equal-budget criterion (AF1)."
-conclusion: ""
+  - date: "2026-08-22"
+    transition: "TESTING -> DECIDED FAIL"
+    cause: "EXP-AF-001 (AF1 equal-training-budget control, git 39be76c, n=3 seeds, matched CE under identical batches/optimizer/budget) DECIDED FAIL: T1+T2 loses to T1-continued on every capability metric (wikitext ppl +9.09 stderr in favor of A, arc_easy -2.23, lambada_openai -6.24). Claim as stated is falsified. A-RP-001's required evidence [AF1, AF3, AF5, AF8] is now blocked from completing; future AF experiments inform A-RP-002 (equal-storage) and A-RP-003 (sequential vs joint), not A-RP-001."
+conclusion: "Falsified under matched training-time budget. The A3 discovery gain (EXP-A-03x) does not survive an equal-budget T1-continuation control. The v2 claim's wording confuses training-time and parameter-count as the cost axis. Track B B1 unlock requirement 'A-RP-001 CONFIRMED_PASS' is now unreachable. Future ternary work must be evaluated at matched STORAGE (EXP-AF-002 / A-RP-002), not matched STEPS."
