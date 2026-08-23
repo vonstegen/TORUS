@@ -71,5 +71,29 @@ def test_t2_ternary_untrained_sets_is_untrained_and_no_grad():
     assert _run_snippet(snippet) == "OK"
 
 
+
+def test_t2_ternary_patch_replaces_target_forward():
+    """Regression for the 4cf3860 bug: T2TernaryAdapter.patch defined
+    `residual` but did not call _patch_module_forward, so the
+    target_module.forward was never replaced. Verify the patch DOES
+    replace target_module.forward and DOES contribute to the output."""
+    snippet = (
+        "import torch\n"
+        "import torch.nn as nn\n"
+        "ad = ns['T2TernaryAdapter'](in_features=16, out_features=8, train=True, init_seed=42)\n"
+        "base = nn.Linear(16, 8, bias=False)\n"
+        "base.weight.data = torch.zeros_like(base.weight.data)\n"
+        "ad.patch(base)\n"
+        "import inspect\n"
+        "assert 'patched_forward' in str(base.forward), f'forward not patched: {base.forward}'\n"
+        "with torch.no_grad():\n"
+        "    ad.latent.fill_(10.0)\n"
+        "x = torch.randn(2, 16)\n"
+        "y = base(x)\n"
+        "assert y.abs().sum() > 0, f'patched forward produced zero: {y}'\n"
+        "print('OK')\n"
+    )
+    assert _run_snippet(snippet) == "OK"
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

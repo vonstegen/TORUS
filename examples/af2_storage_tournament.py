@@ -112,6 +112,7 @@ class T2TernaryAdapter(SiteAdapter):
             q_ste = r + (q - r).detach()
             y = F.linear(x, q_ste)
             return y * scale.squeeze(1)
+        _patch_module_forward(parent_module, residual)
 
     def trainable_parameters(self):
         return [self.latent] if self._train else []
