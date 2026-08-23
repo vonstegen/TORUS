@@ -10,8 +10,11 @@ reproduction of AF2-D's two headline measurements under AF8 governance:
       n=3) AND arc_easy in [0.594, 0.606] AND lambada_openai in
       [0.541, 0.549].
 
-Cost-vector B must be within +/-1% of 4,194,404 B for the
-t2_ternary arm.
+Cost-vector B must be within +/-1% of 4,199,318 B (the AF2-D
+t2_ternary actual deployed_bytes) for the t2_ternary arm. The
+target_deployed_bytes is 4,194,404; the actual value is
+4,199,318 due to scale-metadata overhead — within the +/-1%
+tolerance.
 
 This script is the structural twin of ``audit_af2_reproduction.py``
 but it audits the AGGREGATE.json against the EXP-RPM-000 PASS
@@ -19,18 +22,30 @@ bands rather than auditing the token cache. The two audits are
 independent (cache traceability is verified by the AF2-D audit;
 this verifies the AF2-D reproduction itself).
 
+Source layout expected::
+
+    runs/r/RPM-000/<ts>/
+        aggregate.json
+        seed-001/pre_train_eval.json
+        seed-002/pre_train_eval.json
+        seed-003/pre_train_eval.json
+
+The aggregate.json layout mirrors EXP-AF-002-D's
+``aggregate_corrected.json``: ``trained_arms.<arm>.tasks.<task>.{mean,
+stderr, values}`` and ``trained_arms.<arm>.matched_bytes``.
+
 Usage on legion::
 
     python examples/audit_rpm_000_reproduction.py \\
         --aggregate runs/r/RPM-000/<ts>/aggregate.json \\
         --af2d-reference <path to AF2-D aggregate_corrected.json> \\
         --manifest research/residual-pareto/experiments/RPM-000/manifest.yaml \\
+        --runs-dir runs/r/RPM-000/<ts>/ \\
         --out runs/r/RPM-000/<ts>/rpm000_audit.json
 """
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
 from pathlib import Path
@@ -46,7 +61,7 @@ AF2D_REFERENCE = {
     "trained_t2_ppl": {"mean": 20.96, "band": [18.66, 23.26]},
     "trained_t2_arc_easy": {"mean": 0.600, "band": [0.594, 0.606]},
     "trained_t2_lambada": {"mean": 0.545, "band": [0.541, 0.549]},
-    "deployed_bytes_t2": {"mean": 4194404, "tolerance_pct": 1.0},
+    "deployed_bytes_t2": {"mean": 4199318, "tolerance_pct": 1.0},
 }
 
 
@@ -60,12 +75,7 @@ def _load_json(path: Path) -> dict:
 
 def _band_check(value: float, band: list, name: str) -> dict:
     in_band = band[0] <= value <= band[1]
-    return {
-        "metric": name,
-        "value": value,
-        "band": band,
-        "in_band": in_band,
-    }
+    return {"metric": name, "value": value, "band": band, "in_band": in_band}
 
 
 def _deployed_bytes_check(value: int, ref: int, tolerance_pct: float, name: str) -> dict:
@@ -82,59 +92,69 @@ def _deployed_bytes_check(value: int, ref: int, tolerance_pct: float, name: str)
 
 def _compute_rpm000_verdict(audit_checks: list) -> str:
     """Verdict: REPRODUCED iff all in_band checks pass."""
-    if all(c["in_band"] for c in audit_checks):
-        return "REPRODUCED"
-    return "DRIFTED"
+    return "REPRODUCED" if all(c["in_band"] for c in audit_checks) else "DRIFTED"
+
+
+def _avg_pre_train(runs_dir: Path) -> tuple:
+    """Average the per-seed pre_train_eval.json files.
+
+    Returns (mean_pre_ppl, mean_pre_arc). Per-seed pre_train_eval is
+    stored at ``seed-XXX/pre_train_eval.json`` (one file per seed,
+    not per arm — the damaged base is the same for all arms within
+    a seed).
+    """
+    pre_ppls = []
+    pre_arcs = []
+    for seed_dir in sorted(runs_dir.glob("seed-*")):
+        p = seed_dir / "pre_train_eval.json"
+        if not p.exists():
+            raise FileNotFoundError(f"missing pre_train_eval.json: {p}")
+        d = _load_json(p)
+        pre_ppls.append(d["tasks"]["wikitext"]["value"])
+        pre_arcs.append(d["tasks"]["arc_easy"]["value"])
+    if not pre_ppls:
+        raise ValueError(f"no seed-XXX/pre_train_eval.json under {runs_dir}")
+    return (
+        sum(pre_ppls) / len(pre_ppls),
+        sum(pre_arcs) / len(pre_arcs),
+    )
 
 
 def audit_rpm_000(*, aggregate_path: Path, af2d_reference_path: Path,
-                  manifest_path: Path) -> dict:
-    """Verify the EXP-RPM-000 reproduction aggregate against bands.
-
-    Reads the per-seed aggregate produced by af2_storage_tournament.py
-    (t2_ternary arm only, --damage-ptq --pre-train-eval) and the
-    AF2-D reference aggregate; checks each metric against the
-    preregistered band.
-    """
+                  manifest_path: Path, runs_dir: Path) -> dict:
+    """Verify the EXP-RPM-000 reproduction aggregate against bands."""
     aggregate = _load_json(aggregate_path)
     manifest = _load_yaml(manifest_path)
     af2d = _load_json(af2d_reference_path)
 
-    # Compute per-seed means across n=3 seeds for the checks.
-    # aggregate.json layout mirrors AF2-D's: trained_arms[arm] = {seeds: [...]}
-    seeds = aggregate.get("trained_arms", {}).get("t2_ternary", {}).get("seeds", [])
-    if not seeds:
-        raise ValueError("aggregate.json missing trained_arms.t2_ternary.seeds")
+    # Post-train: from aggregate.json trained_arms.t2_ternary.tasks.<task>.mean
+    # and matched_bytes (list of int).
+    t2 = aggregate.get("trained_arms", {}).get("t2_ternary")
+    if t2 is None:
+        raise ValueError("aggregate.json missing trained_arms.t2_ternary")
+    tasks = t2.get("tasks")
+    if not tasks:
+        raise ValueError("aggregate.json trained_arms.t2_ternary missing tasks")
+    matched_bytes = t2.get("matched_bytes")
+    if not matched_bytes:
+        raise ValueError("aggregate.json trained_arms.t2_ternary missing matched_bytes")
+    if "wikitext" not in tasks or "arc_easy" not in tasks or "lambada_openai" not in tasks:
+        raise ValueError("aggregate.json missing required tasks (wikitext/arc_easy/lambada_openai)")
 
-    pre_ppl_vals = [s["pre_train_eval"]["wikitext_ppl"] for s in seeds
-                    if "pre_train_eval" in s]
-    pre_arc_vals = [s["pre_train_eval"]["arc_easy"] for s in seeds
-                    if "pre_train_eval" in s]
-    post_ppl_vals = [s["eval"]["wikitext_ppl"] for s in seeds if "eval" in s]
-    post_arc_vals = [s["eval"]["arc_easy"] for s in seeds if "eval" in s]
-    post_lam_vals = [s["eval"]["lambada_openai"] for s in seeds if "eval" in s]
-    dep_bytes_vals = [s["deployed_bytes"]["serialized_total"] for s in seeds
-                      if "deployed_bytes" in s]
+    post_ppl_mean = tasks["wikitext"]["mean"]
+    post_arc_mean = tasks["arc_easy"]["mean"]
+    post_lam_mean = tasks["lambada_openai"]["mean"]
+    dep_bytes_mean = int(sum(matched_bytes) / len(matched_bytes))
 
-    mean = lambda xs: sum(xs) / len(xs) if xs else float("nan")
-    pre_ppl_mean = mean(pre_ppl_vals)
-    pre_arc_mean = mean(pre_arc_vals)
-    post_ppl_mean = mean(post_ppl_vals)
-    post_arc_mean = mean(post_arc_vals)
-    post_lam_mean = mean(post_lam_vals)
-    dep_bytes_mean = int(mean(dep_bytes_vals))
+    # Pre-train: average the per-seed pre_train_eval.json files.
+    pre_ppl_mean, pre_arc_mean = _avg_pre_train(runs_dir)
 
     checks = [
-        _band_check(pre_ppl_mean, AF2D_REFERENCE["pre_train_ppl"]["band"],
-                    "pre_train_ppl"),
-        _band_check(pre_arc_mean, AF2D_REFERENCE["pre_train_arc_easy"]["band"],
-                    "pre_train_arc_easy"),
-        _band_check(post_ppl_mean, AF2D_REFERENCE["trained_t2_ppl"]["band"],
-                    "trained_t2_ppl"),
-        _band_check(post_arc_mean, AF2D_REFERENCE["trained_t2_arc_easy"]["band"],
-                    "trained_t2_arc_easy"),
-        _band_check(post_lam_mean, AF2D_REFERENCE["trained_t2_lambada"]["band"],
-                    "trained_t2_lambada"),
+        _band_check(pre_ppl_mean, AF2D_REFERENCE["pre_train_ppl"]["band"], "pre_train_ppl"),
+        _band_check(pre_arc_mean, AF2D_REFERENCE["pre_train_arc_easy"]["band"], "pre_train_arc_easy"),
+        _band_check(post_ppl_mean, AF2D_REFERENCE["trained_t2_ppl"]["band"], "trained_t2_ppl"),
+        _band_check(post_arc_mean, AF2D_REFERENCE["trained_t2_arc_easy"]["band"], "trained_t2_arc_easy"),
+        _band_check(post_lam_mean, AF2D_REFERENCE["trained_t2_lambada"]["band"], "trained_t2_lambada"),
         _deployed_bytes_check(dep_bytes_mean,
                               AF2D_REFERENCE["deployed_bytes_t2"]["mean"],
                               AF2D_REFERENCE["deployed_bytes_t2"]["tolerance_pct"],
@@ -147,8 +167,8 @@ def audit_rpm_000(*, aggregate_path: Path, af2d_reference_path: Path,
         "manifest_id": manifest["id"],
         "manifest_revision": manifest.get("revision", ""),
         "frozen_af2d_sha": af2d.get("git_sha", ""),
-        "frozen_af2d_run": af2d.get("run_namespace", ""),
-        "n_seeds": len(seeds),
+        "frozen_af2d_run": af2d.get("run_dir", ""),
+        "n_seeds": len(matched_bytes),
         "checks": checks,
         "verdict": verdict,
     }
@@ -163,17 +183,19 @@ def main() -> int:
                    help="Path to AF2-D aggregate_corrected.json (the reference)")
     p.add_argument("--manifest", required=True, type=Path,
                    help="Path to EXP-RPM-000 manifest.yaml")
+    p.add_argument("--runs-dir", required=True, type=Path,
+                   help="Path to runs/r/RPM-000/<ts>/ (parent of seed-XXX/)")
     p.add_argument("--out", required=True, type=Path,
                    help="Path to write rpm000_audit.json")
     args = p.parse_args()
 
     audit = audit_rpm_000(aggregate_path=args.aggregate,
                           af2d_reference_path=args.af2d_reference,
-                          manifest_path=args.manifest)
+                          manifest_path=args.manifest,
+                          runs_dir=args.runs_dir)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(audit, indent=2, sort_keys=True))
 
-    # Print a one-line summary + the verdict.
     n_pass = sum(1 for c in audit["checks"] if c["in_band"])
     n_total = len(audit["checks"])
     print(f"EXP-RPM-000 audit: {n_pass}/{n_total} checks in band; verdict={audit['verdict']}")
