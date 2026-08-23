@@ -1,0 +1,282 @@
+# Experiment record - EXP-AF-002-D - AF2-D damaged-PTQ-start matched-storage tournament (confirmation tier)
+# Preregistered 2026-08-23 BEFORE any run under this ID. Thresholds frozen.
+# Required by ROADMAP rev 2.6 section 2.12 to characterize T2's regime of
+# dominance on the architecture-vs-training-signal axis that AF2/AF2-R
+# found absent at the calibrated base.
+id: EXP-AF-002-D
+track: A
+subtrack: "AF2-D damaged-PTQ-start matched-storage"
+tier: confirmation
+claims_addressed: [A-RP-002, A-RP-003]
+title: "Matched-storage tournament on a damaged-PTQ base (T1 = broken PTQ on the target module) under v2.3 cost-vector"
+owner: "research-harness"
+date_proposed: "2026-08-23"
+status: PROPOSED
+decision: null
+grade: null
+
+hypothesis: >
+  On a damaged-PTQ base (T1 = int8-ternary PTQ on
+  `model.layers.0.mlp.down_proj`; the same single layer as AF2), the
+  trained `t2_ternary` arm RECOVERS the layer substantially toward
+  FP16 (ppl 427.7 -> below 100) AND lies within +/-2
+  stderr-of-difference of the strongest matched-storage fp16
+  comparator (`dense_adapter` r=192) at matched deployed-bytes (4.2
+  MB). Critically: trained `t2_ternary` PULLS AHEAD of the
+  untrained `random_t2_ternary` control by >2 stderr on at least one
+  capability metric - the architecture-vs-training-signal gap that
+  AF2/AF2-R found absent on the calibrated base.
+
+rationale: >
+  AF2 (PROVISIONAL_PASS -> AF2-R CONFIRMED_PASS) and AF2-R together
+  establish that on a CALIBRATED FP16 base, trained T2 ties
+  dense_adapter at matched bytes (PASS) but does not pull ahead
+  (PASS+ softens). Trained T2 also lands within sampling noise of
+  random T2 - the architecture's load-bearing contribution at N=500
+  is below seed noise on a healthy base.
+
+  EXP-A-03x (PPL 427.7 -> 41.44 on the same layer with a T2 +
+  KD-trained pipeline) found that the architecture CAN move signal
+  when the base is damaged enough that the optimization budget
+  actually has work to do. AF2-D tests the architecture-vs-training-
+  signal question directly: on a damaged-PTQ start (the A-03x
+  starting state), does trained T2 pull ahead of random T2 - and
+  does it do so at matched deployed-bytes?
+
+  The result has three possible qualitative outcomes:
+    (a) TRAINED T2 PULLS AHEAD OF RANDOM T2: confirms the
+        architecture's contribution lives in the damaged regime;
+        T2's representation is doing real work when the base
+        has gaps to fill. Strong support for the architecture
+        as a corrective mechanism.
+    (b) TRAINED T2 TIES RANDOM T2 (same as AF2 on calibrated base):
+        the A-03x result was a one-shot KD recovery, not a
+        generalizable property of the architecture. T2's role
+        reduces to "fill the slot", not "carry information".
+    (c) TRAINED T2 LOSES TO RANDOM T2 OR DIVERGES: the
+        architecture actively hurts in the damaged regime.
+        Falsifies T2's corrective-mechanism claim.
+
+revision: ""              # filled at RUN - commit hash of the driver.
+                          # Driver is a superset of AF2's: it adds a
+                          # --damage-ptq flag that ternarizes the
+                          # target module's weight BEFORE training.
+                          # For the preregistration, we pin the
+                          # expected frozen SHA to be the latest
+                          # main HEAD at RUN-start (not yet known;
+                          # will be filled at RUN).
+run_namespace: "runs/a/EXP-AF-002-D/<timestamp>/seed-00X/<arm>/"
+environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt recorded at run start"
+baseline: >
+  Damaged-PTQ base (T1 = int8-ternary PTQ on model.layers.0.mlp.down_proj):
+    untrained PTQ arm (EXP-A-011): wikitext ppl 427.71, arc_easy 0.5396.
+  EXP-A-03x KD-trained T2 on the same damaged base:
+    wikitext ppl 41.44, arc_easy 0.6313 (above FP16 baseline 0.6073 on bounded subset).
+  FP16 reference (EXP-A-001):
+    wikitext ppl 13.09, arc_easy 0.6073, lambada_openai 0.6100.
+
+  Cost-vector baseline (from AF2, the matched-storage tournament on
+  the calibrated base):
+    t2_ternary (4,199,318 B); dense_adapter r=192 (3,932,771 B);
+    LoRA r=216 (4,424,265 B); int4_residual 50%-mask (4,197,020 B);
+    int8_residual 25%-mask (4,195,994 B).
+  Same arm set and same matched-bytes tolerance as AF2.
+
+# ----- the damage mode --------------------------------------------------
+damage_ptq:
+  mechanism: >
+    Apply the EXP-A-011 single-layer PTQ path to
+    `model.layers.0.mlp.down_proj` before any adapter is built.
+    Specifically: ternarize the per-row weight via a signed-{-1,0,+1}
+    STE-style mapping (mean-zero threshold + per-row scale), with
+    per-row fp16 scale metadata. This is the v2 PTQ path that
+    produced the EXP-A-011 ppl 427.7 result.
+  pre_train_eval_check: >
+    The first eval (BEFORE training the adapter) on the damaged
+    base must reproduce EXP-A-011 within +/-2 stderr-of-difference.
+    Specifically: pre-train wikitext ppl must land in [400, 460] and
+    arc_easy in [0.51, 0.57]. If pre-train eval lands OUTSIDE this
+    band, the damage mode is wrong and the run is INVALIDATED
+    without a re-run; the damage mode itself is the variable.
+  freezer: >
+    Once the damaged base is set, the target module's weight is
+    frozen (requires_grad_(False)) - the same freeze pattern as AF2.
+    Only the adapter parameters move during training.
+
+# ----- arms (mirror of AF2's arm set) -----------------------------------
+# Same 5 trained arms + 2 untrained controls as AF2, run on the
+# damaged-PTQ base. The CRITICAL diagnostic is the
+# trained-vs-untrained comparison at the same arm (t2_ternary vs
+# random_t2_ternary), not the trained-vs-dense comparison.
+arms:
+  trained:
+    - id: t2_ternary
+      parameterized_forward: >
+        Resid = T2(ste(r)) on a latent real-valued matrix of shape
+        (8192, 2048). Forward: y = base(x) + adapter_scale *
+        adapter_ternary(adapter_real). The BASE is the damaged
+        ternary PTQ; adapter_scale and adapter_real are the only
+        trainable parameters.
+      target_deployed_bytes: 4194404
+    - id: int4_residual
+      parameterized_forward: >
+        Resid = T4(ste(r)) per-row signed-INT4 with per-row fp16
+        scale and zero-point.
+      column_mask_fraction: 0.5
+      target_deployed_bytes: 4194404
+    - id: int8_residual
+      parameterized_forward: >
+        Resid = T8(ste(r)) per-row signed-INT8 with per-row fp16
+        scale and zero-point.
+      column_mask_fraction: 0.25
+      target_deployed_bytes: 4194404
+    - id: lora
+      parameterized_forward: >
+        Resid = (x @ W_down) @ W_up where W_down: 2048 -> r=216,
+        W_up: r=216 -> 8192.
+      rank: 216
+      target_deployed_bytes: 4423680
+    - id: dense_adapter
+      parameterized_forward: >
+        Resid = x @ W_down @ W_up where W_down: 2048 -> r=192,
+        W_up: r=192 -> 8192.
+      rank: 192
+      target_deployed_bytes: 3932160
+
+  untrained_controls:
+    - id: random_t2_ternary
+      parameterized_forward: "Same as t2_ternary but the latent
+        r-matrix is drawn from np.random.seed(seed) and never
+        trained. The damaged base is the same; only the adapter
+        latent is random."
+      reported_in: "untrained panel only"
+    - id: random_lora
+      parameterized_forward: "Same as lora but W_down, W_up drawn
+        from np.random.seed(seed) and never trained."
+      reported_in: "untrained panel only"
+
+# ----- training recipe (matched across trained arms; same as AF2) -------
+training:
+  corpus: "wikitext-103 train split"
+  token_cache: "runs/a/EXP-AF-002-D/<ts>/wikitext103_train_ids.npy
+    (sha256 recorded; AF8 independent re-tokenization)"
+  optimizer: "SGD lr=1e-3 momentum=0.9 grad-clip=1.0"
+  objective: "next-token cross-entropy on the damaged base"
+  n_steps: 500
+  batch_size: 4
+  seq_len: 128
+  base_frozen: true
+  base_state: "damaged-PTQ (the int8-ternary PTQ path from EXP-A-011)"
+  eval_dtype: "float16"
+  eval_tasks: ["wikitext", "arc_easy", "lambada_openai"]
+  eval_limit: null
+
+# ----- matched-bytes tolerance (mirror AF2) ----------------------------
+matched_bytes_tolerance_pct: 1.0
+
+# ----- thresholds (frozen at PROPOSE) -----------------------------------
+quantitative_thresholds:
+  id: A-RP-002-D-v1
+  pass:
+    - >
+      Trained t2_ternary recovers the damaged base substantially:
+      post-train wikitext ppl <= 100 (a 4.3x recovery from 427.7).
+    - >
+      Post-train trained t2_ternary lies within +/-2
+      stderr-of-difference of dense_adapter on the primary
+      capability metric (wikitext ppl OR (arc_easy AND
+      lambada_openai)) AND no metric regresses by >2 stderr
+      below dense_adapter.
+  pass_plus:
+    - >
+      Trained t2_ternary PULLS AHEAD of random_t2_ternary by >2
+      stderr on at least one capability metric. This is the
+      CRITICAL AF2-D diagnostic - the architecture-vs-training-
+      signal gap that AF2/AF2-R found absent on the calibrated
+      base.
+  fail:
+    - >
+      EITHER (a) trained t2_ternary does NOT recover the damaged
+      base (post-train wikitext ppl > 285, less than 1.5x
+      recovery from 427.7), OR (b) trained t2_ternary LOSES to
+      random_t2_ternary by >2 stderr on any capability metric
+      (architecture actively hurts in the damaged regime), OR
+      (c) matched-bytes tolerance fails for any trained arm.
+  passthrough_invalidation:
+    - >
+      If pre-train eval lands outside [400, 460] ppl / [0.51,
+      0.57] arc_easy, the damage mode is wrong; the run is
+      INVALIDATED and the damage mode itself is the variable.
+
+decision_logic_summary: >
+  Run all 21 arms (5 trained x 3 seeds + 2 untrained x 3
+  seeds). For each trained arm: pre-train eval verifies the damage
+  mode, then train, then post-train eval. Aggregate over n=3 seeds
+  per arm. Compute:
+    (i) trained t2_ternary vs dense_adapter (PASS bar, mirror AF2);
+    (ii) trained t2_ternary vs random_t2_ternary (PASS+ bar,
+        the AF2-D critical diagnostic);
+    (iii) trained t2_ternary pre-train vs post-train recovery
+        (PASS bar).
+  Verdict on PASS+ is what tells us whether the architecture's
+  contribution lives in the damaged regime.
+
+stop_conditions:
+  - "All 21 runs complete; aggregate.json produced."
+  - "Any pre-train eval outside the damage-mode tolerance band
+    -> that run INVALIDATED, re-execute after fixing damage mode."
+  - "Any matched-bytes tolerance violation -> INVALIDATED."
+
+budget: "12 GPU-hours on legion. 21 runs at ~15 min each = 5.3h;
+  2x buffer for warm cache, eval re-runs."
+
+expected_artifacts:
+  - "per-(seed, arm): history.jsonl, eval.summary.json,
+    eval.full.json, adapter.npz + meta (or per-arm equivalent),
+    deployed_bytes.json, cost_vector.json"
+  - "per-(seed, arm): pre_train_eval.json (capturing the damage
+    mode's verified state BEFORE adapter training)"
+  - "aggregate.json: trained-arms summary, untrained-arms panel,
+    cost-vector table, Pareto frontier points, damage-mode
+    verification, A-RP-002-D verdict"
+  - "provenance.json + env-lock.txt + driver.log + ARTIFACTS.json"
+
+artifact_paths: []
+artifacts_manifest: "runs/a/EXP-AF-002-D/<timestamp>/ARTIFACTS.json"
+contamination_risks:
+  - "Token cache under runs/a/EXP-AF-002-D/<ts>/; sha256
+    captured; one writer per namespace."
+  - "Damage mode is a function of the target module + the PTQ
+    recipe; reproducible from the frozen driver SHA."
+  - "Concurrent writers: AF2-D writer is the only process touching
+    runs/a/EXP-AF-002-D/."
+
+# ----- freeze exception logged (OPERATING-PLAN section 3, section 6) ---
+freeze_exception:
+  change: >
+    (a) Add a --damage-ptq flag to af2_storage_tournament.py: the
+    driver's build_base step gains a damage mode that ternarizes
+    the target module's weight (per-row signed-{-1,0,+1} via
+    STE-style mean-zero threshold + per-row fp16 scale) BEFORE
+    adapter construction. The damage mode uses the same PTQ
+    recipe as EXP-A-011's per-layer sensitivity scan (the v2 PTQ
+    path, --no-calibrate). Pre-train eval is captured as a
+    separate artifact (pre_train_eval.json) under each
+    seed/arm/ directory.
+    (b) New manifest in research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/manifest.yaml.
+  justification: >
+    Required to execute this preregistered AF2-D experiment.
+    AF2's driver only operates on a calibrated FP16 base; the
+    damaged-PTQ-start variant needs the target module's weight
+    replaced before adapter construction. The damage mode is a
+    strict superset: the original AF2 behavior is unchanged when
+    --damage-ptq is not set.
+  approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN section 3)"
+
+# ----- decision block (filled at DECIDE) --------------------------------
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""
+supersedes: null

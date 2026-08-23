@@ -1,12 +1,22 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
-**Revision:** 2.5 (2026-08-23) — §2.11 (EXP-AF-002-R clean reproduction)
-DONE with A-RP-002 → CONFIRMED_PASS. The PASS bar reproduces
-(t2 within ±1.1σ of dense on every metric); the PASS+ bar (lambada
-+2.18σ dominance) does NOT reproduce — AF2's zero seed-variance on
-t2_ternary lambada was a single-point quirk; AF2-R reveals true
-seed-variance ~0.001-0.004, putting the true effect inside ±1σ.
+**Revision:** 2.6 (2026-08-23) — section 2.12 added: EXP-AF-002-D
+(AF2-D damaged-PTQ-start matched-storage tournament under v2.3
+cost-vector). This is the architecture-vs-training-signal
+experiment: on a damaged-PTQ base (the EXP-A-011 starting state
+where wikitext ppl 427.7), does trained T2 pull ahead of random T2
+by >2 sigma — the gap AF2/AF2-R found absent on the calibrated base.
+(PASS+ bar of AF2-D = architecture's load-bearing contribution
+question; if it holds here, A-RP-002 expands from "competitive" to
+"carries information in the damaged regime".)
+**Revision 2.5** (2026-08-23) — section 2.11 (EXP-AF-002-R clean reproduction)
+DONE with A-RP-002 -> CONFIRMED_PASS. The PASS bar reproduces
+(t2 within +/-1.1 sigma of dense on every metric); the PASS+ bar
+(lambada +2.18 sigma dominance) does NOT reproduce — AF2's zero
+seed-variance on t2_ternary lambada was a single-point quirk;
+AF2-R reveals true seed-variance ~0.001-0.004, putting the true
+effect inside +/-1 sigma.
 Track B B1 unlock rule: A-RP-002 CONFIRMED_PASS met; AF5 task-
 relevant T2 above threshold still required.
 **Revision 2.4** (2026-08-23) — §2.2 (AF2 equal-storage tournament)
@@ -250,18 +260,27 @@ its way into adaptive-gating experiments.
       wikitext-103 token cache (auditator re-tokenizes from the HF
       parquet shards, SHA-fingerprints every input, records PID + UTC;
       identity vs AF2 is the expected outcome, NOT a violation), independent
-      eval output, same preregistered thresholds, n=3 seeds (1, 2, 3).
-      **Done 2026-08-23: PROVISIONAL_PASS on A-RP-002** (run
-      `research/track-a-residual-ternary/residual-falsification/experiments/AF2-R/runs/20260823T062845Z`,
-      git `c036718`). 21 runs total; all inside ±1% bytes tolerance.
-      Cost-vector byte counts byte-identical to AF2 (per arm × per seed).
-      Trained t2_ternary within ±1.1σ of dense_adapter on every metric
-      (mean (B-A)/se_diff: wikitext -1.125σ, arc_easy -0.547σ,
-      lambada -0.551σ). PASS+ (lambada +2.18σ) does NOT reproduce —
-      see verdict-R.md §"Reading the lambada sign flip". Architecture-
-      vs-training diagnostic unchanged: trained T2 ≈ random T2 at N=500
-      on a calibrated FP16 base. CONFIRMED_PASS under the PASS bar;
-      Track B B1 unlock still requires AF5.
+
+- [ ] **2.12** `EXP-AF-002-D` — **AF2-D damaged-PTQ-start matched-storage.**
+      Required to characterize T2's regime of dominance on the
+      architecture-vs-training-signal axis that AF2/AF2-R found
+      absent at the calibrated base. Same arm set as AF2 (5 trained
+      + 2 untrained structure controls × 3 seeds), but the BASE
+      starts damaged: `model.layers.0.mlp.down_proj` is ternarized
+      via the v2 PTQ path (the EXP-A-011 recipe that drives ppl to
+      427.7) BEFORE adapter construction. Pre-train eval on the
+      damaged base must reproduce EXP-A-011 within +/-2 stderr
+      ([400, 460] ppl, [0.51, 0.57] arc_easy) or the damage mode
+      itself is wrong. Trained t2_ternary must recover to ppl <= 100
+      (4.3x recovery). **CRITICAL diagnostic** (PASS+ bar):
+      trained t2_ternary pulls ahead of random_t2_ternary by >2
+      sigma on at least one capability metric — the
+      architecture-vs-training-signal gap that AF2/AF2-R found
+      absent at the calibrated base. On a damaged base the
+      optimization budget has work to do; whether the
+      architecture's contribution is invisible (b) or real (a)
+      is the central question this experiment answers.
+      Manifest: `research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/manifest.yaml`.
 - [ ] **2.5** `EXP-AF-005` — **AF5 downstream-transfer gate.** Proxy and
       capability metrics on every AF run (classes per 1.4). Task-relevant T2
       value must exceed the preregistered threshold.
