@@ -868,10 +868,10 @@ def main() -> None:
                 print(f"[af2] arm={arm} seed={seed}: done "
                       f"deployed_bytes={summary['matched_bytes_actual']} "
                       f"matched={summary['matched_bytes_passed']}", flush=True)
+    agg = aggregate(summaries, args.out_dir)
     print(json.dumps({"n_runs": len(summaries),
                        "tolerance_violations": agg["tolerance_violations"]},
                       indent=2))
-
 
 if __name__ == "__main__":
     main()
