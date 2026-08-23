@@ -561,6 +561,7 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
                 model, tokenizer,
                 tasks=args.tasks.split(","), limit=None,
                 batch_size=args.batch_size,
+            )
             if isinstance(eval_results, dict) and "results" in eval_results:
                 ev_tasks = {}
                 for t, res in eval_results["results"].items():
@@ -570,13 +571,10 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
                         if "acc" in k or "word_perplexity" in k:
                             ev_tasks[t] = {"metric": k, "value": v}
                 eval_summary_dict["tasks"] = ev_tasks
-                    if "acc" in k or "word_perplexity" in k
-                }
             (arm_dir / "eval.full.json").write_text(
                 json.dumps(eval_results, indent=2))
         except Exception as e:
             eval_summary_dict["eval_error"] = str(e)
-
     (arm_dir / "eval.summary.json").write_text(
         json.dumps(eval_summary_dict, indent=2))
     (arm_dir / "cost_vector.json").write_text(
