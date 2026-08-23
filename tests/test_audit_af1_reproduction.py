@@ -1,8 +1,11 @@
 """Tests for examples/audit_af1_reproduction.py.
 
-These pin the AF8 governance notary: the regenerated cache file MUST
-NOT match AF1's recorded cache SHA256. The check is a pure function
-(SystemExit on collision), so the test does not need to contact HF.
+The AF8 governance for AF1-R is *traceability*, not byte-difference:
+re-tokenizing a deterministic corpus yields the same SHA by
+construction. These tests pin what the audit MUST guarantee: a
+non-overwriting write, a complete provenance record with SHA
+fingerprints, and a fingerprint identical to hashlib. The hard
+governance stop is the refuse-to-overwrite check.
 """
 from __future__ import annotations
 
@@ -10,8 +13,6 @@ import importlib.util
 import subprocess
 import sys
 from pathlib import Path
-
-import pytest
 
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
 
@@ -29,27 +30,29 @@ def _load(name: str):
 audit = _load("audit_af1_reproduction")
 
 
-def test_provenance_check_distinct_shas_passes() -> None:
-    """Two different SHAs -> notary returns normally (no exception)."""
-    audit._provenance_check("aaa", "bbb")
-
-
-def test_provenance_check_identical_shas_exits() -> None:
-    """Matching SHAs trigger SystemExit. This is the AF8 governance
-    hard-stop: any future change that disables the check would let a
-    cross-experiment cache reuse through, which the framework forbids.
-    """
-    with pytest.raises(SystemExit) as excinfo:
-        audit._provenance_check("same", "same")
-    msg = str(excinfo.value)
-    assert "PROVENANCE VIOLATION" in msg
-    assert "AF8 governance" in msg
+def test_af8_record_has_required_keys() -> None:
+    """The provenance dict must carry every field an audit reader needs
+    to verify an AF8-clean run without the audit script itself."""
+    rec = audit._af8_record(
+        out_path=Path("/tmp/x.npy"),
+        cache_sha="abc",
+        parquet_shas={"/tmp/a.parquet": "pqr"},
+        token_count=42,
+    )
+    for k in (
+        "auditor_pid",
+        "auditor_utc",
+        "token_count",
+        "wikitext_cache_sha256",
+        "wikitext_cache_path",
+        "parquet_shards_sha256",
+        "tokenizer_id",
+        "eot_policy",
+    ):
+        assert k in rec, f"missing AF8 field: {k}"
 
 
 def test_sha256_file_matches_hashlib(tmp_path: Path) -> None:
-    """The cache-file hashing helper must compute exactly what hashlib
-    would on the same content, otherwise the comparison with the
-    ARTIFACTS.json sha256 is unsound."""
     payload = b"hello world\n"
     p = tmp_path / "blob.bin"
     p.write_bytes(payload)
@@ -58,11 +61,30 @@ def test_sha256_file_matches_hashlib(tmp_path: Path) -> None:
     assert audit._sha256_file(p) == expected
 
 
-def test_main_help_runs(tmp_path: Path) -> None:
-    """Just covers --help: real runs need HF + parquet and are not
-    unit-tested here."""
+def test_main_refuses_to_overwrite_existing(tmp_path: Path) -> None:
+    """Refuse-to-overwrite is the hard AF8 governance stop: the auditor
+    must NOT silently clobber an artifact another run is depending on."""
+    target = tmp_path / "wikitext103_train_ids.npy"
+    target.write_bytes(b"already here")
+    out = subprocess.run(
+        [
+            sys.executable, str(EXAMPLES / "audit_af1_reproduction.py"),
+            "--af1-cache-sha256", "deadbeef" * 8,
+            "--out-path", str(target),
+            "--manifest", str(tmp_path / "manifest.json"),
+        ],
+        capture_output=True, text=True,
+    )
+    assert out.returncode != 0
+    combined = out.stderr + out.stdout
+    assert "refusing to overwrite" in combined
+
+
+def test_main_help_runs() -> None:
     subprocess.run(
-        [sys.executable, str(EXAMPLES / "audit_af1_reproduction.py"),
-         "--help"],
+        [
+            sys.executable, str(EXAMPLES / "audit_af1_reproduction.py"),
+            "--help",
+        ],
         check=True, capture_output=True, text=True,
     )
