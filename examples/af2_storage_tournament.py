@@ -1,29 +1,20 @@
 """EXP-AF-002 - AF2 equal-storage tournament (A-RP-002).
 
-Five trained arms + two untrained structure controls, all under a
-single shared training loop at matched DEPLOYED bytes on
+Five trained arms + two untrained structure controls under a single
+shared training loop at matched DEPLOYED bytes on
 model.layers.0.mlp.down_proj of OLMo-1B. Cost-vector framing per
 OPERATING-PLAN rev 2.3 §11.
 
 Trained arms (target ~ 4.21 MB each):
   t2_ternary    : 2 bpw signed ternary + per-row fp16 scale.
-  int4_residual : 4 bpw signed INT4 + per-row scale/zero; 50% col mask.
-  int8_residual : 8 bpw signed INT8 + per-row scale/zero; 25% col mask.
+  int4_residual : 4 bpw signed INT4 + per-row fp16 scale; 50% col mask.
+  int8_residual : 8 bpw signed INT8 + per-row fp16 scale; 25% col mask.
   lora          : r=216 fp16 down/up parallel residual.
   dense_adapter : 192-rank bottleneck fp16.
 
 Untrained controls (separate panel; not byte-budgeted):
   random_t2_ternary
   random_lora
-
-Each arm serializes to adapter.npz + adapter.npz.meta.json with sha256.
-Cost-vector keys per OPERATING-PLAN §11 v2.3:
-  (deployed_bytes, training_flops, inference_ops_per_token,
-   memory_traffic_per_token, latency_per_token_titan_rtx,
-   energy_per_token).
-
-The AF1 helpers (load_wikitext_ids, make_window_sampler,
-next_token_ce_loss, train_arm) are reused unchanged.
 """
 from __future__ import annotations
 
@@ -38,7 +29,6 @@ from typing import List, Optional
 
 import numpy as np
 
-# triton stub: see distill_run.py
 sys.modules.setdefault("triton", None)
 
 
@@ -60,10 +50,6 @@ next_token_ce_loss = _af1.next_token_ce_loss
 train_arm = _af1.train_arm
 
 
-# ---------------------------------------------------------------------------
-# CostVector
-# ---------------------------------------------------------------------------
-
 @dataclasses.dataclass(frozen=True)
 class CostVector:
     deployed_bytes: int
@@ -84,51 +70,34 @@ class CostVector:
         }
 
 
-# ---------------------------------------------------------------------------
-# SiteAdapter base + module-patch helper
-# ---------------------------------------------------------------------------
-
 class SiteAdapter:
-    """All 6 trained arms + 2 untrained controls implement this."""
     is_untrained: bool = False
 
     def patch(self, parent_module): raise NotImplementedError
     def trainable_parameters(self) -> list: return []
+
     def serialize(self, out_dir: Path, *, training_flops: int,
                   inference_ops_per_token: int) -> CostVector:
         raise NotImplementedError
 
 
 def _patch_module_forward(parent_module, residual_fn):
-    """Wrap a module's forward so its output gains `residual_fn(x)`."""
-    import torch
     original_forward = parent_module.forward
 
     def patched_forward(*args, **kwargs):
         out = original_forward(*args, **kwargs)
-        # Pull the input tensor out of args/kwargs for the residual.
         x = args[0] if args else kwargs.get("hidden_states",
                                               kwargs.get("inputs"))
         if x is None:
             return out
         if isinstance(out, tuple):
-            head = out[0]
-            return (head + residual_fn(x),) + out[1:]
+            return (out[0] + residual_fn(x),) + out[1:]
         return out + residual_fn(x)
 
     parent_module.forward = patched_forward
 
 
-def _cast(x, dtype):
-    return x.to(dtype=dtype) if hasattr(x, "to") else x
-
-
-# ---------------------------------------------------------------------------
-# T2 ternary
-# ---------------------------------------------------------------------------
-
 class T2TernaryAdapter(SiteAdapter):
-    """2 bpw signed ternary + per-row fp16 scale."""
     is_untrained = False
 
     def __init__(self, *, intermediate_size: int, hidden_size: int,
@@ -139,19 +108,15 @@ class T2TernaryAdapter(SiteAdapter):
                           else torch.seed() % (2**31))
         self.latent = torch.nn.Parameter(
             0.01 * torch.randn(intermediate_size, hidden_size,
-                               device=device, dtype=dtype)
-        )
+                               device=device, dtype=dtype))
         if not train:
             self.latent.requires_grad_(False)
         self._train = train
 
     def patch(self, parent_module):
-        import torch.nn.functional as F
-        r = self.latent
-
         def residual(x):
-            import torch as _t
             import torch.nn.functional as F
+            import torch as _t
             r = self.latent
             scale = r.abs().amax(dim=1, keepdim=True).clamp(min=1e-6)
             thresholds = scale / 3
@@ -160,6 +125,8 @@ class T2TernaryAdapter(SiteAdapter):
             q_ste = r + (q - r).detach()
             y = F.linear(x, q_ste)
             return y * scale.squeeze(1)
+        _patch_module_forward(parent_module, residual)
+
     def trainable_parameters(self):
         return [self.latent] if self._train else []
 
@@ -200,16 +167,11 @@ class T2TernaryAdapter(SiteAdapter):
                           energy_per_token=None)
 
 
-# ---------------------------------------------------------------------------
-# INT-N (signed N-bit) residual
-# ---------------------------------------------------------------------------
-
 def intN_residual_adapter(*, N_bits: int, column_mask_fraction: float,
                           intermediate_size: int, hidden_size: int,
                           device: str = "cpu", dtype=None,
                           train: bool = True,
                           init_seed: Optional[int] = None):
-    """N_bits in {4, 8}. column_mask_fraction in (0, 1]."""
     import torch
     import torch.nn.functional as F
     torch.manual_seed(init_seed if init_seed is not None
@@ -220,8 +182,7 @@ def intN_residual_adapter(*, N_bits: int, column_mask_fraction: float,
     keep_mask[:keep_count] = True
     latent = torch.nn.Parameter(
         0.01 * torch.randn(intermediate_size, hidden_size,
-                           device=device, dtype=dtype)
-    )
+                           device=device, dtype=dtype))
     if not train:
         latent.requires_grad_(False)
     levels = (1 << (N_bits - 1)) - 1
@@ -254,9 +215,11 @@ def intN_residual_adapter(*, N_bits: int, column_mask_fraction: float,
         r = latent.detach()
         qmax = r.abs().amax(dim=1, keepdim=True).clamp(min=step)
         q_int = torch.round(r / (qmax / levels)).clamp(-levels, levels)
-        q_int_clamped = q_int.cpu().numpy()
-        ub = (q_int_clamped + (1 << (N_bits - 1))).astype(np.uint8)
-        ub_masked = ub[keep_mask.cpu().numpy().astype(bool)]
+        q_np = q_int.cpu().numpy()
+        ub = (q_np + (1 << (N_bits - 1))).astype(np.uint8)
+        keep_np = keep_mask.cpu().numpy().astype(bool)
+        ub_masked = ub[keep_np]
+        scale_masked = (qmax.cpu().numpy().astype(np.float16))[keep_np]
         if N_bits <= 4:
             if ub_masked.size % 2 != 0:
                 ub_masked = np.concatenate(
@@ -264,14 +227,11 @@ def intN_residual_adapter(*, N_bits: int, column_mask_fraction: float,
             packed = ((ub_masked[0::2] & 0xF)
                       | ((ub_masked[1::2] & 0xF) << 4)).astype(np.uint8)
             np.savez(out_dir / "adapter.npz",
-                     packed=packed,
-                     scale=(qmax.cpu().numpy().astype(np.float16))
-                     [keep_mask.cpu().numpy().astype(bool)])
+                     packed=packed, scale=scale_masked)
         else:
             np.savez(out_dir / "adapter.npz",
                      codes=ub_masked.astype(np.uint8),
-                     scale=(qmax.cpu().numpy().astype(np.float16))
-                     [keep_mask.cpu().numpy().astype(bool)])
+                     scale=scale_masked)
         (out_dir / "adapter.npz.meta.json").write_text(json.dumps({
             "format": f"int{N_bits}_per_row_fp16_scale",
             "N_bits": N_bits,
@@ -288,12 +248,10 @@ def intN_residual_adapter(*, N_bits: int, column_mask_fraction: float,
                           memory_traffic_per_token=deployed_bytes,
                           latency_per_token_titan_rtx=None,
                           energy_per_token=None)
+
     inst.serialize = serialize
     return inst
 
-# ---------------------------------------------------------------------------
-# LoRA r=216 fp16
-# ---------------------------------------------------------------------------
 
 def lora_adapter(*, intermediate_size: int, hidden_size: int, rank: int = 216,
                  device: str = "cpu", train: bool = True,
@@ -322,11 +280,7 @@ def lora_adapter(*, intermediate_size: int, hidden_size: int, rank: int = 216,
         wu = W_up.to(dtype=x.dtype)
         return (x @ wd.T) @ wu.T
 
-    inst._residual = residual
-    inst._target_module = None
-
     def patch(parent_module):
-        inst._target_module = parent_module
         _patch_module_forward(parent_module, residual)
 
     inst.patch = patch
@@ -350,13 +304,10 @@ def lora_adapter(*, intermediate_size: int, hidden_size: int, rank: int = 216,
                           memory_traffic_per_token=deployed_bytes,
                           latency_per_token_titan_rtx=None,
                           energy_per_token=None)
+
     inst.serialize = serialize
     return inst
 
-
-# ---------------------------------------------------------------------------
-# dense_adapter 192-rank bottleneck fp16
-# ---------------------------------------------------------------------------
 
 def dense_adapter_bottleneck(*, intermediate_size: int, hidden_size: int,
                               bottleneck: int = 192, device: str = "cpu",
@@ -386,8 +337,6 @@ def dense_adapter_bottleneck(*, intermediate_size: int, hidden_size: int,
         wu = W_up.to(dtype=x.dtype)
         return (x @ wd.T) @ wu.T
 
-    inst._residual = residual
-
     def patch(parent_module):
         _patch_module_forward(parent_module, residual)
 
@@ -412,13 +361,10 @@ def dense_adapter_bottleneck(*, intermediate_size: int, hidden_size: int,
                           memory_traffic_per_token=deployed_bytes,
                           latency_per_token_titan_rtx=None,
                           energy_per_token=None)
+
     inst.serialize = serialize
     return inst
 
-
-# ---------------------------------------------------------------------------
-# Per-arm target bytes (manifest mirror) and arm list
-# ---------------------------------------------------------------------------
 
 TARGET_DEPLOYED_BYTES = {
     "t2_ternary":   4_194_404,
@@ -431,14 +377,28 @@ TRAINED_ARMS = list(TARGET_DEPLOYED_BYTES.keys())
 ALL_ARMS = TRAINED_ARMS + ["random_t2_ternary", "random_lora"]
 
 
+def resolve_target_module(model, target_path: str):
+    parts = target_path.split(".")
+    node = model
+    for p in parts[:-1]:
+        node = getattr(node, p)
+    leaf = getattr(node, parts[-1])
+    if hasattr(leaf, "weight") and hasattr(leaf.weight, "device"):
+        return leaf
+    for sub in leaf.named_children():
+        if hasattr(sub[1], "weight") and hasattr(sub[1].weight, "device"):
+            return sub[1]
+    raise AttributeError(
+        f"target {target_path}: neither {type(leaf).__name__} nor its "
+        "children have a usable .weight attribute"
+    )
+
+
 def build_site_adapter(arm_id: str, *, target_module, hidden_size: int,
                        intermediate_size: int):
-    """Build a SiteAdapter and attach it to target_module. Returns the
-    adapter instance (callers should also call adapter.patch())."""
     import torch
     device = target_module.weight.device
     dtype = target_module.weight.dtype
-
     if arm_id == "t2_ternary":
         ad = T2TernaryAdapter(intermediate_size=intermediate_size,
                               hidden_size=hidden_size, device=device,
@@ -450,39 +410,41 @@ def build_site_adapter(arm_id: str, *, target_module, hidden_size: int,
                                    intermediate_size=intermediate_size,
                                    hidden_size=hidden_size, device=device,
                                    dtype=dtype, train=True)
-        ad.patch(target_module); return ad
+        ad.patch(target_module)
+        return ad
     if arm_id == "int8_residual":
         ad = intN_residual_adapter(N_bits=8, column_mask_fraction=0.25,
                                    intermediate_size=intermediate_size,
                                    hidden_size=hidden_size, device=device,
                                    dtype=dtype, train=True)
-        ad.patch(target_module); return ad
+        ad.patch(target_module)
+        return ad
     if arm_id == "lora":
         ad = lora_adapter(intermediate_size=intermediate_size,
                           hidden_size=hidden_size, rank=216,
                           device=device, train=True)
-        ad.patch(target_module); return ad
+        ad.patch(target_module)
+        return ad
     if arm_id == "dense_adapter":
         ad = dense_adapter_bottleneck(intermediate_size=intermediate_size,
                                        hidden_size=hidden_size, bottleneck=192,
                                        device=device, train=True)
-        ad.patch(target_module); return ad
+        ad.patch(target_module)
+        return ad
     if arm_id == "random_t2_ternary":
         ad = T2TernaryAdapter(intermediate_size=intermediate_size,
                               hidden_size=hidden_size, device=device,
                               dtype=dtype, train=False, init_seed=12345)
-        ad.patch(target_module); return ad
+        ad.patch(target_module)
+        return ad
     if arm_id == "random_lora":
         ad = lora_adapter(intermediate_size=intermediate_size,
                           hidden_size=hidden_size, rank=216,
                           device=device, train=False, init_seed=12345)
-        ad.patch(target_module); return ad
+        ad.patch(target_module)
+        return ad
     raise ValueError(f"unknown arm_id: {arm_id}")
 
-
-# ---------------------------------------------------------------------------
-# Model loading + per-seed runner
-# ---------------------------------------------------------------------------
 
 def build_base(model_name: str, *, dtype: str, device: str):
     import torch
@@ -495,16 +457,7 @@ def build_base(model_name: str, *, dtype: str, device: str):
     return model
 
 
-def resolve_target_module(model, target_path: str):
-    parts = target_path.split(".")
-    parent = model
-    for p in parts[:-1]:
-        parent = getattr(parent, p)
-    return parent  # the module that the residual will patch
-
-
-def measure_latency_seconds(forward_fn, *, warmup: int = 5,
-                            iters: int = 100):
+def measure_latency_seconds(forward_fn, *, warmup: int = 5, iters: int = 100):
     try:
         import torch
         if not torch.cuda.is_available():
@@ -532,9 +485,8 @@ def eval_arm(model, tokenizer, *, tasks: List[str], limit=None,
     )
 
 
-# Cost terms that don't depend on per-arm code; analytics helper:
-ANALYTIC_TRAINING_FLOPS = lambda n_steps, b, s, h, i: \
-    6 * n_steps * b * s * (h * i + h * h)
+def analytic_training_flops(n_steps, b, s, h, i):
+    return 6 * n_steps * b * s * (h * i + h * h)
 
 
 def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
@@ -548,18 +500,13 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
 
     model = build_base(args.model, dtype=args.dtype, device=args.device)
     target_module = resolve_target_module(model, args.target_module)
-
-    if arm == "random_t2_ternary" or arm == "random_lora":
-        # Untrained controls: pass train=False to build_site_adapter
-        # by calling it indirectly through the same factory.
-        from examples.af2_storage_tournament import build_site_adapter  # noqa
-        pass  # controls go through the factory below
+    intermediate_size = getattr(model.config, "intermediate_size",
+                                  4 * model.config.hidden_size)
 
     adapter = build_site_adapter(
         arm, target_module=target_module,
         hidden_size=model.config.hidden_size,
-        intermediate_size=getattr(model.config, "intermediate_size",
-                                  4 * model.config.hidden_size),
+        intermediate_size=intermediate_size,
     )
 
     def forward_fn(ids):
@@ -578,28 +525,19 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
             log_every=25, pad_id=pad_id,
         )
 
-    # Cost vector
-    train_flops = ANALYTIC_TRAINING_FLOPS(
-        args.n_steps, args.batch_size, args.seq_len,
-        model.config.hidden_size,
-        getattr(model.config, "intermediate_size",
-                 4 * model.config.hidden_size),
-    )
     cv = adapter.serialize(
         arm_dir,
-        training_flops=train_flops,
-        inference_ops_per_token=(
-            2 * model.config.hidden_size
-            * getattr(model.config, "intermediate_size",
-                       4 * model.config.hidden_size)
-        ),
+        training_flops=analytic_training_flops(
+            args.n_steps, args.batch_size, args.seq_len,
+            model.config.hidden_size, intermediate_size),
+        inference_ops_per_token=(2 * model.config.hidden_size
+                                  * intermediate_size),
     )
     target_bytes = TARGET_DEPLOYED_BYTES.get(arm, 0)
     matched_pct = (abs(cv.deployed_bytes - target_bytes) / target_bytes * 100
                     if target_bytes else 0.0)
     cv_matched = matched_pct <= args.matched_bytes_tolerance_pct
 
-    # Latency (median of 100 forwards) when CUDA available.
     if torch.cuda.is_available():
         try:
             lat = measure_latency_seconds(
@@ -609,23 +547,18 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
         except Exception:
             pass
 
-    # Eval (full tasks)
-    eval_summary_dict = {"arm": arm, "seed": seed,
-                          "model": args.model,
-                          "target_module": args.target_module,
-                          "n_steps": args.n_steps,
-                          "batch_size": args.batch_size,
-                          "seq_len": args.seq_len, "lr": args.lr,
-                          "limit": None,
-                          "tasks": {},
-                          "matched_bytes_target": target_bytes,
-                          "matched_bytes_actual": cv.deployed_bytes,
-                          "matched_bytes_tolerance_pct":
-                              args.matched_bytes_tolerance_pct,
-                          "matched_bytes_passed": cv_matched,
-                          "cost_vector": cv.as_dict(),
-                          "is_untrained_control":
-                              bool(adapter.is_untrained)}
+    eval_summary_dict = {
+        "arm": arm, "seed": seed, "model": args.model,
+        "target_module": args.target_module,
+        "n_steps": args.n_steps, "batch_size": args.batch_size,
+        "seq_len": args.seq_len, "lr": args.lr, "limit": None,
+        "tasks": {}, "matched_bytes_target": target_bytes,
+        "matched_bytes_actual": cv.deployed_bytes,
+        "matched_bytes_tolerance_pct": args.matched_bytes_tolerance_pct,
+        "matched_bytes_passed": cv_matched,
+        "cost_vector": cv.as_dict(),
+        "is_untrained_control": bool(adapter.is_untrained),
+    }
     if not adapter.is_untrained:
         try:
             model.eval()
@@ -664,10 +597,6 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
 
     return eval_summary_dict
 
-
-# ---------------------------------------------------------------------------
-# Aggregate
-# ---------------------------------------------------------------------------
 
 def aggregate(summaries: list, out_dir: Path) -> dict:
     import statistics
@@ -723,9 +652,7 @@ def aggregate(summaries: list, out_dir: Path) -> dict:
     if "dense_adapter" in out["trained_arms"]:
         diff = {}
         for arm in TRAINED_ARMS:
-            if arm == "dense_adapter":
-                continue
-            if arm not in out["trained_arms"]:
+            if arm == "dense_adapter" or arm not in out["trained_arms"]:
                 continue
             row = {}
             for t, st in out["trained_arms"][arm].get("tasks", {}).items():
@@ -746,10 +673,6 @@ def aggregate(summaries: list, out_dir: Path) -> dict:
     out_path.write_text(json.dumps(out, indent=2))
     return out
 
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
@@ -792,8 +715,7 @@ def main() -> None:
             print(f"[af2] arm={arm} seed={seed}: starting", flush=True)
             summary = run_one_seed(
                 arm=arm, seed=seed, args=args,
-                out_dir=args.out_dir,
-                tokenizer=tokenizer, pad_id=pad_id,
+                out_dir=args.out_dir, tokenizer=tokenizer, pad_id=pad_id,
                 all_ids=all_ids,
             )
             summaries.append(summary)
