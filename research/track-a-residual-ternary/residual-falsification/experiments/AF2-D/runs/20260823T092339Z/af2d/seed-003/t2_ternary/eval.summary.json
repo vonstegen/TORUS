@@ -1,0 +1,61 @@
+{
+  "arm": "t2_ternary",
+  "seed": 3,
+  "model": "allenai/OLMo-1B-0724-hf",
+  "target_module": "model.layers.0.mlp.down_proj",
+  "n_steps": 500,
+  "batch_size": 4,
+  "seq_len": 128,
+  "lr": 0.001,
+  "limit": null,
+  "tasks": {
+    "lambada_openai": {
+      "metric": "acc,none",
+      "value": 0.5501649524548806
+    },
+    "arc_easy": {
+      "metric": "acc_norm,none",
+      "value": 0.6069023569023569
+    },
+    "wikitext": {
+      "metric": "word_perplexity,none",
+      "value": 19.265983408994064
+    }
+  },
+  "matched_bytes_target": 4194404,
+  "matched_bytes_actual": 4199318,
+  "matched_bytes_tolerance_pct": 1.0,
+  "matched_bytes_passed": true,
+  "cost_vector": {
+    "deployed_bytes": 4199318,
+    "training_flops": 32212254720000,
+    "inference_ops_per_token": 33554432,
+    "memory_traffic_per_token": 4199318,
+    "latency_per_token_titan_rtx": 0.013285599708557128,
+    "energy_per_token": null
+  },
+  "is_untrained_control": false,
+  "eval_error": "Object of type dtype is not JSON serializable",
+  "damage_meta": {
+    "group_size": 128,
+    "threshold": 0.7,
+    "calibrate_norm": false,
+    "fro_norm_before": 26.316749572753906,
+    "fro_norm_after": 15.877206802368164,
+    "fro_ratio": 0.60331184740254
+  },
+  "pre_train_eval": {
+    "lambada_openai": {
+      "metric": "acc,none",
+      "value": 0.24180089268387348
+    },
+    "arc_easy": {
+      "metric": "acc_norm,none",
+      "value": 0.4890572390572391
+    },
+    "wikitext": {
+      "metric": "word_perplexity,none",
+      "value": 425.76088292432274
+    }
+  }
+}

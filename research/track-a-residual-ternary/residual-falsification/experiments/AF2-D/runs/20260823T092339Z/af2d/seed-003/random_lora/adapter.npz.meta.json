@@ -1,0 +1,6 @@
+{
+  "format": "lora_fp16",
+  "rank": 216,
+  "in_dim": 8192,
+  "out_dim": 2048
+}

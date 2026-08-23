@@ -85,22 +85,12 @@ class T2TernaryAdapter(SiteAdapter):
     the LAST dim of x at the site and out_features is the LAST dim of
     the site output. The serialized residual is W (full, ternary)
     applied as F.linear(x, q_ste) * scale."""
-    is_untrained = False
 
     def __init__(self, *, in_features: int, out_features: int,
                  device: str = "cpu", dtype=None,
                  train: bool = True, init_seed: Optional[int] = None):
-        import torch
-        torch.manual_seed(init_seed if init_seed is not None
-                          else torch.seed() % (2**31))
-        self.latent = torch.nn.Parameter(
-            0.01 * torch.randn(out_features, in_features,
-                               device=device, dtype=dtype))
-        if not train:
-            self.latent.requires_grad_(False)
         self._train = train
-
-    def patch(self, parent_module):
+        self.is_untrained = (not train)
         def residual(x):
             import torch.nn.functional as F
             import torch as _t

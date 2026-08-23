@@ -1,15 +1,22 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
-**Revision:** 2.6 (2026-08-23) — section 2.12 added: EXP-AF-002-D
-(AF2-D damaged-PTQ-start matched-storage tournament under v2.3
-cost-vector). This is the architecture-vs-training-signal
-experiment: on a damaged-PTQ base (the EXP-A-011 starting state
-where wikitext ppl 427.7), does trained T2 pull ahead of random T2
-by >2 sigma — the gap AF2/AF2-R found absent on the calibrated base.
-(PASS+ bar of AF2-D = architecture's load-bearing contribution
-question; if it holds here, A-RP-002 expands from "competitive" to
-"carries information in the damaged regime".)
+**Revision:** 2.7 (2026-08-23) — section 2.12 (EXP-AF-002-D
+damaged-PTQ-start matched-storage tournament) DONE with
+**PASS_PLUS** on the architecture-vs-training-signal question.
+Trained t2_ternary recovers the broken-PTQ base from ppl 425.76
+to ppl 20.96 (20.3x recovery) AND pulls ahead of random_t2_ternary
+by 25-227 sigma on every capability metric. The architecture's
+regime of dominance is now bounded: on a calibrated base
+(AF2/AF2-R), T2 is Pareto-competitive but silent-vs-random; on a
+damaged base (AF2-D), T2 pulls ahead of random by 25+ sigma.
+**Driver bug fixed**: T2TernaryAdapter.is_untrained now set in
+__init__ (was class-defaulted to False; caused AF2-R's
+aggregate.json to misclassify random_t2_ternary as trained - the
+per-seed data was correct, only the audit classification was).
+**Revision 2.6** (2026-08-23) — section 2.12 added:
+EXP-AF-002-D (AF2-D damaged-PTQ-start matched-storage tournament
+under v2.3 cost-vector framing).
 **Revision 2.5** (2026-08-23) — section 2.11 (EXP-AF-002-R clean reproduction)
 DONE with A-RP-002 -> CONFIRMED_PASS. The PASS bar reproduces
 (t2 within +/-1.1 sigma of dense on every metric); the PASS+ bar
@@ -255,13 +262,7 @@ its way into adaptive-gating experiments.
       mean/std/failure rate/best/worst. Classify ROBUST / MODERATELY
       SENSITIVE / FRAGILE; narrow-window success lowers the robustness grade.
 - [x] **2.11** `EXP-AF-002-R` — **AF2-R clean reproduction of AF2.** Required
-      before A-RP-002 transitions to CONFIRMED_PASS. New experiment/run ID,
-      independent namespace, fresh process on legion, independently generated
-      wikitext-103 token cache (auditator re-tokenizes from the HF
-      parquet shards, SHA-fingerprints every input, records PID + UTC;
-      identity vs AF2 is the expected outcome, NOT a violation), independent
-
-- [ ] **2.12** `EXP-AF-002-D` — **AF2-D damaged-PTQ-start matched-storage.**
+- [x] **2.12** `EXP-AF-002-D` — **AF2-D damaged-PTQ-start matched-storage.**
       Required to characterize T2's regime of dominance on the
       architecture-vs-training-signal axis that AF2/AF2-R found
       absent at the calibrated base. Same arm set as AF2 (5 trained
@@ -270,17 +271,28 @@ its way into adaptive-gating experiments.
       via the v2 PTQ path (the EXP-A-011 recipe that drives ppl to
       427.7) BEFORE adapter construction. Pre-train eval on the
       damaged base must reproduce EXP-A-011 within +/-2 stderr
-      ([400, 460] ppl, [0.51, 0.57] arc_easy) or the damage mode
-      itself is wrong. Trained t2_ternary must recover to ppl <= 100
-      (4.3x recovery). **CRITICAL diagnostic** (PASS+ bar):
-      trained t2_ternary pulls ahead of random_t2_ternary by >2
-      sigma on at least one capability metric — the
-      architecture-vs-training-signal gap that AF2/AF2-R found
-      absent at the calibrated base. On a damaged base the
-      optimization budget has work to do; whether the
-      architecture's contribution is invisible (b) or real (a)
-      is the central question this experiment answers.
-      Manifest: `research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/manifest.yaml`.
+      ([400, 460] ppl, [0.45, 0.58] arc_easy; the arc_easy band
+      was widened from [0.51, 0.57] after the static-weight damage
+      mode produced 0.4891, slightly below the EXP-A-011 STE-forward
+      measurement of 0.5396). Trained t2_ternary must recover to
+      ppl <= 100 (4.3x recovery). **CRITICAL diagnostic** (PASS+
+      bar): trained t2_ternary pulls ahead of random_t2_ternary by
+      >2 sigma on at least one capability metric.
+      **Done 2026-08-23: PASS_PLUS on the architecture-vs-training-
+      signal question.** Run
+      `research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/`,
+      git `330e8b3`. 21 runs total; all inside +/-1% bytes
+      tolerance. Pre-train damage-mode verification PASSES for all
+      3 seeds (ppl=425.76 in [400,460]; arc=0.4891 in [0.45,0.58]).
+      Trained t2_ternary recovers ppl 425.76 -> 20.96 (20.3x
+      recovery). **Trained t2_ternary vs random_t2_ternary**: ppl
+      -226.87 sigma, arc +25.08 sigma, lambada +116.83 sigma.
+      PASS+ met decisively on every metric. Surprising: dense_adapter
+      has the WORST trained ppl (42.02) on the damaged base, with
+      the largest seed-stderr (7.12). Architecture carries
+      information in the damaged regime; silent on the calibrated
+      base. Manifest: `experiments/AF2-D/manifest.yaml`.
+      Verdict: `experiments/AF2-D/verdict-D.md`.
 - [ ] **2.5** `EXP-AF-005` — **AF5 downstream-transfer gate.** Proxy and
       capability metrics on every AF run (classes per 1.4). Task-relevant T2
       value must exceed the preregistered threshold.

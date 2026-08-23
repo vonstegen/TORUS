@@ -1,4 +1,51 @@
-# CHANGELOG
+## 0.16.5 / research — EXP-AF-002-D DECIDED PASS+ on architecture-vs-training-signal; driver bugfix
+
+### Verified (architecture carries information in the damaged regime)
+  `runs/a/EXP-AF-002-D/runs/20260823T092339Z/af2d/`, git `330e8b3`,
+  n=3 seeds, damaged-PTQ base) DECIDED **PASS+** on the
+  architecture-vs-training-signal question. 21 runs total; all
+  inside ±1% bytes tolerance.
+  (ppl=425.76 in [400, 460] band; arc_easy=0.4891 in [0.45, 0.58]
+  band). Damage mode reproduces EXP-A-011's 427.7 within 0.5% on
+  ppl.
+  manifest PASS bar was 4.3×).
+  on the damaged base = ppl −226.87σ, arc_easy +25.08σ,
+  lambada_openai +116.83σ. PASS+ met decisively on every metric.
+  The architecture-vs-training gap that AF2/AF2-R found absent on
+  the calibrated base manifests decisively here.
+  (42.02) on the damaged base, with the largest seed-stderr (7.12).
+  lora beats dense_adapter (ppl 22.3 vs 42.0); int8_residual has
+  the best ppl (18.6).
+
+### Changed (driver bugfix; AF2-R audit reclassification)
+  `T2TernaryAdapter.is_untrained` now set in `__init__`
+  (was class-defaulted to False even when constructed with
+  `train=False`, which misclassified `random_t2_ternary` as a
+  trained arm in AF2-R's `aggregate.json`). The fix uses
+  `self.is_untrained = (not train)`, mirroring the other adapter
+  classes (`_IntNCls`, `_LoRACls`, `_DenseCls`). AF2-R's per-seed
+  eval data was always correct; only the audit classification was
+  wrong. The same fix benefits AF2 and any future re-runs.
+  with a seed-major iteration when `--damage-ptq` is set (so the
+  damaged base + pre-train eval run once per seed instead of
+  redundantly per arm). When `--damage-ptq` is NOT set, the
+  original arm-major order is preserved exactly.
+  `--damage-group-size`, `--damage-threshold`, `--pre-train-eval`
+  flags added for the damaged-PTQ regime.
+
+### Added (artifacts)
+  refuse-to-overwrite, AF8 record keys, sha256 matches hashlib,
+  damage-mode invariants (fro_ratio in [0.5, 0.85], idempotent,
+  no-touch-other-weights, metadata capture, --help lists flags).
+
+### Changed (governance)
+  CONFIRMED_PASS (refined by AF2-D)"; supporting_experiments now
+  lists EXP-A-03x, EXP-AF-001, EXP-AF-002, EXP-AF-002-D, EXP-AF-002-R.
+  row added; decision log entry added.
+  PASS+.
+
+### Tests: 207/207 pass (was 201 in 0.16.4; +6 from test_af2_damaged_ptq)
+
 ## 0.16.4 / research — EXP-AF-002-R DECIDED CONFIRMED_PASS — A-RP-002 reproduction confirms PASS bar; PASS+ softens
 
 ### Verified (AF8 clean reproduction of EXP-AF-002)

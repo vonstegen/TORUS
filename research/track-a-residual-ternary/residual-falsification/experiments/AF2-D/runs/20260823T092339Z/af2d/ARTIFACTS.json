@@ -1,0 +1,447 @@
+{
+  "experiment_id": "EXP-AF-002-D",
+  "git_sha": "330e8b3",
+  "run_dir": "20260823T092339Z",
+  "files": [
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/aggregate.json",
+      "sha256": "99a2a06594888a498dc6bcf971a49452f97cf7fd519fdc0089d87cdab57e146e",
+      "bytes": 14534
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/dense_adapter/adapter.npz.meta.json",
+      "sha256": "34c863399ff4737a510068d3e149b108805d0cc0954ff0d45994cff93b25bdd4",
+      "bytes": 105
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/dense_adapter/cost_vector.json",
+      "sha256": "fd0a684f48895b4c6b6f3a6b5bda289acb406e9249e7e0b3acccc608475cdae1",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/dense_adapter/eval.summary.json",
+      "sha256": "c3ec8f14888e2dade869c9fcf636f75b65e0ffbf5cd026bcabcfef1ebfbd6812",
+      "bytes": 1544
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/dense_adapter/history.jsonl",
+      "sha256": "108cbdea00dcef1da9ae79cb2814b2568c9ba224df7c79ed3801bdecec169cea",
+      "bytes": 1673
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/int4_residual/adapter.npz.meta.json",
+      "sha256": "18ef978beae962f916de83c7bb3bc5d6efc24fa4c0d7072a217664623700a797",
+      "bytes": 160
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/int4_residual/cost_vector.json",
+      "sha256": "2d2a048b57924866abf79e305eea7a69b518b7546f3725394cbeddb83e18fe45",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/int4_residual/eval.summary.json",
+      "sha256": "1680888f36e71555b1026a6db631dd00cc421b8b8205d2c8308fcca131054b43",
+      "bytes": 1545
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/int4_residual/history.jsonl",
+      "sha256": "0379b2ab0093b3067b7d494752f84c5db7a876f36ef29c999c658ddaf1ae60a0",
+      "bytes": 1674
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/int8_residual/adapter.npz.meta.json",
+      "sha256": "f74644708acdceb97e9d190221417f5ff2e095e00b064f93dcdf276fc3567751",
+      "bytes": 160
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/int8_residual/cost_vector.json",
+      "sha256": "14d04e29df7dbd053ecefebdc5c9e43dc8420cc749abf1d5cab25898e928a485",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/int8_residual/eval.summary.json",
+      "sha256": "d1fdc18c7b3ccc16261b0440b8a87e0d2cce3c214e3dbd52587965c0ae2a9d93",
+      "bytes": 1545
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/int8_residual/history.jsonl",
+      "sha256": "e2c20ead579bb344b27a88436ab8033d023eeceb8608c77d7a3db3f4b61760ee",
+      "bytes": 1665
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/lora/adapter.npz.meta.json",
+      "sha256": "0a7485746eafa7b14fde78939783a69a52dc5ee990b4acad8308f7e215c28a31",
+      "bytes": 79
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/lora/cost_vector.json",
+      "sha256": "61f908699b30f39c7bcdeddb4aebb313e679ffe6b81b3468260334327fe88a98",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/lora/eval.summary.json",
+      "sha256": "d8e788943e689b141488dad26229efbd6530637066b8a57fbc90dbc829cd14ba",
+      "bytes": 1536
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/lora/history.jsonl",
+      "sha256": "220ef61594e6ef5561b7b33f8ff199fcdee423a6938754e55cc25e2b7f9dc870",
+      "bytes": 1675
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/pre_train_eval.json",
+      "sha256": "749bf0592bd1f195d3f7f1d08260e7667b67e96271e42f37479de0f944bded0c",
+      "bytes": 673
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/random_lora/adapter.npz.meta.json",
+      "sha256": "0a7485746eafa7b14fde78939783a69a52dc5ee990b4acad8308f7e215c28a31",
+      "bytes": 79
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/random_lora/cost_vector.json",
+      "sha256": "12c64bc908702ffbd15657b2ace911fd898398dfcd1d002ffd06545ac825162c",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/random_lora/eval.summary.json",
+      "sha256": "0b54969578eb6a4e4e3717ee724f20df079f1a1ad98d8a92646e744226a1eeaa",
+      "bytes": 1185
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/random_lora/history.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/random_t2_ternary/adapter.npz.meta.json",
+      "sha256": "aafc95e9a6f0d2ce46a3d24e77eb304041e0e9fa043121ccf37e39728d32bffe",
+      "bytes": 152
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/random_t2_ternary/cost_vector.json",
+      "sha256": "0cbacf0151af5767c5ae459508e1e0f064025668e67a5693993d6e43ca9351cb",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/random_t2_ternary/eval.summary.json",
+      "sha256": "55bbe8de89f0b24946c191fed889dea2f1823e04aeb0abea6075462f50c25967",
+      "bytes": 1544
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/random_t2_ternary/history.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/t2_ternary/adapter.npz.meta.json",
+      "sha256": "aafc95e9a6f0d2ce46a3d24e77eb304041e0e9fa043121ccf37e39728d32bffe",
+      "bytes": 152
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/t2_ternary/cost_vector.json",
+      "sha256": "1e47c49f8852dbaed9e80aa607d09d1174e81e3c15d8d959e8df7c2100e6a1ee",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/t2_ternary/eval.summary.json",
+      "sha256": "5760f4ed6954253ae1147de11b16e8a762d6a3380c19b3077b892b042aacef1e",
+      "bytes": 1541
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-001/t2_ternary/history.jsonl",
+      "sha256": "683390c965013da1957cd41bf7e3f2d529797f7507f73d76de7b0fd139cc650d",
+      "bytes": 1669
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/dense_adapter/adapter.npz.meta.json",
+      "sha256": "34c863399ff4737a510068d3e149b108805d0cc0954ff0d45994cff93b25bdd4",
+      "bytes": 105
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/dense_adapter/cost_vector.json",
+      "sha256": "dc3a17687bd18f80c096c1ce58b9dc42b25e2d48343f9fb2564406cbacdec545",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/dense_adapter/eval.summary.json",
+      "sha256": "edcb9a6d08c027f6a85d03f1f021013acd429b5d761bd8e6a8891479f084a054",
+      "bytes": 1544
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/dense_adapter/history.jsonl",
+      "sha256": "f2e74d4e51622e28404dd188f8483419eea5e25ce53079eaa889a1b743506320",
+      "bytes": 1671
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/int4_residual/adapter.npz.meta.json",
+      "sha256": "18ef978beae962f916de83c7bb3bc5d6efc24fa4c0d7072a217664623700a797",
+      "bytes": 160
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/int4_residual/cost_vector.json",
+      "sha256": "ca012053365217e7fe1b9b20399e2487dd6aa6fc885eac77495538636559ddd7",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/int4_residual/eval.summary.json",
+      "sha256": "d349935c89f2de7c767ea843d3df8232b09cb9ed4eef098ffb926b452fa0aa69",
+      "bytes": 1544
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/int4_residual/history.jsonl",
+      "sha256": "7bcbd2838517fd0050678a0f62ec50d9f9b20e36a1f82f80d0b29c7daa787331",
+      "bytes": 1667
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/int8_residual/adapter.npz.meta.json",
+      "sha256": "f74644708acdceb97e9d190221417f5ff2e095e00b064f93dcdf276fc3567751",
+      "bytes": 160
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/int8_residual/cost_vector.json",
+      "sha256": "ed5fda478c1864638c550f8c834a0a6a01ad2e0144fb49dc48f764bf4c425a93",
+      "bytes": 227
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/int8_residual/eval.summary.json",
+      "sha256": "55158435f1db93e800ef27b3f86e8c9004cea0349cbe80e0904b54f0d2a46faf",
+      "bytes": 1542
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/int8_residual/history.jsonl",
+      "sha256": "70c399c3b96738fbbc1af3bb5006ea796a4368805c23c57f1533eb862b7062fc",
+      "bytes": 1672
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/lora/adapter.npz.meta.json",
+      "sha256": "0a7485746eafa7b14fde78939783a69a52dc5ee990b4acad8308f7e215c28a31",
+      "bytes": 79
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/lora/cost_vector.json",
+      "sha256": "b8a174a4529def2fa0676f78e129934f0b1bc6accdc098270dbf6850cf592660",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/lora/eval.summary.json",
+      "sha256": "6310c6ff982ecfac02e633cdcf65a059a7e0fc9b6defb5fe479e783e16b595e7",
+      "bytes": 1534
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/lora/history.jsonl",
+      "sha256": "4e86134c35222d25f6d645f4cc77360a37bd85ad8dc86b654b17a9205b54911c",
+      "bytes": 1675
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/pre_train_eval.json",
+      "sha256": "7deba18b15caf5c143c5d14d6691cbe2547498b4c4999fa424d8a11afe6653cf",
+      "bytes": 673
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/random_lora/adapter.npz.meta.json",
+      "sha256": "0a7485746eafa7b14fde78939783a69a52dc5ee990b4acad8308f7e215c28a31",
+      "bytes": 79
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/random_lora/cost_vector.json",
+      "sha256": "b37018e7dc1bae29fa2771e54512160df6a8f721a4c9773c762f89fdbe89baca",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/random_lora/eval.summary.json",
+      "sha256": "38563a58c77a3fafd47be72aa0c5a1cdd28d53c925306fc036566304ca7d7b92",
+      "bytes": 1185
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/random_lora/history.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/random_t2_ternary/adapter.npz.meta.json",
+      "sha256": "aafc95e9a6f0d2ce46a3d24e77eb304041e0e9fa043121ccf37e39728d32bffe",
+      "bytes": 152
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/random_t2_ternary/cost_vector.json",
+      "sha256": "34ad03432704a014e94ccaf10b3efc925d49a589cf47b65757b45182e8fa7dff",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/random_t2_ternary/eval.summary.json",
+      "sha256": "2a02fbe7b1b8b7bdaee326e86bb64c0dbcc6ba37739c8deb06efe36c5ed49205",
+      "bytes": 1544
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/random_t2_ternary/history.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/t2_ternary/adapter.npz.meta.json",
+      "sha256": "aafc95e9a6f0d2ce46a3d24e77eb304041e0e9fa043121ccf37e39728d32bffe",
+      "bytes": 152
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/t2_ternary/cost_vector.json",
+      "sha256": "7e98711a75535d1e37e2f82326bed3ab58d0d18a688b474af41dbc824b1c573f",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/t2_ternary/eval.summary.json",
+      "sha256": "ebb4ae501c475be9b6456993b3dfa286eb329b3af754e4fd2ed00754487a43a1",
+      "bytes": 1542
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-002/t2_ternary/history.jsonl",
+      "sha256": "fc06b774fb786a30561fccb47c3049ec067c5804b4d37cf27b35955b99c202a7",
+      "bytes": 1668
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/dense_adapter/adapter.npz.meta.json",
+      "sha256": "34c863399ff4737a510068d3e149b108805d0cc0954ff0d45994cff93b25bdd4",
+      "bytes": 105
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/dense_adapter/cost_vector.json",
+      "sha256": "6086f8a6b1ac09a3438101d71fc6f1f482ea21213bc320fa0308a99f0e3350b1",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/dense_adapter/eval.summary.json",
+      "sha256": "32148709bc7543021a1707d66800f4246eb262b2ee4f992b1d58326ecff75c47",
+      "bytes": 1544
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/dense_adapter/history.jsonl",
+      "sha256": "38022daa690bc01c2bc2b3bc3d0a4c44e9a7df0d08c13f78f7bd66e14f0c748d",
+      "bytes": 1670
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/int4_residual/adapter.npz.meta.json",
+      "sha256": "18ef978beae962f916de83c7bb3bc5d6efc24fa4c0d7072a217664623700a797",
+      "bytes": 160
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/int4_residual/cost_vector.json",
+      "sha256": "2915468b86b5f82df38776caff5cee0f81de85e9b944ca53f89132d9d3526a5c",
+      "bytes": 227
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/int4_residual/eval.summary.json",
+      "sha256": "5e02d77f9341fb91252aae7c233a79aca98b884f54cfb9662a1b70acb0405359",
+      "bytes": 1544
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/int4_residual/history.jsonl",
+      "sha256": "9e11b0a19d3cb931312158e4292cd62ce923ffca36ff1d89e8c9a14bceab2075",
+      "bytes": 1670
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/int8_residual/adapter.npz.meta.json",
+      "sha256": "f74644708acdceb97e9d190221417f5ff2e095e00b064f93dcdf276fc3567751",
+      "bytes": 160
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/int8_residual/cost_vector.json",
+      "sha256": "bceda59747db7790045fabbbe4ddb9ebdb53942f1c5ac54c844f7c416faf117d",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/int8_residual/eval.summary.json",
+      "sha256": "a07715b43d71ed2454f4ea01cdc497f4e6b7ea025865169e8a059551bcd4604c",
+      "bytes": 1543
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/int8_residual/history.jsonl",
+      "sha256": "8eaa8fc57951016afaa30956a0a2959b598932280f19472c87428707b4647f30",
+      "bytes": 1678
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/lora/adapter.npz.meta.json",
+      "sha256": "0a7485746eafa7b14fde78939783a69a52dc5ee990b4acad8308f7e215c28a31",
+      "bytes": 79
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/lora/cost_vector.json",
+      "sha256": "4b0eb35bfccc393aec3318b6bf20adfc6ab03863988cbd447b270f0608a4db0c",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/lora/eval.summary.json",
+      "sha256": "2725f67339a407f18fdedcf51c2118b6b8cd5c141405a0b4b7f86ff478bbd36e",
+      "bytes": 1535
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/lora/history.jsonl",
+      "sha256": "e37a36f9ead6709bc0c37f119435e6de267dd194caa91d2de073aa7b0b33ce22",
+      "bytes": 1675
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/pre_train_eval.json",
+      "sha256": "e1e78c83efbd6ed1210e664dee05dbb9a4aebf6f81b55d423a49d5b48cf2084d",
+      "bytes": 673
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/random_lora/adapter.npz.meta.json",
+      "sha256": "0a7485746eafa7b14fde78939783a69a52dc5ee990b4acad8308f7e215c28a31",
+      "bytes": 79
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/random_lora/cost_vector.json",
+      "sha256": "07cd665c16d62e1b5b5a2fb6fe971c87187f53adcefefa49230185f8a96e5331",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/random_lora/eval.summary.json",
+      "sha256": "f935ac4c3afeacbdd241623e66c6535264f2456f0541c6febc4f0e6243f0f1f3",
+      "bytes": 1185
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/random_lora/history.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/random_t2_ternary/adapter.npz.meta.json",
+      "sha256": "aafc95e9a6f0d2ce46a3d24e77eb304041e0e9fa043121ccf37e39728d32bffe",
+      "bytes": 152
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/random_t2_ternary/cost_vector.json",
+      "sha256": "34ad03432704a014e94ccaf10b3efc925d49a589cf47b65757b45182e8fa7dff",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/random_t2_ternary/eval.summary.json",
+      "sha256": "6cecbaf1c712613e1ef8d3a34c52224d920d061e577e3a52636be0f49f06064d",
+      "bytes": 1544
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/random_t2_ternary/history.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/t2_ternary/adapter.npz.meta.json",
+      "sha256": "aafc95e9a6f0d2ce46a3d24e77eb304041e0e9fa043121ccf37e39728d32bffe",
+      "bytes": 152
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/t2_ternary/cost_vector.json",
+      "sha256": "5782ba0030a8e26c4086d895776f0828e6ac943757919e53974c0cdae280fb83",
+      "bytes": 228
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/t2_ternary/eval.summary.json",
+      "sha256": "f3274a6ecff345689148066d2877520a944e996355cb859ec28a3d7fb7490222",
+      "bytes": 1542
+    },
+    {
+      "path": "research/track-a-residual-ternary/residual-falsification/experiments/AF2-D/runs/20260823T092339Z/af2d/seed-003/t2_ternary/history.jsonl",
+      "sha256": "288fc462f3cab9d9214433aeaad8d68c6a6df0f3e43965adb36e556adb150fc5",
+      "bytes": 1672
+    }
+  ]
+}
