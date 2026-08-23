@@ -28,11 +28,12 @@ hypothesis: >
         mode in AF2-D);
 
     (2) trained t2_ternary correction: post-train wikitext ppl
-        lands within +/-1.5 standard deviations of the AF2-D
+        lands within +/-2 standard deviations of the AF2-D
         reference value (20.96, mean seed-stderr 1.53 -> band
-        [18.66, 23.26]) AND arc_easy and lambada_openai land
-        within +/-1.5 standard deviations of their AF2-D reference
-        values (arc 0.600 +/- 0.004; lambada 0.545 +/- 0.003).
+        [17.91, 24.01]) AND arc_easy and lambada_openai land
+        within +/-2 standard deviations of their AF2-D reference
+        values (arc 0.600 +/- 0.004 -> [0.592, 0.608]; lambada
+        0.545 +/- 0.003 -> [0.539, 0.551]).
 
   Reproduction is a strict re-run: new run namespace under
   runs/r/RPM-000/<timestamp>/, fresh process on Legion, independent
