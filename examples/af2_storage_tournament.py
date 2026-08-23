@@ -89,8 +89,18 @@ class T2TernaryAdapter(SiteAdapter):
     def __init__(self, *, in_features: int, out_features: int,
                  device: str = "cpu", dtype=None,
                  train: bool = True, init_seed: Optional[int] = None):
+        import torch
+        torch.manual_seed(init_seed if init_seed is not None
+                          else torch.seed() % (2**31))
+        self.latent = torch.nn.Parameter(
+            0.01 * torch.randn(out_features, in_features,
+                               device=device, dtype=dtype))
+        if not train:
+            self.latent.requires_grad_(False)
         self._train = train
         self.is_untrained = (not train)
+
+    def patch(self, parent_module):
         def residual(x):
             import torch.nn.functional as F
             import torch as _t
@@ -102,7 +112,6 @@ class T2TernaryAdapter(SiteAdapter):
             q_ste = r + (q - r).detach()
             y = F.linear(x, q_ste)
             return y * scale.squeeze(1)
-        _patch_module_forward(parent_module, residual)
 
     def trainable_parameters(self):
         return [self.latent] if self._train else []
