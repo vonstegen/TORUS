@@ -1,16 +1,22 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
-**Revision:** 2.9 (2026-08-23) — section 2.14 (Stage 1 damage
-sweep EXP-RPM-D0..D5) PREREGISTERED. 6 manifests with frozen
-damage knobs (threshold axis 0.0/0.3/0.5/0.6/0.7 + D0 no-damage);
-144 runs total planned. RPM-002 / RPM-001 claims get data on
-launch. Stage 2/3/4/5 manifests will be preregistered AFTER
-Stage 1 completes.
-__init__ (was class-defaulted to False; caused AF2-R's
-aggregate.json to misclassify random_t2_ternary as trained - the
-per-seed data was correct, only the audit classification was).
-**Revision 2.6** (2026-08-23) — section 2.12 added:
+**Revision:** 2.10 (2026-08-23) — section 2.14 (Stage 1 damage
+sweep EXP-RPM-D0..D5) DECIDED. 126 runs; 0 tolerance violations.
+**Finding F1:** threshold→ppl is highly non-monotonic —
+D1/D2/D3 (thresholds 0.0/0.3/0.5) all hit ppl 1525; only D4/D5
+move below 700. **Finding F5:** D1/D2/D3 collapse into the same
+observed-ppl regime; Stage 1 effectively produced 4 distinct
+observed regimes, not 6. **Verdicts per user directive:**
+RPM-001 tentative PASS (T2 is Pareto-optimal vs the complete
+frozen comparator set on the joint 3-cap × 5-cost vector in
+every regime; energy is null and excluded so the verdict is
+tentative until E is measured). RPM-002 and RPM-006 UNRESOLVED
+(data gap: untrained evals skipped by driver; claim definitions
+NOT altered). EXP-RPM-CAL calibration pre-experiment
+PREREGISTERED — must run before any Stage 1.5/Stage 2 damage
+sweep so the next experiment's damage axis is chosen from
+observed ppl, not the uninformative threshold knob.
 EXP-AF-002-D (AF2-D damaged-PTQ-start matched-storage tournament
 under v2.3 cost-vector framing).
 **Revision 2.5** (2026-08-23) — section 2.11 (EXP-AF-002-R clean reproduction)
@@ -310,17 +316,31 @@ its way into adaptive-gating experiments.
       preregistration. Manifest:
       `research/residual-pareto/experiments/RPM-000/manifest.yaml`.
       Verdict: `research/residual-pareto/experiments/RPM-000/verdict.md`.
-- [ ] **2.14** `EXP-RPM-D1`..`EXP-RPM-D6` — **Stage 1 damage
-      sweep.** Six damage regimes D0 (ppl 13-15 calibrated)
-      → D5 (ppl 300-500 catastrophic/AF2-D-like). At the
-      AF2-D layer (`model.layers.0.mlp.down_proj`) with the
-      AF2-D budget (~4.2 MB), AF2-D training recipe, AF2-D
-      eval suite. Per-regime: 5 trained arms + random_t2 +
-      random_lora + no_correction × 3 seeds. Gates G-RPM-1
-      ("at least one damage regime places T2 on Pareto
-      frontier"). RPM-002 attacks the damage-dependence
-      hypothesis. Required manifests preregistered BEFORE
-      any run; cheapest-falsifier-first ordering.
+- [x] **2.14** `EXP-RPM-D0`..`EXP-RPM-D5` — **Stage 1 damage
+      sweep.** Six damage regimes D0 (FP16 reference)
+      → D5 (catastrophic / AF2-D reference, threshold=0.7).
+      At the AF2-D layer (`model.layers.0.mlp.down_proj`)
+      with the AF2-D budget (~4.2 MB), AF2-D training
+      recipe, AF2-D eval suite. Per-regime: 5 trained +
+      2 untrained × 3 seeds = 21 runs (no_correction arm
+      dropped pre-launch because the driver doesn't
+      implement it). Gates G-RPM-1 ("at least one damage
+      regime places T2 on Pareto frontier"). RPM-002
+      attacks the damage-dependence hypothesis. **Done
+      2026-08-23: 126 runs; 0 tolerance violations; verdict
+      at `experiments/verdict-Stage1.md`. Three findings:**
+      (F1) threshold→ppl highly non-monotonic (D1/D2/D3
+      all hit ppl 1525); (F2) int8_residual wins ppl in
+      D1-D4 (NOT T2); (F5) D1/D2/D3 collapse into the same
+      observed-ppl regime. **Data gap:** untrained evals
+      were skipped by the driver, so RPM-006 z-score and
+      RPM-002 cross-regime monotone cannot be computed.
+      RPM-001 tentative PASS (T2 Pareto-optimal on the full
+      cost-vector in every regime; energy null and excluded).
+      RPM-002 + RPM-006 UNRESOLVED (claim definitions NOT
+      altered). EXP-RPM-CAL preregistered — must run before
+      any Stage 1.5/Stage 2 damage sweep.
+- [ ] **2.5** `EXP-AF-005` — **AF5 downstream-transfer gate.** Proxy and
       capability metrics on every AF run (classes per 1.4). Task-relevant T2
       value must exceed the preregistered threshold.
 - [ ] **2.6** `EXP-AF-006` — **AF6 dataset/context robustness.** ≥2 context
@@ -339,29 +359,33 @@ its way into adaptive-gating experiments.
 
 ### Checkpoints — the residual-plane acceptance bar
 
-T2 is promoted to a validated representation mechanism only if **all five**
-hold (`10` §15):
-- [ ] **2.14** `EXP-RPM-D1`..`EXP-RPM-D6` — **Stage 1 damage
-      sweep.** Six damage regimes D0 (ppl 13-15 calibrated)
-      → D5 (ppl 300-500 catastrophic/AF2-D-like). At the
-      AF2-D layer (`model.layers.0.mlp.down_proj`) with the
-      AF2-D budget (~4.2 MB), AF2-D training recipe, AF2-D
-      eval suite. Per-regime: 5 trained arms + random_t2 +
-      random_lora + no_correction × 3 seeds. Gates G-RPM-1
-      ("at least one damage regime places T2 on Pareto
-      frontier"). RPM-002 attacks the damage-dependence
-      hypothesis. Required manifests preregistered BEFORE
-      any run; cheapest-falsifier-first ordering.
+T2 is promoted to a validated representation mechanism only if
+the Stage 1 Pareto verdict holds, the cross-regime monotone
+test reproduces (or its calibration pre-experiment informs the
+next design), and the systems measurements don't eliminate the
+advantage (per RPM proposal §13). The current state:
+- [x] **2.14** `EXP-RPM-D0`..`EXP-RPM-D5` — **Stage 1 damage
+      sweep DECIDED (DONE).** 126 runs; 0 tolerance violations.
+      RPM-001 tentative PASS (T2 Pareto-optimal on the full
+      cost-vector in every regime). RPM-002 + RPM-006 UNRESOLVED
+      (data gap; claim definitions NOT altered). Verdicts at
+      `experiments/verdict-Stage1.md` and per-regime verdicts.
+- [ ] **EXP-RPM-CAL** — **Damage-knob calibration pre-experiment
+      PREREGISTERED.** Must run before any Stage 1.5/Stage 2
+      damage-sweep experiment is preregistered (per user
+      directive). Maps threshold → ppl on the AF2-D layer +
+      attention_k + late_mlp; 99 eval-only runs; ~90 min on
+      Legion. Manifest at `experiments/EXP-RPM-CAL/manifest.yaml`.
 - [ ] **2.15** Stage 2 layer sweep `EXP-RPM-Lxx` (top
       sites × 3 seeds), Stage 3 budget sweep
       `EXP-RPM-B1..B5` (0.5/1/2/4/8 MB), Stage 4 task
       robustness `EXP-RPM-Txx` (≥3 tasks + ≥2 context
       lengths), Stage 5 systems validation `EXP-RPM-SYS`
       (measured latency/bytes/traffic/energy on Legion).
-      Each gated by Gates G-RPM-2/3/4. Detailed
-      experiments will be preregistered AFTER Stage 1
-      completes (per the user's "no more architecture"
-      instruction).
+      Each gated by Gates G-RPM-2/3/4. Will be preregistered
+      AFTER EXP-RPM-CAL completes and its threshold→ppl
+      function informs the next damage-axis design.
+
 ## Phase 3 — Track A: Heterogeneous Precision, Hadamard, Decision
 
 **Objective:** Convert validated representation behavior into a Pareto

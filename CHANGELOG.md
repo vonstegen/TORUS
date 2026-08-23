@@ -975,4 +975,64 @@ Launch EXP-RPM-D0..D5 on Legion (144 runs, ~10-15 hours). The
 cross-regime audit (RPM-002 axis) and per-regime audits
 (RPM-006 + RPM-001 axes) will land AFTER all 6 regimes complete.
 Stage 2/3/4/5 manifests will be preregistered AFTER Stage 1
+
+## 0.16.10 / research — Stage 1 (EXP-RPM-D0..D5) DECIDED; EXP-RPM-CAL PREREGISTERED
+
+### Decided (Stage 1)
+- **EXP-RPM-D0..D5 DECIDED.** 126 runs; 0 tolerance violations;
+  ~4 hours wall time on Legion (2026-08-23T17:14:05Z → T21:11:24Z).
+  Frozen driver SHA `692e8ee`. Per-regime verdicts at
+  `research/residual-pareto/experiments/EXP-RPM-D{0..5}/verdict.md`;
+  master verdict at `research/residual-pareto/experiments/verdict-Stage1.md`.
+
+### Findings (per user directive 6: a finding, not a failure)
+- **F1:** threshold→ppl is highly non-monotonic across the
+  preregistered axis. D1 (threshold=0.0), D2 (threshold=0.3),
+  D3 (threshold=0.5) all produce ppl 1524.80. Only D4
+  (threshold=0.6) jumps to ppl 697.29 and D5 (threshold=0.7)
+  to ppl 429.55. The preregistered thresholds are uninformative
+  at the lower end.
+- **F5:** D1/D2/D3 collapse into the same observed-ppl regime;
+  Stage 1 effectively produced 4 distinct observed regimes, not 6.
+- **F2:** int8_residual has lower ppl than t2_ternary in D1-D4
+  (17.75-18.99 vs 23.66-26.91). On the full (3 cap × 5 cost)
+  Pareto criterion, both remain on the frontier.
+
+### Claim verdicts (per user directive 8: claim definitions NOT altered)
+- **RPM-001:** tentative PASS at every regime (T2 IS Pareto-optimal
+  vs the complete frozen comparator set on the joint 3 cap ×
+  5 cost vector; energy_per_token E is null and excluded so
+  the verdict becomes CONFIRMED only when E is measured).
+- **RPM-002:** UNRESOLVED. Cross-regime monotone check requires
+  trained-vs-random z-score; random-control evals are missing
+  from the Stage 1 aggregate.json (driver skip-eval on
+  untrained arms). Per-regime monotone hypothesis NOT yet
+  tested.
+- **RPM-006:** UNRESOLVED. Trained-vs-random separation requires
+  the missing random-control evals. Per-regime activation
+  regime NOT yet tested.
+
+### Registered (EXP-RPM-CAL calibration pre-experiment)
+- **EXP-RPM-CAL PREREGISTERED.** Maps threshold → ppl on the
+  AF2-D layer + attention_k + late_mlp (~11 thresholds ×
+  3 layers × 3 seeds = 99 eval-only runs; no residual training).
+  **Per user directive 7:** MUST run before any further
+  Stage 1.5/Stage 2 damage-sweep experiment is preregistered.
+  The next experiment's damage axis will be chosen from the
+  observed ppl function (not the uninformative threshold
+  knob). Manifest at
+  `research/residual-pareto/experiments/EXP-RPM-CAL/manifest.yaml`.
+
+### Changed (governance)
+- `research/registry/INDEX.md`: EXP-RPM-D0..D5 rows DECIDED;
+  EXP-RPM-CAL row added; RPM-001..006 status line updated
+  (RPM-001 tentative PASS at the per-regime level; RPM-002
+  and RPM-006 UNRESOLVED per the user directive that claim
+  definitions not be altered).
+- `research/ROADMAP.md`: rev 2.10; section 2.14 marked DONE;
+  Checkpoints section rewritten with Stage 1 verdict and the
+  EXP-RPM-CAL prerequisite; section 2.15 deferred pending
+  EXP-RPM-CAL.
+
+### Tests: 233/233 pass (unchanged; Stage 1 did not modify code).
 results, per the user's "no more architecture" instruction.
