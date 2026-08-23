@@ -1,0 +1,126 @@
+id: EXP-RPM-D4
+track: A
+subtrack: RPM Stage 1 damage sweep - D4 heavy damage (threshold=0.6)
+tier: discovery
+claims_addressed:
+- RPM-001
+- RPM-002
+title: RPM Stage 1 damage sweep (one regime)
+owner: research-harness
+date_proposed: '2026-08-23'
+status: PROPOSED
+decision: null
+grade: null
+hypothesis: At the AF2-D layer (model.layers.0.mlp.down_proj) with threshold=0.6 (group_size=128,
+  calibrate_norm=False), the matched-storage tournament reproduces the AF2-D arm ordering
+  (t2_ternary ties dense_adapter on capability metrics at matched bytes) AND the trained
+  t2_ternary arm recovers the damaged base substantially. The damaged-base starting
+  ppl lands in the preregistered band [200.0, 350.0] (observed covariate; deviation
+  noted but does not invalidate per RPM proposal section 5). This regime preregisters
+  damage severity only; cross-regime result interpretation is via RPM-002 (damage-dependence).
+rationale: 'Stage 1 of the RPM program (proposal section 5). Heavy TWN zeroing. Actual
+  ppl is observed. The damage mechanism is parameterized by preregistered knobs (threshold=0.6,
+  group_size=128, calibrate_norm=False); the resulting ppl is recorded as an observed
+  covariate, not tuned post-hoc. Within-regime comparison: trained t2_ternary vs random_t2_ternary
+  (RPM-006 axis) and trained t2_ternary vs dense_adapter (RPM-001 cost-vector axis).'
+revision: EXP-RPM-000-reproduced driver (687f3f5). Frozen at RUN-start.
+run_namespace: runs/r/EXP-RPM-D4/<timestamp>/seed-00X/<arm>/
+environment: legion; x86_64; 2x TITAN RTX; env-lock.txt recorded at run start
+model: allenai/OLMo-1B-0724-hf
+target_module: model.layers.0.mlp.down_proj
+damage_ptq:
+  threshold: 0.6
+  group_size: 128
+  calibrate_norm: false
+  applies: true
+  pre_train_eval_check: 'For EXP-RPM-D4: pre-train wikitext ppl lands in [200.0, 350.0]
+    (nominal target). Deviation is recorded as an observed covariate; does NOT invalidate
+    the run (per RPM proposal section 5).'
+arms:
+  trained:
+  - t2_ternary
+  - int4_residual
+  - int8_residual
+  - lora
+  - dense_adapter
+  untrained_controls:
+  - random_t2_ternary
+  - random_lora
+  no_correction:
+  - no_correction
+training:
+  corpus: wikitext-103 train split
+  token_cache: runs/r/EXP-RPM-D4/<ts>/wikitext103_train_ids.npy (sha256 captured;
+    AF8 independent re-tokenization)
+  optimizer: SGD lr=1e-3 momentum=0.9 grad-clip=1.0
+  objective: next-token cross-entropy on the damaged base
+  n_steps: 500
+  batch_size: 4
+  seq_len: 128
+  base_frozen: true
+  base_state: damaged-PTQ (per --damage-ptq with the regime's preregistered knobs)
+  eval_dtype: float16
+  eval_tasks:
+  - wikitext
+  - arc_easy
+  - lambada_openai
+  eval_limit: null
+matched_bytes_tolerance_pct: 1.0
+target_deployed_bytes: 4194404
+quantitative_thresholds:
+  id: EXP-RPM-D4-v1
+  pass:
+  - Damaged starting state ppl in [200.0, 350.0] (observed covariate).
+  - All trained arms within +/-1% matched-bytes tolerance.
+  - Trained t2_ternary recovers the damaged base (post-train ppl <= 1.5x the starting
+    ppl).
+  pass_plus:
+  - Trained t2_ternary beats random_t2_ternary by >2 stderr-of-difference on >=1 capability
+    metric (the RPM-006 representation-signal axis).
+  - Trained t2_ternary is Pareto-optimal against the full registered comparator set
+    (RPM-001 full-comparator rule, evaluated at this regime's cost-vector point).
+  fail:
+  - Matched-bytes tolerance violation for any trained arm.
+  - Trained t2_ternary does not recover (post-train ppl > 3x the starting ppl).
+decision_logic_summary: "Run all arms x 3 seeds under AF8 governance. Verify:\n  (a)\
+  \ damaged starting state ppl in [200.0, 350.0] (observation; deviation noted but\
+  \ does not invalidate);\n  (b) matched-bytes tolerance holds for all trained arms;\n\
+  \  (c) trained t2_ternary recovers the damaged base substantially.\nAggregate over\
+  \ n=3 seeds per arm. The Stage 1 cross-regime comparison (RPM-002) is computed AFTER\
+  \ all 6 regimes complete."
+stop_conditions:
+- 'All runs complete: 5 trained x 3 seeds + 2 untrained x 3 seeds + 1 no_correction
+  x 3 seeds = 24 runs total.'
+- Any matched-bytes tolerance violation -> that arm INVALIDATED, re-execute.
+- Any pre-train ppl outside nominal_band -> recorded as observation, run continues
+  (regime band is a target, not a hard validation criterion).
+expected_artifacts:
+- 'per-(seed, arm): history.jsonl, eval.summary.json, eval.full.json, adapter.npz
+  + meta, deployed_bytes.json, cost_vector.json'
+- 'per-seed: pre_train_eval.json (capturing the regime''s verified damaged-base state
+  BEFORE adapter training)'
+- 'aggregate.json: trained-arms summary, untrained-arms panel, cost-vector table,
+  Pareto frontier points, damage-mode verification, regime verdict'
+- provenance.json + env-lock.txt + driver.log + ARTIFACTS.json
+artifact_paths: []
+artifacts_manifest: runs/r/EXP-RPM-D4/<timestamp>/ARTIFACTS.json
+contamination_risks:
+- Token cache under runs/r/EXP-RPM-D4/<ts>/; sha256 captured; one writer per namespace.
+- Damage mode is a function of (threshold, group_size, calibrate_norm) applied to
+  the target module; reproducible from the frozen driver SHA + preregistered knobs.
+- 'Concurrent writers: the EXP-RPM-D4 writer is the only process touching runs/r/EXP-RPM-D4/.'
+freeze_exception:
+  change: New manifest per regime; no driver modifications. The Stage 1 sweep uses
+    the existing --damage-ptq / --damage-threshold knobs from AF2-D's recipe (group_size=128,
+    calibrate_norm=False) with threshold varied across regimes.
+  justification: Required to execute the preregistered RPM Stage 1 damage sweep (EXP-RPM-D0..D5).
+    The driver is invoked as-is; the only per-regime variation is the --damage-threshold
+    flag.
+  approved_by: 'harness rule: feature work permitted when required to execute a registered
+    experiment (OPERATING-PLAN section 3)'
+result_summary: ''
+confidence_and_reproduction: ''
+next_permitted_experiment: ''
+experiments_blocked: []
+conclusion: ''
+supersedes: null
