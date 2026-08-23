@@ -450,15 +450,6 @@ def build_site_adapter(arm_id: str, *, target_module, hidden_size: int,
     raise ValueError(f"unknown arm_id: {arm_id}")
 
 
-def build_base(model_name: str, *, dtype: str, device: str):
-    import torch
-    from transformers import AutoModelForCausalLM
-    torch.set_grad_enabled(False)
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=getattr(torch, dtype), low_cpu_mem_usage=True,
-    ).to(device)
-    model.eval()
-    return model
 
 
 def measure_latency_seconds(forward_fn, *, warmup: int = 5, iters: int = 100):
