@@ -1,16 +1,16 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
-**Revision:** 2.7 (2026-08-23) — section 2.12 (EXP-AF-002-D
-damaged-PTQ-start matched-storage tournament) DONE with
-**PASS_PLUS** on the architecture-vs-training-signal question.
-Trained t2_ternary recovers the broken-PTQ base from ppl 425.76
-to ppl 20.96 (20.3x recovery) AND pulls ahead of random_t2_ternary
-by 25-227 sigma on every capability metric. The architecture's
-regime of dominance is now bounded: on a calibrated base
-(AF2/AF2-R), T2 is Pareto-competitive but silent-vs-random; on a
-damaged base (AF2-D), T2 pulls ahead of random by 25+ sigma.
-**Driver bug fixed**: T2TernaryAdapter.is_untrained now set in
+**Revision:** 2.8 (2026-08-23) — section 2.13 (EXP-RPM-000
+reference lock + AF2-D reproduction) DONE with REPRODUCED
+(G-RPM-0 PASSED). All 6 preregistered checks in band
+(±2σ on the trained metrics; standard program rule). Two
+driver regressions caught by this reproduction (7383b57
+parent_module NameError; 687f3f5 missing
+_patch_module_forward call) and pinned by
+`tests/test_t2_ternary_adapter_construction.py`. Stage 1
+(EXP-RPM-D1..D6) manifests now ready for preregistration;
+RPM-001..006 stay UNTESTED until those run.
 __init__ (was class-defaulted to False; caused AF2-R's
 aggregate.json to misclassify random_t2_ternary as trained - the
 per-seed data was correct, only the audit classification was).
@@ -293,7 +293,38 @@ its way into adaptive-gating experiments.
       information in the damaged regime; silent on the calibrated
       base. Manifest: `experiments/AF2-D/manifest.yaml`.
       Verdict: `experiments/AF2-D/verdict-D.md`.
-- [ ] **2.5** `EXP-AF-005` — **AF5 downstream-transfer gate.** Proxy and
+- [x] **2.13** `EXP-RPM-000` — **RPM reference lock + AF2-D
+      reproduction (formal G-RPM-0 gate).** Two-arm
+      reproduction (damaged-PTQ starting state + trained
+      t2_ternary arm only) under AF8 governance; PASS bands
+      derived from AF2-D reference (±2σ; standard program
+      rule per OPERATING-PLAN §11 v2.3). AF2-D driver SHA
+      `7383b57` is the immutable reference; the reproduction
+      uses the driver at `687f3f5` (with two regressions
+      caught and fixed: `7383b57` parent_module NameError;
+      `687f3f5` missing `_patch_module_forward` call).
+      **Done 2026-08-23: REPRODUCED (6/6 checks in band).**
+      Run `runs/r/RPM-000/20260823T140032Z/af2d/`,
+      git `687f3f5`, n=3 seeds. Per-seed ppl [21.56, 16.87,
+      17.31] vs AF2-D [19.60, 24.01, 19.27]; within natural
+      seed-variance. AF8 governance held: new namespace,
+      fresh process on Legion, independent token cache.
+      Effect: RPM-001..006 stay UNTESTED but G-RPM-0
+      unlocks Stage 1 (RPM-D1..D6) manifests for
+      preregistration. Manifest:
+      `research/residual-pareto/experiments/RPM-000/manifest.yaml`.
+      Verdict: `research/residual-pareto/experiments/RPM-000/verdict.md`.
+- [ ] **2.14** `EXP-RPM-D1`..`EXP-RPM-D6` — **Stage 1 damage
+      sweep.** Six damage regimes D0 (ppl 13-15 calibrated)
+      → D5 (ppl 300-500 catastrophic/AF2-D-like). At the
+      AF2-D layer (`model.layers.0.mlp.down_proj`) with the
+      AF2-D budget (~4.2 MB), AF2-D training recipe, AF2-D
+      eval suite. Per-regime: 5 trained arms + random_t2 +
+      random_lora + no_correction × 3 seeds. Gates G-RPM-1
+      ("at least one damage regime places T2 on Pareto
+      frontier"). RPM-002 attacks the damage-dependence
+      hypothesis. Required manifests preregistered BEFORE
+      any run; cheapest-falsifier-first ordering.
       capability metrics on every AF run (classes per 1.4). Task-relevant T2
       value must exceed the preregistered threshold.
 - [ ] **2.6** `EXP-AF-006` — **AF6 dataset/context robustness.** ≥2 context

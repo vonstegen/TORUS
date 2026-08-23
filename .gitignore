@@ -71,6 +71,12 @@ dmypy.json
 
 # OS / temp
 Thumbs.db
+
+# Research artifacts: large serialized weights in per-seed dirs
+research/**/seed-*/**/adapter.npz
+research/**/provenance.json
+research/**/env-lock.txt
+.gitignore.tmp
 *~
 .nfs*
 

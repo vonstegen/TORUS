@@ -1,0 +1,73 @@
+{
+  "trained_arms": {
+    "t2_ternary": {
+      "n": 3,
+      "matched_bytes": [
+        4199318,
+        4199318,
+        4199318
+      ],
+      "matched_bytes_target": 4194404,
+      "cost_vector_rows": [
+        {
+          "deployed_bytes": 4199318,
+          "training_flops": 32212254720000,
+          "inference_ops_per_token": 33554432,
+          "memory_traffic_per_token": 4199318,
+          "latency_per_token_titan_rtx": 0.012239871978759765,
+          "energy_per_token": null
+        },
+        {
+          "deployed_bytes": 4199318,
+          "training_flops": 32212254720000,
+          "inference_ops_per_token": 33554432,
+          "memory_traffic_per_token": 4199318,
+          "latency_per_token_titan_rtx": 0.012447744369506837,
+          "energy_per_token": null
+        },
+        {
+          "deployed_bytes": 4199318,
+          "training_flops": 32212254720000,
+          "inference_ops_per_token": 33554432,
+          "memory_traffic_per_token": 4199318,
+          "latency_per_token_titan_rtx": 0.012444255828857421,
+          "energy_per_token": null
+        }
+      ],
+      "tasks": {
+        "wikitext": {
+          "n": 3,
+          "mean": 18.578312200595377,
+          "stderr": 1.4948384376369828,
+          "values": [
+            21.557460975804027,
+            16.87164268340376,
+            17.30583294257834
+          ]
+        },
+        "arc_easy": {
+          "n": 3,
+          "mean": 0.6050785634118968,
+          "stderr": 0.0056588226796012,
+          "values": [
+            0.5938552188552189,
+            0.6094276094276094,
+            0.6119528619528619
+          ]
+        },
+        "lambada_openai": {
+          "n": 3,
+          "mean": 0.5477068374409729,
+          "stderr": 0.0019801058108563315,
+          "values": [
+            0.5437609159712788,
+            0.5499708907432563,
+            0.5493887056083835
+          ]
+        }
+      }
+    }
+  },
+  "untrained_controls": {},
+  "tolerance_violations": []
+}

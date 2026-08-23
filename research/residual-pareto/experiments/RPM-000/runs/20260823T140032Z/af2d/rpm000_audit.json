@@ -1,0 +1,63 @@
+{
+  "auditor": "examples/audit_rpm_000_reproduction.py",
+  "checks": [
+    {
+      "band": [
+        400.0,
+        460.0
+      ],
+      "in_band": true,
+      "metric": "pre_train_ppl",
+      "value": 429.5512704717107
+    },
+    {
+      "band": [
+        0.45,
+        0.58
+      ],
+      "in_band": true,
+      "metric": "pre_train_arc_easy",
+      "value": 0.4886363636363636
+    },
+    {
+      "band": [
+        17.91,
+        24.01
+      ],
+      "in_band": true,
+      "metric": "trained_t2_ppl",
+      "value": 18.578312200595377
+    },
+    {
+      "band": [
+        0.592,
+        0.608
+      ],
+      "in_band": true,
+      "metric": "trained_t2_arc_easy",
+      "value": 0.6050785634118968
+    },
+    {
+      "band": [
+        0.539,
+        0.551
+      ],
+      "in_band": true,
+      "metric": "trained_t2_lambada",
+      "value": 0.5477068374409729
+    },
+    {
+      "in_band": true,
+      "metric": "deployed_bytes_t2",
+      "reference": 4199318,
+      "tolerance_pct": 1.0,
+      "value": 4199318
+    }
+  ],
+  "frozen_af2d_run": "",
+  "frozen_af2d_sha": "",
+  "manifest_id": "EXP-RPM-000",
+  "manifest_revision": "",
+  "n_seeds": 3,
+  "verdict": "REPRODUCED"
+}

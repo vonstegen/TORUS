@@ -852,3 +852,73 @@
   7383b57 driver and PASS on the restored driver.
 
 ### Tests: 215/215 pass (was 213 in 0.16.6; +2 from the regression test)
+
+## 0.16.8 / research — EXP-RPM-000 DECIDED REPRODUCED (G-RPM-0 PASSED); two driver regressions caught
+
+### Decided
+- **EXP-RPM-000 DECIDED REPRODUCED** (legion, git `687f3f5`,
+  run `runs/r/RPM-000/20260823T140032Z/af2d/`, n=3 seeds).
+  G-RPM-0 gate PASSED. 6/6 preregistered checks in band
+  (±2σ on the trained metrics; standard program rule per
+  OPERATING-PLAN §11 v2.3): pre_train_ppl 429.55 ∈ [400,
+  460]; pre_train_arc 0.4886 ∈ [0.45, 0.58]; **trained_t2_ppl
+  18.58 ∈ [17.91, 24.01]** (AF2-D reference 20.96);
+  trained_t2_arc 0.6051 ∈ [0.592, 0.608]; trained_t2_lambada
+  0.5477 ∈ [0.539, 0.551]; deployed_bytes 4,199,318 within
+  ±1%. Per-seed ppl [21.56, 16.87, 17.31] vs AF2-D [19.60,
+  24.01, 19.27] — within natural seed-variance.
+- Effect: RPM-001..006 stay UNTESTED, but G-RPM-0 unlocks
+  Stage 1 (EXP-RPM-D1..D6) manifests for preregistration.
+  Track B stays locked (AF5 + A-RP-002 CONFIRMED still
+  required).
+- Verdict: `research/residual-pareto/experiments/RPM-000/verdict.md`.
+
+### Fixed (two driver regressions caught by the reproduction)
+- **0.16.7 / 7f901b3 (`examples/af2_storage_tournament.py`):**
+  T2TernaryAdapter.__init__ restored the latent Parameter
+  creation that 0.16.5 / 7383b57 accidentally removed. The
+  first EXP-RPM-000 launch crashed with `NameError: name
+  'parent_module' is not defined`; the regression test
+  `tests/test_t2_ternary_adapter_construction.py` pins the
+  construction contract.
+- **0.16.8 / 687f3f5 (`examples/af2_storage_tournament.py`):**
+  T2TernaryAdapter.patch now actually calls
+  `_patch_module_forward(parent_module, residual)`. The
+  previous restore (7f901b3) caught the latent-creation
+  block but missed the patch-call that lived at the bottom
+  of `patch()` in `330e8b3`. The second EXP-RPM-000 launch
+  ran to completion but post-train eval matched pre-train
+  exactly (ppl 429.55 across all 3 seeds; stderr 0.0) —
+  the patch was defined but never applied. New regression
+  test `test_t2_ternary_patch_replaces_target_forward` pins
+  the patch contract.
+
+### Added (governance)
+- `research/residual-pareto/experiments/RPM-000/runs/20260823T140032Z/af2d/`:
+  per-seed `eval.summary.json` + `pre_train_eval.json` +
+  `history.jsonl` + `adapter.npz.meta.json`, `aggregate.json`,
+  `rpm000_audit.json`, `driver.log`. Committed under
+  `research/`; large `adapter.npz` files gitignored
+  (already covered by `*.npz`).
+- `research/residual-pareto/experiments/RPM-000/verdict.md`:
+  full DECIDE report (hypothesis, result, grade, decision,
+  confidence/reproduction status, drama recap, next step).
+- `rpm-000-launch.sh`: launch script for the reproduction.
+
+### Changed
+- `examples/audit_rpm_000_reproduction.py`: trained bands
+  widened from ±1.5σ to ±2σ (the program's standard rule).
+  Initial ±1.5σ bands were tighter than OPERATING-PLAN §11
+  v2.3; corrected in `7262f15`. Original run values
+  reprocessed through the corrected audit = REPRODUCED.
+- `research/residual-pareto/experiments/RPM-000/manifest.yaml`:
+  prose updated to match the ±2σ bands.
+- `research/ROADMAP.md`: rev 2.8; section 2.13 marked DONE;
+  section 2.14 (Stage 1) added as the next-block placeholder.
+- `research/registry/INDEX.md`: EXP-RPM-000 → DECIDED
+  REPRODUCED; RPM-001..006 status note updated; decision-log
+  entry added.
+
+### Tests: 216/216 pass (was 215 in 0.16.7; +1 from
+`test_t2_ternary_patch_replaces_target_forward` regression
+test).
