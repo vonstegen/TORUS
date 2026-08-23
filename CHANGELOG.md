@@ -1,6 +1,46 @@
 # CHANGELOG
 
-## 0.14.0 — Phase 3 trainer plumbing fixes + default residual init
+## 0.16.1 / research rev 2.3 — Track-A decision-axis revision + A-RP-001 PROVISIONAL_FAIL
+
+### Changed (research governance)
+- **OPERATING-PLAN rev 2.3** — added §11 "Track A decision-axis
+  revision". The A-F suite was asking "is T2 better than continued
+  FP16 training at equal training-time?"; AF1 decisively said *no*
+  (37:1 losers). The v2.3 Track-A primary decision axis is now
+  capability as a function of a **cost vector**
+  `C = (deployed bytes, training FLOPs, inference ops/token, memory
+  traffic/token, latency, joules/token)`. Single-scalar cost
+  matching is no longer permitted for Track-A claim tests; AF2 must
+  match deployed bytes (artifact) and report training FLOPs
+  separately, not conflate them with bytes or steps.
+- **OPERATING-PLAN §5** — Track-B B1 unlock rule rewritten: the
+  gating is now `A-RP-002 PROVISIONAL_PASS` (or above) +
+  `A-RP-002/003 CONFIRMED via AF8` + AF5 above threshold. The
+  historical "A-RP-001 CONFIRMED_PASS" prerequisite is retired in
+  favor of the storage Pareto argument that A-RP-002 carries.
+  Track-B stays locked either way through the A-F suite.
+- **OPERATING-PLAN claim-lifecycle clarification** — a
+  confirmation-tier ≥3-seed result with matched control design can
+  promote `TESTING → PROVISIONAL_FAIL` in one transition; set
+  `reproduction: REQUIRED` at the same transition. CONFIRMED_FAIL
+  only after an AF8-style clean reproduction (new run ID,
+  independent namespace, frozen SHA, fresh process, independently
+  generated eval output, ideally independent token-cache build).
+- **ROADMAP rev 2.3** — §2.1 marked DONE with PROVISIONAL_FAIL
+  (not DECIDED FAIL) per the lifecycle; §2.10 inserted
+  (`EXP-AF-001-R` clean reproduction, required before A-RP-001 →
+  CONFIRMED_FAIL); §2.2 (AF2) rewritten with the cost-vector
+  framing; CP2.1/CP2.4/G2→3 updated accordingly.
+
+### Changed (claim registry)
+- `A-RP-001.yaml` — `state: PROVISIONAL_FAIL`, `reproduction:
+  REQUIRED`. Conclusion language softened: even a CONFIRMED_FAIL
+  here closes only the equal-training-time branch and does not
+  block Track B if A-RP-002 (equal-storage) is supported. v2.3
+  lifecycle prescribes `EXP-AF-001-R` as the required next step.
+
+### No code changes
+0 code edits, no API changes. Research governance only.
 
 ### Fixed (audit Bugs 1–7)
 

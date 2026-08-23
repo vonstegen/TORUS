@@ -1,8 +1,22 @@
 # TORUS Operating Plan — How Research Runs From Here
 
-**Revision:** 2.2 (2026-08-22) — explicit authority order, claim versioning
-with quantitative thresholds, and mandatory ARTIFACTS.json provenance index.
-
+**Revision:** 2.3 (2026-08-22) — v2.2 hold plus the AF1 lesson. Two
+changes:
+(a) Track A primary decision axis is now **storage / compute / energy
+Pareto efficiency**, not "matched-training-time capacity" (see §11
+below). A-RP-001's wording conflated training-time and
+parameter-count as the cost axis; AF1 caught it and the v2 suite
+needs to keep that catch possible.
+(b) Claim-lifecycle clarification on `TESTING → PROVISIONAL_*`
+transitions: a confirmation-tier result (≥3 seeds, preregistered
+thresholds, matched-control design) moves `TESTING` directly to
+`PROVISIONAL_PASS` or `PROVISIONAL_FAIL`. `REPRODUCTION_REQUIRED` is
+the next state on the same lifecycle step, NOT a separate
+experiment-grade event. `CONFIRMED_PASS / CONFIRMED_FAIL` only
+after a clean reproduction (`AF8`-style: new run ID, independent
+namespace, frozen git SHA, fresh process, verified checkpoint
+hashes, independently generated eval output, ideally independent
+token-cache build). `INVALID` is reachable from any state.
 **This document is the single governing authority for TORUS research
 process.** `research/ROADMAP.md` governs sequencing and gates. The
 `docs/TORUS-feedback/` v2 package is design rationale; within it,
@@ -154,8 +168,7 @@ order:
 | Track B oracle gating (B1) | A-RP-001 `CONFIRMED_PASS`; A-RP-002 at least provisionally supported; AF5 shows task-relevant T2 value above its preregistered threshold |
 | OLMoE adaptive precision (B3) | B1 shows useful dense-model oracle savings **and** T1/T2 survived the A-F falsification suite |
 | Routine T3/T4 scaling | Measured marginal downstream gain per added physical bit/operation exceeds a preregistered threshold |
-| Large-model native Hadamard | Small controlled A-H1 earns `CONFIRMED_PASS` |
-| Recombination (Phase 6) | All constituent claims `CONFIRMED_PASS` under clean provenance |
+| Track B oracle gating (B1) | (reorganized under §11 v2.3) A-RP-001 CONFIRMED outcome is *not* the gate; A-RP-002 PROVISIONAL_PASS (or above) on the equal-storage tournament **and** AF5 task-relevant T2 value above its preregistered threshold **and** an AF8-clean CONFIRMED state on at least one of A-RP-002/003. A-RP-001's CONFIRMED_FAIL closes only the equal-training-time branch and does not on its own block Track B if A-RP-002 is supported. |
 
 ## 6. Rules with no exceptions
 
@@ -230,5 +243,78 @@ initialization.
 4. Pre-regime runs (v0.16.0 overnight distillation; the
    provenance-contaminated session) retro-registered as `INVALID`.
    → Roadmap 0.6.
-5. Track C needs a frozen named-workload benchmark spec before any run.
-   → Roadmap 5.1.
+
+## 11. v2.3 Track A decision-axis revision
+
+**Driven by:** `EXP-AF-001` (AF1, 2026-08-22, git `39be76c`).
+A-RP-001 as written failed decisively: at matched training-time
+budget, a sequentially trained T2 ternary correction plane (T1+T2)
+lost to plain T1-continued on every capability metric. The data are
+correct; the question was the wrong primary axis for a deployment
+decision.
+
+**From this revision forward, Track A's primary decision axis is:**
+
+> Capability as a function of a *cost vector*, not a single scalar.
+> The cost vector is, at minimum:
+>
+> **C = (deployed bytes,
+>     training FLOPs,
+>     inference ops / token,
+>     memory traffic / token,
+>     measured latency / token,
+>     joules / token)**
+>
+> Each term is reported separately. No claim "wins" on C alone;
+> a Pareto frontier is drawn across C and capability.
+
+Initially not every term is measurable at full fidelity — energy and
+latency require on-Titan instrumentation, etc. The architecture
+preserves all terms independently so subsequent revisions can swap
+in better measurements without invalidating the trial design.
+
+**Concretely, the v2.3 Track-A claim semantics become:**
+
+- **A-RP-002** (equal-storage tournament) is now the **central**
+  Track-A claim, not a peripheral one. The ternary T2 plane is
+  tested against INT4 residual, smaller INT8 residual, low-rank
+  correction, learned group scales, and a small dense adapter at
+  matched *physical bytes-in-deployment*, including scales,
+  metadata, headers, and alignment. The AF2 manifest must report
+  training FLOPs in addition to deployed bytes; "1.58 bits/weight"
+  is the *floor* on bytes, not the actual on-disk footprint.
+- **A-RP-001** (equal-training-time) is **PROVISIONAL_FAIL /
+  REPRODUCTION_REQUIRED**; even a CONFIRMED_FAIL here only closes
+  the equal-training-time branch, not the residual-plane program.
+  The lesson is architectural: the v2 wording chose the wrong
+  axis. Future ternary work must be evaluated at matched storage.
+- **A-RP-003** (sequential vs joint training) remains genuinely
+  open. The curriculum T1 → freeze → T2 may be suboptimal
+  relative to a joint or teacher-initialized curriculum; AF4
+  attacks this claim directly. Until AF4 returns, the
+  representation-versus-curriculum distinction must stay explicit
+  throughout the repo so a curriculum failure does not invalidate
+  the residual architecture.
+
+**Cost-vector reporting convention for all Track-A experiments
+(confirmed by this revision):**
+
+- The manifest declares which cost terms are measured, which are
+  held matched by construction, and which are explicitly out of
+  scope. An experiment that matches only bytes cannot use the
+  wording "matched compute" or "matched training budget"; it must
+  say "matched bytes" and list the other terms as out-of-scope
+  or held equal by inference.
+- Each experiment's results table includes a row per reported
+  term, even if all values are "matched." A Pareto plot across
+  the matrix becomes part of the final Track-A verdict
+  (§ 12 to follow).
+
+**Governance rule added by this revision:**
+
+> "Equal training steps" is no longer a defensible single-axis
+> match condition for Track A. Track-A claim tests must either
+> (a) match deployed bytes (the AF2 default) and report other
+> cost terms as out-of-scope, or (b) match a multi-term cost
+> vector and report all terms. Either is acceptable; a single-
+> scalar cost match is not.

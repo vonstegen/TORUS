@@ -1,9 +1,18 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
-**Revision:** 2.1 (2026-08-22) — adds Track A-F residual-plane falsification
-suite and the claim-driven harness model per
-`docs/TORUS-feedback/10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2.md`.
+**Revision:** 2.3 (2026-08-22) — OPERATING-PLAN §11. Three
+changes triggered by AF1:
+(a) the primary Track A decision axis is now storage/compute/energy
+Pareto efficiency, not "matched training time" (see OPERATING-PLAN
+§11 and the AF1 verdict);
+(b) Phase 2 §2.1 is marked DONE (PROVISIONAL_FAIL on A-RP-001, not
+  DECIDED FAIL); §2.10 inserts the AF1-R clean reproduction as the
+  next required step before A-RP-001 can transition to
+  CONFIRMED_FAIL;
+(c) §2.2 (AF2 equal-storage tournament) is elevated with cost-vector
+  framing, matching OPERATING-PLAN §11. v2.1 sequencing otherwise
+  holds.
 Rev 2.0 tracked feedback v2 docs 01–09.
 **Governing directive:** **Isolate. Falsify. Grade. Reproduce. Recombine.**
 **Authority order** (explicit; filename ordering is NOT authority):
@@ -185,26 +194,36 @@ correction.
 second correction plane adds real, useful capacity" survives strong controls.
 This is the first full test case of the claim-driven harness. T2 must earn
 its way into adaptive-gating experiments.
-
-**Claims:** A-RP-001, A-RP-002, A-RP-003.
-**Structure:** `research/track-a-residual-ternary/residual-falsification/
-{claims,experiments/AF1..AF8,reports}/`; each AF experiment runs
-`seed-001/002/003` sub-namespaces with config, provenance, train/eval JSONL,
-and checkpoint SHA-256.
-
-### Checklist
-
 - [x] **2.1** `EXP-AF-001` — **AF1 equal-training-budget control.** Arm A:
       T1 trained N steps + T1 continued N more steps. Arm B: T1 trained N
       steps → freeze → T2 trained N steps. Match tokens, batches, data order,
       optimizer budget, compute accounting. Compare `Q(T1 continued)` vs.
       `Q(T1+T2)`. No material T2 advantage → downgrade A-RP-001.
-      **Done 2026-08-22: DECIDED FAIL.** T1+T2 loses to T1-continued on every capability metric (wikitext ppl +9.09 stderr in favor of A, arc_easy -2.23, lambada_openai -6.24, n=3 seeds, matched CE, git `39be76c`). A-RP-001 transitioned to `DECIDED FAIL`. Track B stays locked; CP2.1 cannot pass; EXP-AF-002 (equal-storage) is the next-priority falsifier for A-RP-002.
-- [ ] **2.2** `EXP-AF-002` — **AF2 equal-storage tournament.** T2 ternary vs.
+      **Done 2026-08-22: PROVISIONAL_FAIL / REPRODUCTION_REQUIRED on A-RP-001.** T1+T2 loses to T1-continued on every capability metric at matched CE (wikitext ppl +9.09 stderr in favor of A, arc_easy -2.23, lambada_openai -6.24, n=3 seeds, git `39be76c`). A-RP-001 transitions `TESTING → PROVISIONAL_FAIL` per OPERATING-PLAN §11 v2.3 lifecycle; CONFIRMED_FAIL only after §2.10 (AF1-R) succeeds. Track B stays locked; the next-priority falsifier for the residual-plane program is now §2.2 (AF2 equal-storage tournament for A-RP-002) per OPERATING-PLAN §11, NOT a follow-up to A-RP-001.
+- [ ] **2.10** `EXP-AF-001-R` — **AF1-R clean reproduction of AF1.** Required
+      before A-RP-001 transitions to CONFIRMED_FAIL. New experiment/run ID,
+      independent namespace, git checkout of the AF1 SHA `39be76c`, fresh
+      Python process on legion (no shared mutable state with the AF1 process),
+      independently generated wikitext-103 token cache (re-tokenized,
+      sha256-recorded, not copied from the AF1 cache), independently generated
+      eval output, same preregistered thresholds, n=3 seeds (1, 2, 3). On
+      reproduction, write `research/track-a-residual-ternary/residual-falsification/experiments/AF1/verdict-R.md` and update A-RP-001 to CONFIRMED_FAIL.
+      On non-reproduction, write `verdict-INVALIDATED.md` and reopen A-RP-001
+      to TESTING.
+### Checklist
+
+- [ ] **2.2** `EXP-AF-002` — **AF2 equal-storage tournament.** The
+      primary Track-A falsifier per OPERATING-PLAN §11 v2.3. T2 ternary vs.
       INT4 residual, smaller INT8 residual, low-rank correction, learned
-      group scales, small dense adapter — at matched physical bytes incl.
-      scales/metadata. The claim is quality-per-physical-bit/compute Pareto
-      competitiveness, not "better than no T2."
+      group scales, small dense adapter — at matched *physical bytes-in-deployment*
+      including scales, metadata, headers, alignment, and a measured
+      training-FLOPs row. Each arm reports: deployed bytes (artifact),
+      training FLOPs (count), inference ops/token (compute per token),
+      memory traffic/token (count), measured latency where feasible,
+      plus the capability metrics (wikitext ppl, arc_easy, lambada_openai
+      at minimum). The claimed bit-density ("1.58 bits/weight") is the
+      *floor*, not the reported value. Quality per **vector C** Pareto
+      is the decision rule, not "better than no T2."
 - [ ] **2.3** `EXP-AF-003` — **AF3 initialization robustness.** Init matrix
       {0, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2} × seeds {11, 22, 33}. Aggregate
       mean/std/failure rate/best/worst. Classify ROBUST / MODERATELY
@@ -237,13 +256,12 @@ hold (`10` §15):
 
 | ID | Checkpoint | Pass criterion |
 |---|---|---|
-| CP2.1 | Budget control (AF1) | T1+T2 materially outperforms equal-budget T1 continuation. |
+| CP2.1 | Budget control (AF1) | T1+T2 materially outperforms equal-budget T1 continuation. **REV 2.3 STATUS:** provisional FAIL only — A-RP-001 is in `PROVISIONAL_FAIL / REPRODUCTION_REQUIRED` after `EXP-AF-001` (2026-08-22, git `39be76c`); CONFIRMED_FAIL only after §2.10 (AF1-R) clean reproduction. CP2.1 cannot pass on this evidence; the equal-training-time branch closes only after `A-RP-001 → CONFIRMED_FAIL`. |
 | CP2.2 | Robustness (AF3, AF8) | Gain survives multiple seeds and reasonable initialization variation (not FRAGILE). |
 | CP2.3 | Capability (AF5) | Held-out downstream improvement, not only KL reduction. |
-| CP2.4 | Storage competition (AF2, AF7) | T2 competitive with ≥1 equal-storage non-ternary correction baseline. |
+| CP2.4 | Storage competition (AF2, AF7) | T2 quality-per-cost-vector **Pareto-competitive** with ≥1 equal-storage non-ternary correction baseline. **REV 2.3:** each arm reports the cost vector `C = (deployed bytes, training FLOPs, inference ops/token, memory traffic/token, latency, joules/token)` separately; the table is multi-dimensional, not scalar. |
 | CP2.5 | Provenance (AF8) | Reproduced under clean immutable provenance → CONFIRMED states. |
-| **G2→3** | **A-F verdict** | A-RP-001 `CONFIRMED_PASS` **and** A-RP-002 at least provisionally supported **and** AF5 above threshold → Track B oracle gating unlocks. Failure → downgrade the claim; do not rescue the architecture with added complexity; Track B stays locked; Phase 6. |
-
+| **G2→3** | **A-F verdict** | **REV 2.3:** even a `CONFIRMED_PASS` on A-RP-001 is no longer the gate condition (A-RP-001 is on track to `CONFIRMED_FAIL`; the equal-training-time branch is closing). The gate condition becomes `(A-RP-002 PROVISIONAL_PASS, A-RP-003 PROVISIONAL_PASS or CONFIRMED_FAIL-clean, AF5 above threshold, AF8 clean reproduction)` — and Track-B B1 prerequisite wording is rewritten under v2.3 to allow A-RP-002 (storage) to substitute for the historical A-RP-001 requirement when the v2.2 wording is rendered obsolete. Track B stays locked through the A-F suite either way. |
 ---
 
 ## Phase 3 — Track A: Heterogeneous Precision, Hadamard, Decision

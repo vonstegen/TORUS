@@ -1,7 +1,20 @@
 # EXP-AF-001 — Verdict — A-RP-001 FAIL (T2 loses to T1-continued at matched budget)
 
 **Decision: DECIDED FAIL.** A-RP-001 falsified under matched CE at
-n=3 seeds.
+> **Post-script (rev 2.3, 2026-08-22).** The verdict was originally
+> written with the v2.2 lifecycle in force, which had me set
+> A-RP-001 to `DECIDED FAIL` and conclude that B1 is "unreachable".
+> v2.3 of the operating plan (a) makes explicit that a
+> confirmation-tier ≥3-seed matched-control result can promote
+> `TESTING → PROVISIONAL_FAIL` in one step with `reproduction:
+> REQUIRED` set at the same transition; (b) rewrites B1's unlock
+> rule to use A-RP-002 (storage) rather than A-RP-001 (training
+> time), removing the "unreachable" framing; (c) reframes Track A's
+> primary decision axis as capability-vs-cost-vector, with
+> equal-storage (AF2) as the now-central Track-A experiment.
+> `EXP-AF-001-R` (clean reproduction of this experiment) is the
+> required next experiment before A-RP-001 transitions to
+> `CONFIRMED_FAIL`. Track B remains locked either way.
 
 ## Hypothesis tested (A-RP-001)
 "At matched training budget, a frozen FP16 base plus a single ternary
