@@ -1,0 +1,6 @@
+{
+  "format": "dense_adapter_fp16_bottleneck",
+  "bottleneck": 192,
+  "in_dim": 8192,
+  "out_dim": 2048
+}

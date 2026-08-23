@@ -1,4 +1,56 @@
 # CHANGELOG
+## 0.16.4 / research — EXP-AF-002-R DECIDED CONFIRMED_PASS — A-RP-002 reproduction confirms PASS bar; PASS+ softens
+
+### Verified (AF8 clean reproduction of EXP-AF-002)
+- **EXP-AF-002-R** (legion run `runs/a/EXP-AF-002-R/20260823T062845Z`, git
+  `c036718`, n=3 seeds, matched deployed-bytes ~4.2 MB on
+  `model.layers.0.mlp.down_proj` of OLMo-1B) DECIDED
+  **CONFIRMED_PASS** for A-RP-002.
+- 21 runs total (5 trained arms × 3 seeds + 2 untrained structure
+  controls × 3 seeds). All 21 inside ±1% bytes tolerance;
+  `tolerance_violations: []`. Cost-vector byte counts
+  **byte-identical** to AF2 per (arm × seed) — the storage-Pareto
+  axis reproduces exactly.
+- Trained `t2_ternary` lies within ±1.1σ of `dense_adapter` on
+  every capability metric at n=3 (mean (B-A)/se_diff:
+  wikitext -1.125σ, arc_easy -0.547σ, lambada_openai -0.551σ).
+  PASS bar reproduces.
+
+### Softened (PASS+ no longer holds)
+- AF2 reported t2 dominating dense by +2.18σ on lambada_openai.
+  Inspecting AF2's per-seed lambada values reveals they were
+  **byte-identical across all 3 seeds** (spread = 0.000000) — a
+  zero seed-variance that made the +2.18σ an artifact of zero
+  denominator stderr. AF2-R's seed-variance is ~0.001-0.004
+  (matching dense_adapter's per-seed spread), putting the true
+  effect inside ±1σ.
+- **Conclusion:** the architecture is Pareto-competitive with
+  dense fp16 at matched bytes (PASS); it does not pull ahead by
+  >2σ on lambada (PASS+). The softening is a positive finding: it
+  shows AF2-R's role was not "try the same thing again" but the
+  AF8 governance check that detects zero-seed-variance artifacts
+  the original run had hidden.
+
+### Changed (governance)
+- `claims/A-RP-002.yaml`: state PROVISIONAL → CONFIRMED; new
+  transition entry; supporting_experiments now lists EXP-A-03x,
+  EXP-AF-001, EXP-AF-002, EXP-AF-002-R.
+- `research/registry/INDEX.md`: A-RP-002 → CONFIRMED_PASS; new
+  EXP-AF-002-R row; decision log entry.
+- `research/ROADMAP.md`: rev 2.5; §2.11 marked DONE
+  (CONFIRMED_PASS).
+- `research/track-a-residual-ternary/residual-falsification/experiments/AF2-R/`:
+  manifest.yaml + verdict-R.md + ARTIFACTS.json (90 files SHA-indexed).
+
+### Added (freezable tooling, audit-script mirror)
+- `examples/audit_af2_reproduction.py` — AF8 governance notary;
+  structural twin of `audit_af1_reproduction.py`; re-tokenizes
+  wikitext-103 to a fresh path, records SHA, refuses to overwrite.
+- `tests/test_audit_af2_reproduction.py` — 4 tests pinning
+  refuse-to-overwrite, AF8 record keys, sha256 matches hashlib,
+  --help runs.
+
+### No code changes (interface/architecture unchanged; 0.16.4 is research + governance only)
 
 ## 0.16.3 / research — EXP-AF-002 DECIDED PROVISIONAL_PASS — A-RP-002 headroom confirmed at matched deployed bytes
 

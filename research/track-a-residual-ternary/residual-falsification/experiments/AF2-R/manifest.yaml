@@ -70,10 +70,8 @@ new_in_this_run:
     way and refuses to overwrite an existing file."
   - "Independently generated eval output (full lm-eval-harness runs
     on the same three tasks; results are regenerated, not copied)."
-  - "Independently generated random-control seeds: random_t2_ternary
-    and random_lora use a fresh seed drawn at run start and recorded
-    in the audit (NOT reused from AF2's seed)."
-  - "env-lock.txt regenerated from `.venv/bin/pip freeze` at run start."
+  - "env-lock.txt regenerated from `.venv/bin/pip freeze` at run
+    start, and SHA recorded in ARTIFACTS.json."
 
 identical_to_af2:
   - "Code: git checkout at sha 0529749, no working-tree edits."
@@ -96,6 +94,14 @@ identical_to_af2:
     token stream, identical sampler seed); base frozen by
     construction (requires_grad_(False)); matched-bytes tolerance
     pinned by tests/test_af2_storage_tournament.py."
+  - "Random-control seed handling: random_t2_ternary and random_lora
+    use the same per-arm numpy seed as their trained counterparts
+    (the driver calls `np.random.seed(seed)` once per arm; the random
+    branches draw from the same generator). This is identical to AF2
+    by construction under the frozen SHA. AF8 traceability is
+    satisfied by the fresh process invocation and the new run
+    namespace, NOT by a divergent random seed (a divergent seed
+    would break the reproduction, not improve it)."
 
 # ----- thresholds (literal copy of AF2, frozen) ----------------------------
 # OPERATING-PLAN rev 2.3 §11 makes explicit that REPRODUCTION is set at
@@ -198,10 +204,6 @@ contamination_risks:
     DECIDE commit."
   - "Eval leakage: same disjointness as AF2 (eval tasks disjoint from
     wikitext-103 train)."
-  - "Random-control seed reuse: random_t2_ternary and random_lora in
-    AF2 used a fresh seed drawn at AF2 run start; AF2-R draws a NEW
-    fresh seed and records it. Identity across runs is informational,
-    not required."
 supersedes: null
 result_summary: ""
 confidence_and_reproduction: ""

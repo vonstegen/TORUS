@@ -1,12 +1,17 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
-**Revision:** 2.4 (2026-08-23) — §2.2 (AF2 equal-storage tournament)
-DONE with PROVISIONAL_PASS on A-RP-002 (t2 ternary Pareto-competitive
-with fp16 LoRA r=216 and fp16 dense_adapter r=192 at matched
-deployed-bytes on model.layers.0.mlp.down_proj, OLMo-1B). §2.11
-added: EXP-AF-002-R (AF8-style clean reproduction) as the required
-next step before A-RP-002 → CONFIRMED_PASS.
+**Revision:** 2.5 (2026-08-23) — §2.11 (EXP-AF-002-R clean reproduction)
+DONE with A-RP-002 → CONFIRMED_PASS. The PASS bar reproduces
+(t2 within ±1.1σ of dense on every metric); the PASS+ bar (lambada
++2.18σ dominance) does NOT reproduce — AF2's zero seed-variance on
+t2_ternary lambada was a single-point quirk; AF2-R reveals true
+seed-variance ~0.001-0.004, putting the true effect inside ±1σ.
+Track B B1 unlock rule: A-RP-002 CONFIRMED_PASS met; AF5 task-
+relevant T2 above threshold still required.
+**Revision 2.4** (2026-08-23) — §2.2 (AF2 equal-storage tournament)
+DONE with PROVISIONAL_PASS on A-RP-002. §2.11 added: EXP-AF-002-R
+(AF8-style clean reproduction) as the required next step.
 **Revision 2.3** (2026-08-22) — three changes triggered by AF1:
 (a) the primary Track A decision axis is now storage/compute/energy
 Pareto efficiency (OPERATING-PLAN §11);
@@ -239,20 +244,24 @@ its way into adaptive-gating experiments.
       {0, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2} × seeds {11, 22, 33}. Aggregate
       mean/std/failure rate/best/worst. Classify ROBUST / MODERATELY
       SENSITIVE / FRAGILE; narrow-window success lowers the robustness grade.
-- [ ] **2.4** `EXP-AF-004` — **AF4 sequential vs. joint.** Arms: T1→freeze→
-      T2; joint(T1,T2) where appropriate; T1→T2→T3 sequential; T1→joint(T2,
-      T3); T1-only with matched extra budget. Report gain per training token
-
-- [ ] **2.11** `EXP-AF-002-R` — **AF2-R clean reproduction of AF2.** Required
+- [x] **2.11** `EXP-AF-002-R` — **AF2-R clean reproduction of AF2.** Required
       before A-RP-002 transitions to CONFIRMED_PASS. New experiment/run ID,
       independent namespace, fresh process on legion, independently generated
       wikitext-103 token cache (auditator re-tokenizes from the HF
       parquet shards, SHA-fingerprints every input, records PID + UTC;
       identity vs AF2 is the expected outcome, NOT a violation), independent
-      eval output, same preregistered thresholds, n=3 seeds (1, 2, 3). On
-      reproduction, write `experiments/AF2/verdict-R.md` and update A-RP-002
-      to CONFIRMED_PASS. On non-reproduction, write
-      `verdict-INVALIDATED.md` and reopen A-RP-002 to TESTING.
+      eval output, same preregistered thresholds, n=3 seeds (1, 2, 3).
+      **Done 2026-08-23: PROVISIONAL_PASS on A-RP-002** (run
+      `research/track-a-residual-ternary/residual-falsification/experiments/AF2-R/runs/20260823T062845Z`,
+      git `c036718`). 21 runs total; all inside ±1% bytes tolerance.
+      Cost-vector byte counts byte-identical to AF2 (per arm × per seed).
+      Trained t2_ternary within ±1.1σ of dense_adapter on every metric
+      (mean (B-A)/se_diff: wikitext -1.125σ, arc_easy -0.547σ,
+      lambada -0.551σ). PASS+ (lambada +2.18σ) does NOT reproduce —
+      see verdict-R.md §"Reading the lambada sign flip". Architecture-
+      vs-training diagnostic unchanged: trained T2 ≈ random T2 at N=500
+      on a calibrated FP16 base. CONFIRMED_PASS under the PASS bar;
+      Track B B1 unlock still requires AF5.
 - [ ] **2.5** `EXP-AF-005` — **AF5 downstream-transfer gate.** Proxy and
       capability metrics on every AF run (classes per 1.4). Task-relevant T2
       value must exceed the preregistered threshold.
