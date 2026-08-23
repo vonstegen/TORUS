@@ -1,0 +1,47 @@
+{
+  "arm": "random_t2_ternary",
+  "seed": 2,
+  "model": "allenai/OLMo-1B-0724-hf",
+  "target_module": "model.layers.0.mlp.down_proj",
+  "n_steps": 500,
+  "batch_size": 4,
+  "seq_len": 128,
+  "lr": 0.001,
+  "limit": null,
+  "tasks": {},
+  "matched_bytes_target": 0,
+  "matched_bytes_actual": 4199318,
+  "matched_bytes_tolerance_pct": 1.0,
+  "matched_bytes_passed": true,
+  "cost_vector": {
+    "deployed_bytes": 4199318,
+    "training_flops": 32212254720000,
+    "inference_ops_per_token": 33554432,
+    "memory_traffic_per_token": 4199318,
+    "latency_per_token_titan_rtx": 0.012496895790100097,
+    "energy_per_token": null
+  },
+  "is_untrained_control": true,
+  "damage_meta": {
+    "group_size": 128,
+    "threshold": 0.7,
+    "calibrate_norm": false,
+    "fro_norm_before": 26.3125,
+    "fro_norm_after": 15.875,
+    "fro_ratio": 0.6033254156769596
+  },
+  "pre_train_eval": {
+    "lambada_openai": {
+      "metric": "acc,none",
+      "value": 0.24180089268387348
+    },
+    "arc_easy": {
+      "metric": "acc_norm,none",
+      "value": 0.48863636363636365
+    },
+    "wikitext": {
+      "metric": "word_perplexity,none",
+      "value": 429.5512704717107
+    }
+  }
+}

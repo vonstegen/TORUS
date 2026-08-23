@@ -1,0 +1,119 @@
+# Experiment record - EXP-RPM-CAL - Damage-knob calibration pre-experiment
+# Preregistered 2026-08-23 BEFORE any run under this ID.
+# Required by Stage 1 finding F5 (D1/D2/D3 collapse into the same
+# observed-ppl regime; the preregistered threshold axis is not
+# informative at the lower end). Per user directive 7: this is a
+# CHEAP calibration experiment whose only purpose is to map threshold
+# -> actual representation statistics -> pre-correction capability.
+# NO residual training is performed.
+#
+# Stage 2 / Stage 1.5 damage-sweep experiments (the next substantive
+# RPM-001/002/006 test) MUST NOT be preregistered until this calibration
+# completes and its threshold->damage function informs the choice of
+# damage axis for those experiments.
+id: EXP-RPM-CAL
+track: A
+subtrack: "RPM calibration pre-experiment (threshold->ppl mapping)"
+tier: discovery
+claims_addressed: []   # calibration; does NOT attack any RPM claim directly.
+                         # Provides the damage-axis design for the next
+                         # substantive experiment.
+title: "Threshold->ppl mapping for the AF2-D layer (and 3 transfer layers): no residual training"
+owner: "research-harness"
+date_proposed: "2026-08-23"
+status: PROPOSED
+decision: null
+grade: null
+
+hypothesis: >
+  For the AF2-D layer (`model.layers.0.mlp.down_proj`), the
+  threshold-knob->pre-train-ppl mapping is non-monotonic and
+  highly step-like (per Stage 1 finding F5: thresholds 0.0,
+  0.3, 0.5 all produce ppl ~1525). A denser threshold sweep
+  will reveal whether the transition is gradual or discontinuous,
+  and will identify the threshold values that produce the most
+  informative damage spread for the next Stage 1.5/Stage 2
+  experiment.
+
+rationale: >
+  The preregistered Stage 1 threshold axis was 0.0/0.3/0.5/0.6/0.7,
+  but 3 of 5 active values collapse to the same ppl. The
+  hypotheses (RPM-002 monotone, RPM-001 Pareto-band) cannot be
+  cleanly tested with an uninformative axis. A denser sweep at
+  the same fixed group_size=128 and calibrate_norm=False will
+  identify the threshold range where ppl actually varies, so the
+  next experiment can preregister its damage axis against
+  OBSERVED ppl, not against the knob.
+
+# CALIBRATION is not an experiment about residual corrections; it's
+# only a measurement of the pre-correction base at various threshold
+# values. There is no training step. Per regime we measure pre-train
+# ppl on the damaged base only.
+
+revision: ""              # filled at RUN - driver SHA
+run_namespace: "runs/r/EXP-RPM-CAL/<timestamp>/threshold-<value>/"
+environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt recorded at run start"
+
+# Preregistered threshold sweep.
+damage_sweep:
+  thresholds: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  group_size: 128
+  calibrate_norm: false
+  layers:
+    - id: af2d_layer
+      target_module: "model.layers.0.mlp.down_proj"
+    - id: attention_k
+      target_module: "model.layers.0.self_attn.k_proj"
+    - id: late_mlp
+      target_module: "model.layers.15.mlp.down_proj"
+
+per_threshold_runs:
+  seeds: [1, 2, 3]
+  measurement: "pre_train_ppl + pre_train_arc_easy (wikitext + arc_easy only; no lambada)"
+  no_residual_training: true
+  pre_train_eval_only: true
+  inference_only: true
+  matched_storage_tournament: false
+  note: >
+    Per threshold x layer x seed, we apply --damage-ptq with the
+    threshold, then run lm-eval-harness on the DAMAGED base (no
+    adapter). This is a 30-second-eval-only run per cell.
+
+total_runs: "11 thresholds x 3 layers x 3 seeds = 99 eval-only runs (no training)."
+
+quantitative_thresholds:
+  id: EXP-RPM-CAL-v1
+  pass:
+    - "PPL-vs-threshold curve is well-characterized (no large gaps in observed ppl)."
+    - "All 99 runs complete within the wall-time budget (estimated 90 min)."
+    - "At least 4 distinct observed-ppl bands span the ppl range from FP16 baseline (~13) to catastrophic (~700)."
+  fail:
+    - "Damage mode fails to reproduce AF2-D's D5 ppl 430 within ±2σ (i.e. calibration environment is broken)."
+
+stop_conditions:
+  - "All 99 eval-only runs complete."
+  - "Any pre-train eval lands outside the expected band (e.g. ppl 0 or NaN) -> that cell re-executed with diagnostic."
+
+expected_artifacts:
+  - "per-(threshold, layer, seed): pre_train_eval.json + damage_meta.json"
+  - "aggregate.json: per-(threshold, layer) mean + stderr of pre-train ppl + arc_easy"
+  - "summary.json: the threshold->ppl function per layer (3 layers), suitable for designing the next Stage 1.5/Stage 2 damage axis"
+  - "driver.log + env-lock.txt + ARTIFACTS.json"
+
+artifact_paths: []
+artifacts_manifest: "runs/r/EXP-RPM-CAL/<timestamp>/ARTIFACTS.json"
+contamination_risks:
+  - "Token cache under runs/r/EXP-RPM-CAL/<ts>/; sha256 captured; one writer per namespace."
+  - "Damage mode is a function of (threshold, group_size, calibrate_norm); reproducible from the frozen driver SHA + preregistered knobs."
+
+freeze_exception:
+  change: "New manifest; no driver modifications. The Stage 1 driver supports pre-train eval via --damage-ptq --pre-train-eval (which we used in Stage 1 itself). No new flags needed."
+  justification: "Required to characterize the damage axis before designing the next Stage 1.5/Stage 2 damage-sweep experiment."
+  approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN section 3)"
+
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""
+supersedes: null

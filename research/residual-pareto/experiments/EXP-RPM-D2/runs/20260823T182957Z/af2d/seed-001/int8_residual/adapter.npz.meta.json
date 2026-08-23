@@ -1,0 +1,8 @@
+{
+  "format": "int8_per_row_fp16_scale",
+  "N_bits": 8,
+  "out_features": 2048,
+  "in_features": 8192,
+  "column_mask_fraction": 0.25,
+  "packed_columns": 512
+}
