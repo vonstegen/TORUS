@@ -384,12 +384,13 @@ def resolve_target_module(model, target_path: str):
     for sub in leaf.named_children():
         if hasattr(sub[1], "weight") and hasattr(sub[1].weight, "device"):
             return sub[1]
-    raise AttributeError(
-        f"target {target_path}: neither {type(leaf).__name__} nor its "
-        "children have a usable .weight attribute"
-    )
-
-
+def build_base(model_name: str, *, dtype: str, device: str):
+    import torch
+    from transformers import AutoModelForCausalLM
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name, torch_dtype=getattr(torch, dtype), low_cpu_mem_usage=True,
+    ).to(device)
+    return model
 def build_site_adapter(arm_id: str, *, target_module, hidden_size: int,
                        intermediate_size: int):
     """Build a SiteAdapter at the given target_module.
