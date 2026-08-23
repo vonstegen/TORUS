@@ -576,9 +576,13 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
         )
     intermediate_size = getattr(model.config, "intermediate_size",
                                   4 * model.config.hidden_size)
+    adapter = build_site_adapter(
+        arm, target_module=target_module,
+        hidden_size=model.config.hidden_size,
+        intermediate_size=intermediate_size,
+    )
     def forward_fn(ids):
         return model(input_ids=ids).logits
-
     history = []
     if adapter.trainable_parameters():
         data = make_window_sampler(

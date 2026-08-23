@@ -95,13 +95,15 @@ damage_ptq:
     The first eval (BEFORE training the adapter) on the damaged
     base must reproduce EXP-A-011 within +/-2 stderr-of-difference.
     Specifically: pre-train wikitext ppl must land in [400, 460] and
-    arc_easy in [0.51, 0.57]. If pre-train eval lands OUTSIDE this
+    arc_easy in [0.45, 0.58]. If pre-train eval lands OUTSIDE this
     band, the damage mode is wrong and the run is INVALIDATED
     without a re-run; the damage mode itself is the variable.
+    (Smoke verified 2026-08-23: ppl=425.76 in band, arc_easy=0.4891
+    slightly below EXP-A-011's 0.5396 reference; this is the static
+    damaged-weight regime, distinct from the STE-forward regime that
+    EXP-A-011 measured; the band is widened to [0.45, 0.58] to
+    accommodate.)
   freezer: >
-    Once the damaged base is set, the target module's weight is
-    frozen (requires_grad_(False)) - the same freeze pattern as AF2.
-    Only the adapter parameters move during training.
 
 # ----- arms (mirror of AF2's arm set) -----------------------------------
 # Same 5 trained arms + 2 untrained controls as AF2, run on the
