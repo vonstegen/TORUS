@@ -1,0 +1,115 @@
+# TORUS RPM Cost Vector Schema v1 — FROZEN per RPM proposal §4 (Stage 0 freeze).
+# This file is the authoritative definition of the physical-cost dimensions used
+# in every RPM-stage Pareto comparison. Changes require a version bump
+# (COST-VECTOR-v2.yaml) and an explicit regression justification; in-flight
+# experiments referencing v1 do not migrate.
+#
+# AUTHORITY: research/OPERATING-PLAN.md §11 v2.3 cost-vector framing, extended
+# from a single deployed-bytes axis to the full 6-tuple below.
+#
+# RULE: do NOT collapse these dimensions into a weighted "TORUS score."
+# Perform Pareto comparisons dimension-by-dimension.
+
+schema_version: 1
+frozen_at: "2026-08-23"
+
+# ----------------------------------------------------------------------------
+# Cost dimensions: C = (B, F, O, M, L, E)
+# ----------------------------------------------------------------------------
+
+dimensions:
+  - id: B
+    name: deployed_bytes
+    units: bytes
+    required_by_stage: [RPM-D, RPM-L, RPM-B, RPM-T, RPM-SYS]
+    measurement: "actual serialized deployed artifact size, including metadata, scales, masks, headers, padding. NOT theoretical bits/weight."
+    provenance_rule: "sha256 of the deployed artifact recorded in ARTIFACTS.json; byte counts verified against disk in the audit step."
+
+  - id: F
+    name: training_flops
+    units: FLOPs (counted as 2 * mac_ops; report both conventions when ambiguous)
+    required_by_stage: [RPM-D, RPM-L, RPM-B, RPM-T, RPM-SYS]
+    measurement: "measured on Legion (CUDA) where available; consistently estimated (model.layers + adapter forward+backward hooks) when not."
+    provenance_rule: "recording convention must be declared in the manifest; per-arm total reported in eval.summary.json."
+
+  - id: O
+    name: inference_ops_per_token
+    units: ops/token
+    required_by_stage: [RPM-L, RPM-T, RPM-SYS]
+    measurement: "under a specified counting convention (e.g. multiply-accumulate, FMA-equivalent). Convention must be declared in the manifest and held constant across the comparator set."
+    provenance_rule: "counted via instrumented forward pass on the same input batch; reporting script version pinned in the manifest."
+
+  - id: M
+    name: memory_traffic_per_token
+    units: bytes/token
+    required_by_stage: [RPM-T, RPM-SYS]
+    measurement: "measured/estimated DRAM bytes moved per generated token under the declared inference batch and sequence length."
+    provenance_rule: "nvidia-smi / nsys profile on Legion where available; analytical model with declared assumptions when not."
+
+  - id: L
+    name: latency_per_token
+    units: milliseconds/token
+    required_by_stage: [RPM-SYS]
+    measurement: "measured under a frozen benchmark protocol: warm-up runs excluded, repeated timed runs with noise accounting (median + IQR), single fixed batch size and sequence length declared in the manifest."
+    provenance_rule: "hardware/environment (GPU model, driver, torch version, CUDA version) recorded in the run namespace; bare measurements are not comparable across hardware."
+
+  - id: E
+    name: joules_per_token
+    units: joules/token
+    required_by_stage: [RPM-SYS]
+    measurement: "measured (nvidia-smi power draw sampled at 100ms over the timed run, integrated) on Legion. DO NOT infer energy savings from fewer nominal operations."
+    provenance_rule: "power sampling frequency and integration method declared in the manifest; wall-time wall-clock-anchored."
+
+# ----------------------------------------------------------------------------
+# Pareto comparison rules
+# ----------------------------------------------------------------------------
+
+pareto_rules:
+  - "A point is Pareto-optimal only if no comparator is simultaneously equal-or-better on every registered capability metric AND lower-or-equal on every applicable registered cost dimension."
+  - "Each cost dimension is evaluated independently. A mechanism is Pareto-optimal at point P only if it is non-dominated on every dimension that is required_by_stage for P's stage."
+  - "Capabilities and costs are NEVER combined into a single scalar score for primary decision-making. Composite scores, if computed, are diagnostic only and must be labeled as such."
+  - "Capability per MB form (E_B = (Q_corrected - Q_damaged) / deployed_MB) is reported per metric, not merged across metrics."
+  - "When a cost dimension is not measured in a given stage, its absence must be recorded explicitly in the manifest (status: not_measured / estimated / hardware_unavailable)."
+
+# ----------------------------------------------------------------------------
+# Comparator set (frozen; mirrored from the AF2-D set plus random_lora)
+# ----------------------------------------------------------------------------
+
+comparator_set:
+  - id: t2_ternary
+    description: "trained ternary residual correction plane (T2TernaryAdapter)"
+  - id: int4_residual
+    description: "trained int4 column-masked residual"
+  - id: int8_residual
+    description: "trained int8 column-masked residual"
+  - id: lora
+    description: "fp16 LoRA, rank variable"
+  - id: dense_adapter
+    description: "fp16 low-rank dense adapter, bottleneck variable"
+  - id: random_t2_ternary
+    description: "untrained T2TernaryAdapter (random codes, untrained scales); trained-T2 vs random-T2 separation is the representation-signal axis (RPM-006)"
+  - id: random_lora
+    description: "untrained fp16 LoRA (random init, no training); structural control for fp16 comparator set"
+  - id: no_correction
+    description: "damaged or healthy base with no adapter; the recovery-floor baseline"
+
+# ----------------------------------------------------------------------------
+# Stage requirements summary
+# ----------------------------------------------------------------------------
+
+stage_requirements:
+  RPM-000: [B, F]              # reference lock + AF2-D reproduction
+  RPM-D:   [B, F]              # damage sweep; ops/memory/latency/energy deferred
+  RPM-L:   [B, F]              # layer sweep; ops/memory/latency/energy deferred
+  RPM-B:   [B, F]              # budget sweep; ops/memory/latency/energy deferred
+  RPM-T:   [B, F, O, M]        # task robustness; ops + memory required; latency/energy deferred
+  RPM-SYS: [B, F, O, M, L, E]  # physical systems validation; ALL six dimensions required
+
+# ----------------------------------------------------------------------------
+# Stop-rule alignment (mirrors RPM proposal §12)
+# ----------------------------------------------------------------------------
+
+stop_rules:
+  - "T2's apparent storage advantage disappears after actual packing/metadata accounting (B-only check)."
+  - "Measured systems cost (L or E) removes T2 from all Pareto frontiers."
+  - "T2 requires training cost (F) grossly higher than comparators for the same deployed benefit."

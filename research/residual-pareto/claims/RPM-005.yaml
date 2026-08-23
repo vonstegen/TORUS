@@ -1,0 +1,23 @@
+id: RPM-005
+claim_version: 1
+track: A
+title: "T2 is relatively more competitive as deployed-byte budget tightens"
+statement: "T2's Pareto status (per RPM-001's full-comparator-set rule) at the Stage-2 confirmed layer/damage combinations is non-decreasing as the deployed-byte budget tightens within the preregistered B-sweep range — i.e. T2 occupies the frontier at small budgets even when it does not at large budgets."
+quantitative_thresholds:
+  - "PASS: At the Stage-2-confirmed combinations, T2 is Pareto-optimal at a budget ≤ 2 MB AND not Pareto-optimal at a budget ≥ 4 MB (relative-frontier improvement under tightening). Equivalently: a monotone improvement of T2's rank in the capability-recovered-per-MB ordering as budget decreases."
+  - "FAIL: T2's Pareto region does not extend to budgets ≤ 2 MB, OR its relative position worsens monotonically as budget tightens."
+  - "Budget sweep: 0.5, 1, 2, 4, 8 MB per correction site. Every mechanism resized to fall within ±1% of target serialized bytes (compare actual packed bytes, not bits/weight)."
+  - "Resize knobs: T2 — active rows/columns, grouping, # planes, packed structure. INT4/INT8 — masks/group sizes. LoRA — rank. Dense — bottleneck width."
+  - "Capability per MB form (metric-specific, no scalar merging): E_B = (Q_corrected - Q_damaged) / deployed_MB for each metric independently."
+date_registered: "2026-08-23"
+state: UNTESTED
+status: ""
+required_evidence: [RPM-B, RPM-L, RPM-D]
+supporting_experiments: []
+unlock_rules_affected:
+  - "Practical deployment size classes (sub-MB / mobile / server-side)"
+history:
+  - date: "2026-08-23"
+    transition: "-> UNTESTED"
+    cause: "registered per RPM proposal acceptance. Stage 3 family: EXP-RPM-B1 through B5. Tighter-budget advantage is a falsifiable sub-hypothesis of RPM-001 and warrants independent registration rather than folding."
+conclusion: ""

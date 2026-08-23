@@ -1,0 +1,22 @@
+id: RPM-002
+claim_version: 1
+track: A
+title: "T2 value increases with base damage severity"
+statement: "The relative gain of trained T2 over random T2 and no-correction baselines increases monotonically (or at least non-decreasingly) as base-model damage rises from mild to severe, holding layer, budget, training recipe, and evaluation suite fixed."
+quantitative_thresholds:
+  - "PASS: For at least three consecutive damage regimes (e.g. D1→D2→D3 or D2→D3→D4 from the D0..D5 sweep), the trained-T2 vs random-T2 effect size (in standard errors of the difference) is non-decreasing."
+  - "FAIL: The effect size is non-increasing across all consecutive regime pairs, OR the trained-vs-random separation fails to materialize at any damage level (cross-falsifies with RPM-006)."
+  - "Damage regimes: D0 ≈ ppl 13-15 (calibrated); D1 ≈ 20-40; D2 ≈ 40-80; D3 ≈ 80-150; D4 ≈ 150-300; D5 ≈ 300-500 (AF2-D-like)."
+  - "Record the observed starting ppl as a covariate; the preregistered target bands are nominal, the actual measurement is the binding value for ranking."
+date_registered: "2026-08-23"
+state: UNTESTED
+status: ""
+required_evidence: [RPM-D, EXP-RPM-000]
+supporting_experiments: []
+unlock_rules_affected:
+  - "Which damage regimes are eligible for Stage 2 (Layer sweep) confirmation"
+history:
+  - date: "2026-08-23"
+    transition: "-> UNTESTED"
+    cause: "registered per RPM proposal acceptance. EXP-RPM-000 must pass before EXP-RPM-D1..D6 execute. Stage 1 family: EXP-RPM-D1 through EXP-RPM-D6 (six damage regimes)."
+conclusion: ""

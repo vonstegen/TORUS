@@ -1,0 +1,22 @@
+id: RPM-004
+claim_version: 1
+track: A
+title: "Best residual representation is task-dependent, not mechanism-invariant"
+statement: "For at least one tested (layer, damage, budget) combination, the residual mechanism with the best perplexity differs from the mechanism with the best downstream-task capability — i.e. no single mechanism dominates across both metric families at that combination."
+quantitative_thresholds:
+  - "PASS: At ≥1 tested combination, the perplexity-best mechanism is NOT the task-best mechanism (mechanism IDs differ)."
+  - "FAIL: Across every tested combination, the same mechanism dominates on both metric families (no task-vs-perplexity mechanism split)."
+  - "Task suite: WikiText ppl, ARC-Easy, LAMBADA/OpenAI, plus one reasoning/knowledge task and one longer-context/continuation task. Two context-length regimes where feasible (short ~16-32, standard ~128-256, longer if hardware permits)."
+  - "Task-robustness rule: A mechanism is task-robust only if no registered capability task is worse than the best matched-storage control by >2 standard errors unless a clearly lower physical cost creates a distinct Pareto point."
+date_registered: "2026-08-23"
+state: UNTESTED
+status: ""
+required_evidence: [RPM-T, RPM-D, RPM-L, RPM-B]
+supporting_experiments: []
+unlock_rules_affected:
+  - "Whether T2 retains Pareto status only on perplexity-subset metrics (downgrades interpretation of any PASS+ from earlier stages)"
+history:
+  - date: "2026-08-23"
+    transition: "-> UNTESTED"
+    cause: "registered per RPM proposal acceptance. Stage 4 family: EXP-RPM-Txx. Must NOT select only tasks favorable to T2."
+conclusion: ""

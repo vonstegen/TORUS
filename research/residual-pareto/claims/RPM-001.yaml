@@ -1,0 +1,23 @@
+id: RPM-001
+claim_version: 1
+track: A
+title: "T2 lies on a capability-vs-cost Pareto frontier for at least one nontrivial regime"
+statement: "For at least one nontrivial combination of base damage/compression severity, model layer/category, task family, and deployed-byte budget, a trained ternary residual correction mechanism is Pareto-optimal against the COMPLETE registered comparator set (INT4, INT8, LoRA, dense low-rank) — i.e. no comparator is simultaneously equal-or-better on every registered capability metric AND lower-or-equal on every applicable registered physical-cost dimension."
+quantitative_thresholds:
+  - "PASS: For at least one (damage regime, layer/category, task family, deployed-byte budget) point, no registered comparator dominates T2 across all registered capability AND physical-cost dimensions."
+  - "PASS+ (strong): PASS, AND trained-vs-random separation reproduces per RPM-006, AND T2 is non-dominated against at least two conventional matched-cost comparators on the relevant capability/cost projections."
+  - "FAIL: For every tested combination, at least one registered comparator dominates T2 (better-or-equal on every capability metric, lower-or-equal on every applicable cost dimension)."
+  - "Global-comparator rule: PASS+ is NOT granted by merely beating two comparators; the full registered comparator set is evaluated at every tested combination."
+date_registered: "2026-08-23"
+state: UNTESTED
+status: ""
+required_evidence: [RPM-D, RPM-L, RPM-B, RPM-T, RPM-SYS, EXP-RPM-000]
+supporting_experiments: []
+unlock_rules_affected:
+  - "Track B B1 unlock precondition (in addition to existing A-RP-002 CONFIRMED + AF5 task-relevant T2 met)"
+  - "Whether T2 remains a core TORUS representation vs being demoted to a narrow mechanism"
+history:
+  - date: "2026-08-23"
+    transition: "-> UNTESTED"
+    cause: "registered per RPM proposal acceptance; supersedes any informal hypothesis statements. Activation precondition: EXP-RPM-000 PASS (reference lock + AF2-D reproduction within confidence band). Strong-form Pareto status (PASS+) requires full comparator-set evaluation at every tested combination — not merely beating two controls."
+conclusion: ""

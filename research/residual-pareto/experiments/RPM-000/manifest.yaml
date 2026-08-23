@@ -1,0 +1,241 @@
+# Experiment record - EXP-RPM-000 - Reference Lock & AF2-D Reproduction
+# (formal G-RPM-0; preregistration gate before any RPM-D stage-1 work)
+# Preregistered 2026-08-23 BEFORE any run under this ID. Thresholds frozen.
+# Required by ROADMAP section "G-RPM-0" of the RPM proposal acceptance to
+# establish the immutable foundation for the entire RPM program.
+id: EXP-RPM-000
+track: A
+subtrack: "RPM reference lock + AF2-D reproduction"
+tier: confirmation
+claims_addressed: [RPM-001, RPM-002, RPM-003, RPM-004, RPM-005, RPM-006]
+title: "G-RPM-0 reference lock: freeze AF2-D driver + env + reproduce both the damaged starting state and the trained T2 correction"
+owner: "research-harness"
+date_proposed: "2026-08-23"
+status: PROPOSED
+decision: null
+grade: null
+
+hypothesis: >
+  The AF2-D driver SHA + frozen environment + frozen tokenizer +
+  frozen model revision + frozen dataset revisions + frozen eval
+  harness + frozen cost-vector schema (research/residual-pareto/COST-VECTOR-v1.yaml)
+  together REPRODUCE both of AF2-D's headline measurements on
+  Legion, within the preregistered tolerance band:
+
+    (1) damaged starting state: post-damage, pre-train wikitext
+        ppl lands in [400, 460] AND arc_easy in [0.45, 0.58]
+        (the band already widened for the static-weight damage
+        mode in AF2-D);
+
+    (2) trained t2_ternary correction: post-train wikitext ppl
+        lands within +/-1.5 standard deviations of the AF2-D
+        reference value (20.96, mean seed-stderr 1.53 -> band
+        [18.66, 23.26]) AND arc_easy and lambada_openai land
+        within +/-1.5 standard deviations of their AF2-D reference
+        values (arc 0.600 +/- 0.004; lambada 0.545 +/- 0.003).
+
+  Reproduction is a strict re-run: new run namespace under
+  runs/r/RPM-000/<timestamp>/, fresh process on Legion, independent
+  wikitext-103 token cache (sha256 captured by the auditator;
+  identity vs AF2-D's cache is the expected outcome of a clean
+  reproduction, NOT a violation), independently generated eval
+  output.
+
+rationale: >
+  AF2-D produced the program's first PASS+ result on the
+  architecture-vs-training-signal axis (trained T2 vs random T2
+  on the damaged base, 25-227 sigma separation). The entire RPM
+  program takes AF2-D as its empirical anchor: the damaged regime
+  is the starting state of D5 in the Stage 1 sweep, and the
+  trained T2 correction at ~20.96 ppl is the reference against
+  which Stage 1 D5 results are compared.
+
+  Without a formal reference-lock + reproduction, the RPM program
+  could silently drift away from the phenomenon it is trying to
+  map: a later change to the driver (a refactor, a dependency
+  upgrade, a path change in the cost-vector schema) could shift
+  the AF2-D reference value, invalidating Stage-1 comparisons
+  built on it.
+
+  EXP-RPM-000 is not a discovery experiment. It is the gate that
+  must close before EXP-RPM-D1..D6 execute. The verdict will be
+  "REPRODUCED" (PASS), "DRIFTED" (FAIL — fix and rerun), or
+  "INVALID" (provenance contamination; rerun cleanly).
+
+revision: ""              # filled at RUN - commit hash of the AF2-D driver.
+                          # The driver is NOT modified for this experiment;
+                          # we use the existing AF2-D driver as-is. The
+                          # frozen SHA is the latest main HEAD at RUN-start.
+run_namespace: "runs/r/RPM-000/<timestamp>/seed-00X/"
+environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt recorded at run start"
+baseline: >
+  AF2-D reference (legion, git 330e8b3, run
+  experiments/AF2-D/runs/20260823T092339Z/af2d/, n=3 seeds):
+
+    damaged starting state (mean across seeds):
+      wikitext ppl  = 425.76
+      arc_easy      = 0.4891
+
+    trained t2_ternary (mean +/- seed-stderr, n=3):
+      wikitext ppl  = 20.96 +/- 1.53
+      arc_easy      = 0.600 +/- 0.004
+      lambada_openai= 0.545 +/- 0.003
+
+    random_t2_ternary (mean, n=3, ~zero seed-stderr):
+      wikitext ppl  = 367.62
+      arc_easy      = 0.495
+      lambada_openai= 0.255
+
+    trained-vs-random separation (the AF2-D critical diagnostic):
+      wikitext ppl      -226.87 sigma
+      arc_easy          +25.08 sigma
+      lambada_openai    +116.83 sigma
+
+  Cost-vector reference (COST-VECTOR-v1.yaml):
+    deployed_bytes (B): 4,194,404 B (t2_ternary arm);
+    training_flops (F): reported per-arm by the driver.
+
+# ----- what this experiment actually runs -------------------------------
+# Two-arm reproduction (matches AF2-D's design but minimal): reproduce the
+# damaged starting state measurement and the trained t2_ternary arm only.
+# The full AF2-D comparator set is NOT re-run (those are AF2-D's existing
+# committed-record artifacts; the RPM program inherits them). The goal is
+# to verify the harness, not to redo AF2-D.
+arms:
+  trained:
+    - id: t2_ternary
+      parameterized_forward: >
+        Identical to AF2-D's t2_ternary arm. Resid = T2(ste(r))
+        on a latent real-valued matrix of shape (8192, 2048).
+        Forward: y = base(x) + adapter_scale * adapter_ternary(adapter_real).
+        The BASE is the damaged ternary PTQ; adapter_scale and adapter_real
+        are the only trainable parameters.
+      target_deployed_bytes: 4194404
+
+  untrained_controls: []   # not re-run; AF2-D random_t2_ternary is inherited.
+
+# ----- damage mode (inherited from AF2-D, not modified) -----------------
+damage_ptq:
+  mechanism: >
+    AF2-D's existing --damage-ptq path: per-row signed-{-1,0,+1}
+    STE-style mapping (mean-zero threshold + per-row fp16 scale)
+    applied to `model.layers.0.mlp.down_proj` before adapter
+    construction. Identical to AF2-D; no flags changed.
+  pre_train_eval_check: >
+    pre-train wikitext ppl must land in [400, 460] and arc_easy in
+    [0.45, 0.58]. The arc_easy band was widened from [0.51, 0.57]
+    in AF2-D; this experiment inherits the widened band.
+
+# ----- training recipe (inherited from AF2-D) ---------------------------
+training:
+  corpus: "wikitext-103 train split"
+  token_cache: "runs/r/RPM-000/<ts>/wikitext103_train_ids.npy
+    (sha256 recorded; AF8 independent re-tokenization)"
+  optimizer: "SGD lr=1e-3 momentum=0.9 grad-clip=1.0"
+  objective: "next-token cross-entropy on the damaged base"
+  n_steps: 500
+  batch_size: 4
+  seq_len: 128
+  base_frozen: true
+  base_state: "damaged-PTQ (the AF2-D int8-ternary PTQ path)"
+  eval_dtype: "float16"
+  eval_tasks: ["wikitext", "arc_easy", "lambada_openai"]
+  eval_limit: null
+
+# ----- matched-bytes tolerance (inherited) -----------------------------
+matched_bytes_tolerance_pct: 1.0
+
+# ----- thresholds (frozen at PROPOSE) -----------------------------------
+quantitative_thresholds:
+  id: RPM-000-v1
+  pass:
+    - >
+      (1) Damaged starting state reproduced: pre-train
+      wikitext ppl in [400, 460] AND arc_easy in [0.45, 0.58]
+      for all seeds. (Same band as AF2-D.)
+    - >
+      (2) Trained t2_ternary reproduced: post-train wikitext
+      ppl in [18.66, 23.26] (the AF2-D reference 20.96 +/- 1.5
+      sigma) AND arc_easy in [0.594, 0.606] AND lambada_openai
+      in [0.541, 0.549] for all seeds.
+    - >
+      (3) Cost-vector B reproduces: deployed_bytes within +/-1%
+      of 4,194,404 B (the AF2-D t2_ternary arm value) for all
+      seeds.
+  fail:
+    - >
+      EITHER the damaged starting state lands outside the band
+      (damage mode has drifted), OR the trained t2_ternary lands
+      outside its band (driver has drifted), OR deployed_bytes
+      exceeds the +/-1% tolerance (cost-vector schema or driver
+      has drifted).
+  passthrough_invalidation:
+    - >
+      If pre-train eval lands outside [400, 460] ppl / [0.45,
+      0.58] arc_easy for any seed, that seed is INVALIDATED and
+      the run re-executed after fixing the damage mode.
+    - >
+      If any per-seed cost-vector dimension deviates from the
+      AF2-D reference beyond the declared tolerance, that
+      dimension's measurement is INVALIDATED and the cost-vector
+      schema is the suspect.
+
+decision_logic_summary: >
+  Run the t2_ternary arm on the damaged-PTQ base for n=3 seeds,
+  under AF8 governance (new namespace, fresh process on Legion,
+  independent token cache). Compute:
+    (i) per-seed pre-train eval (damage-mode verification);
+    (ii) per-seed post-train eval on wikitext / arc_easy / lambada;
+    (iii) per-seed cost-vector (B at minimum; F reported for free).
+  Aggregate over n=3 seeds and compare to the AF2-D reference
+  bands. Verdict is PASS (REPRODUCED), FAIL (DRIFTED — fix and
+  rerun), or INVALID (provenance contamination; rerun cleanly).
+
+stop_conditions:
+  - "All 3 seeds complete; aggregate.json produced."
+  - "Any pre-train eval outside the damage-mode tolerance band
+    -> that seed INVALIDATED, re-execute after fixing damage mode."
+  - "Any matched-bytes tolerance violation -> INVALIDATED."
+
+budget: "1 GPU-hour on legion. 3 runs at ~15 min each = 45 min;
+  2x buffer for warm cache, eval re-runs."
+
+expected_artifacts:
+  - "per-seed: pre_train_eval.json, history.jsonl,
+    eval.summary.json, eval.full.json, adapter.npz + meta,
+    cost_vector.json"
+  - "aggregate.json: t2_ternary arm summary, cost-vector table,
+    damage-mode verification, REPRODUCTION verdict vs AF2-D reference"
+  - "provenance.json + env-lock.txt + driver.log + ARTIFACTS.json"
+
+artifact_paths: []
+artifacts_manifest: "runs/r/RPM-000/<timestamp>/ARTIFACTS.json"
+contamination_risks:
+  - "Token cache under runs/r/RPM-000/<ts>/; sha256 captured;
+    one writer per namespace."
+  - "AF8 governance: new namespace, fresh process, independent
+    re-tokenization. Identity vs AF2-D's cache is the expected
+    outcome of a clean reproduction; sha256 mismatch is a
+    provenance violation and triggers INVALIDATION."
+
+# ----- freeze exception logged (NOT a code change, only a new manifest) -
+freeze_exception:
+  change: >
+    (a) New manifest at
+    research/residual-pareto/experiments/RPM-000/manifest.yaml.
+    (b) New directory research/residual-pareto/ + subdirectories
+    claims/, COST-VECTOR-v1.yaml. (c) No code changes; the AF2-D
+    driver SHA is frozen as-is and invoked under AF8 governance.
+  justification: >
+    Required to register the G-RPM-0 reference-lock + reproduction
+    gate. No driver modifications; the AF2-D driver is the
+    immutable reference.
+  approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN section 3)"
+
+# ----- decision block (filled at DECIDE) --------------------------------
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""
+supersedes: null

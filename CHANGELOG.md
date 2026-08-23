@@ -1,3 +1,51 @@
+## 0.16.6 / research — RPM program accepted; EXP-RPM-000 preregistered (G-RPM-0 gate before any RPM-D work)
+
+### Registered (RPM program)
+- Six claim files under `research/residual-pareto/claims/`, all
+  `UNTESTED`:
+  - `RPM-001.yaml` — T2 lies on a capability-vs-cost Pareto frontier
+    for at least one nontrivial regime (full-comparator-set rule;
+    PASS+ requires dominance over ≥2 conventional matched-cost
+    comparators, NOT merely beating two controls).
+  - `RPM-002.yaml` — T2 value increases with base damage severity
+    (RPM-D sweep, 6 regimes D0-D5).
+  - `RPM-003.yaml` — T2 advantage is layer-dependent and generalizable
+    beyond one pathological site (RPM-L sweep; ≥2 layer categories
+    must show T2 Pareto-optimal).
+  - `RPM-004.yaml` — Best residual representation is task-dependent
+    (RPM-T; mechanism IDs must differ between ppl-best and
+    task-best at ≥1 tested combination).
+  - `RPM-005.yaml` — T2 is relatively more competitive as
+    deployed-byte budget tightens (RPM-B; frontier-occupying at
+    ≤2 MB even when not at ≥4 MB).
+  - `RPM-006.yaml` — Trained T2 separates from random T2
+    specifically when the base requires correction (RPM-D
+    controls; reproducible activation boundary).
+
+### Added (cost schema + G-RPM-0)
+- `research/residual-pareto/COST-VECTOR-v1.yaml` — frozen 6-dim
+  schema (B/F/O/M/L/E) with per-stage required-by mapping,
+  comparator set (8 mechanisms), and Pareto rules. v1 explicit;
+  no scalar composite score; capabilities and costs never
+  combined for primary decision-making.
+- `research/residual-pareto/experiments/RPM-000/manifest.yaml` —
+  EXP-RPM-000 preregistration: formal G-RPM-0 reference-lock +
+  AF2-D reproduction. Two-arm reproduction (damaged starting
+  state + trained t2_ternary arm only) under AF8 governance;
+  PASS bands derived from AF2-D reference (±1.5σ). No driver
+  modifications; the AF2-D driver SHA is the immutable
+  reference. **No Stage 1 (RPM-D1..D6) work begins until
+  EXP-RPM-000 verdict = REPRODUCED.**
+
+### Changed (governance)
+- `research/registry/INDEX.md`: claim registry extended to
+  RPM-001..006; EXP-RPM-000 row added; decision-log entry
+  added.
+
+### No code changes (research + governance only)
+
+### Tests: 207/207 pass (unchanged; no code modified)
+
 ## 0.16.5 / research — EXP-AF-002-D DECIDED PASS+ on architecture-vs-training-signal; driver bugfix
 
 ### Verified (architecture carries information in the damaged regime)

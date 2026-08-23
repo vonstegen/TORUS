@@ -1,0 +1,22 @@
+id: RPM-006
+claim_version: 1
+track: A
+title: "Trained T2 separates from random T2 specifically when the base requires correction"
+statement: "On healthy/calibrated bases (Stage 1 D0 regime), trained and random T2 are statistically indistinguishable on the registered capability metrics; on sufficiently damaged bases (Stage 1 D3-D5), trained T2 separates decisively from random T2. The activation boundary (first damage regime where trained > random by >2 standard errors on ≥1 capability metric) is reproducible across re-runs and across layer categories from the L-sweep."
+quantitative_thresholds:
+  - "PASS (representation-signal activation): At the activation boundary D*, trained T2 beats random T2 by >2 stderr-of-difference on ≥1 capability metric, with no material regression on others; D* is reproducible across EXP-RPM-000-style AF8-governance re-runs."
+  - "PASS+ (boundary generalizes): D* is identified within the D1-D3 range AND the same activation occurs in at least two distinct layer categories from the L-sweep."
+  - "FAIL: Trained ≈ random across all tested damage levels (the architecture carries no learnable residual information in any tested regime)."
+  - "Empirical anchor: AF2/AF2-R (calibrated FP16 base) — trained T2 within ±1σ of random T2 at N=500. AF2-D (ppl 425.76 damaged base) — trained T2 vs random T2 = ppl −226.87σ, arc +25.08σ, lambada +116.83σ."
+date_registered: "2026-08-23"
+state: UNTESTED
+status: ""
+required_evidence: [RPM-D, RPM-L, EXP-RPM-000]
+supporting_experiments: []
+unlock_rules_affected:
+  - "Scientific interpretation of T2's mechanism (learned signal vs structural prior) regardless of Pareto outcome"
+history:
+  - date: "2026-08-23"
+    transition: "-> UNTESTED"
+    cause: "registered per RPM proposal acceptance. Asks whether there is a reproducible activation regime for learned residual information — scientifically interesting independently of whether T2 ultimately wins a Pareto tournament (RPM-001). Anchored by AF2/AF2-R/AF2-D empirical pattern."
+conclusion: ""

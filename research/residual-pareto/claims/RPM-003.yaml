@@ -1,0 +1,22 @@
+id: RPM-003
+claim_version: 1
+track: A
+title: "T2 advantage is layer-dependent and generalizable beyond one pathological site"
+statement: "Trained T2 is Pareto-optimal (under the RPM-001 full-comparator-set rule) in at least two distinct layer categories when each is tested in its informative damage regime from Stage 1, demonstrating that the AF2-D finding generalizes beyond model.layers.0.mlp.down_proj."
+quantitative_thresholds:
+  - "PASS: At least two layer categories show T2 Pareto-optimal against the full comparator set (RPM-001 rule), each at its Stage-1-informed damage regime and at a Stage-3 budget from the B-sweep's Pareto region."
+  - "FAIL: T2 is Pareto-optimal at only one layer category (treat as a narrow mechanism finding, demote T2's role in Track B gating)."
+  - "Stage 2 design: Discovery = 8-12 representative sites × 1 seed; Confirmation = top 3-5 sites × 3 seeds. Minimum categories: early/middle/late mlp_down; early/middle attention K; attention Q/V/O; one tolerant later layer."
+  - "Output: layer/category × damage × preferred mechanism map (T2-dominant / INT8-dominant / LoRA-dense-dominant / mixed Pareto / no-correction)."
+date_registered: "2026-08-23"
+state: UNTESTED
+status: ""
+required_evidence: [RPM-L, RPM-D]
+supporting_experiments: []
+unlock_rules_affected:
+  - "Whether T2 qualifies for adaptive-precision routing vs remaining a site-specific patch"
+history:
+  - date: "2026-08-23"
+    transition: "-> UNTESTED"
+    cause: "registered per RPM proposal acceptance. Stage 2 family: EXP-RPM-Lxx (discovery + confirmation tiers)."
+conclusion: ""
