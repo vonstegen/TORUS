@@ -922,3 +922,57 @@
 ### Tests: 216/216 pass (was 215 in 0.16.7; +1 from
 `test_t2_ternary_patch_replaces_target_forward` regression
 test).
+
+
+## 0.16.9 / research — Stage 1 (EXP-RPM-D0..D5) PREREGISTERED; audits + tests shipped
+
+### Registered (RPM Stage 1)
+- Six damage-sweep manifests under
+  `research/residual-pareto/experiments/EXP-RPM-D{0..5}/`:
+  - D0: no damage (FP16 reference; ppl 13.09 from EXP-A-001).
+  - D1: threshold=0.0 (sign-rounding only; no zeroing).
+  - D2: threshold=0.3 (light TWN zeroing).
+  - D3: threshold=0.5 (moderate TWN zeroing).
+  - D4: threshold=0.6 (heavy TWN zeroing).
+  - D5: threshold=0.7 (AF2-D reference; ppl ~425).
+- Per-regime: 5 trained + 2 untrained + no_correction × 3 seeds =
+  24 runs; 144 runs total across 6 regimes.
+- Recipe frozen at AF2-D's: SGD lr=1e-3, 500 steps, batch 4,
+  seq 128, group_size=128, calibrate_norm=False, target 4.2 MB
+  matched-bytes tolerance ±1%.
+- Eval suite: wikitext + arc_easy + lambada_openai.
+- Manifests preregistered BEFORE launch; nominal ppl bands recorded
+  as observed covariates (deviation noted but does not invalidate,
+  per RPM proposal section5).
+- `research/residual-pareto/experiments/gen_d_manifests.py`
+  records the exact code that produced the 6 manifests.
+
+### Added (audits + tests)
+- `examples/audit_rpm_d_reproduction.py` — per-regime auditor:
+  pre-train ppl in nominal band, matched-bytes tolerance,
+  trained t2 recovery, RPM-006 representation-signal axis.
+  10 tests in `tests/test_audit_rpm_d_reproduction.py`.
+- `examples/audit_rpm_d_cross_regime.py` — cross-regime RPM-002
+  auditor: trained-vs-random z-score non-decreasing across ≥3
+  consecutive regimes on any capability metric.
+  7 tests in `tests/test_audit_rpm_d_cross_regime.py`.
+- `rpm-d-launch.sh` — Stage 1 launch script for Legion
+  (6 regimes sequentially).
+
+### Changed (governance)
+- `research/registry/INDEX.md`: 6 EXP-RPM-D<n> rows added; decision-
+  log updated.
+- `research/ROADMAP.md`: rev 2.9; section 2.14 preregistered;
+  section 2.15 placeholder for Stages 2-5 (deferred until Stage 1
+  results land).
+- `research/registry/INDEX.md`: Stage 1 preregistration entry added.
+
+### Tests: 233/233 pass (was 216 in 0.16.8; +17 from the new
+audit test files: 10 per-regime + 7 cross-regime).
+
+### Next step
+Launch EXP-RPM-D0..D5 on Legion (144 runs, ~10-15 hours). The
+cross-regime audit (RPM-002 axis) and per-regime audits
+(RPM-006 + RPM-001 axes) will land AFTER all 6 regimes complete.
+Stage 2/3/4/5 manifests will be preregistered AFTER Stage 1
+results, per the user's "no more architecture" instruction.

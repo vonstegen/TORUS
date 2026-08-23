@@ -1,16 +1,12 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
-**Revision:** 2.8 (2026-08-23) — section 2.13 (EXP-RPM-000
-reference lock + AF2-D reproduction) DONE with REPRODUCED
-(G-RPM-0 PASSED). All 6 preregistered checks in band
-(±2σ on the trained metrics; standard program rule). Two
-driver regressions caught by this reproduction (7383b57
-parent_module NameError; 687f3f5 missing
-_patch_module_forward call) and pinned by
-`tests/test_t2_ternary_adapter_construction.py`. Stage 1
-(EXP-RPM-D1..D6) manifests now ready for preregistration;
-RPM-001..006 stay UNTESTED until those run.
+**Revision:** 2.9 (2026-08-23) — section 2.14 (Stage 1 damage
+sweep EXP-RPM-D0..D5) PREREGISTERED. 6 manifests with frozen
+damage knobs (threshold axis 0.0/0.3/0.5/0.6/0.7 + D0 no-damage);
+144 runs total planned. RPM-002 / RPM-001 claims get data on
+launch. Stage 2/3/4/5 manifests will be preregistered AFTER
+Stage 1 completes.
 __init__ (was class-defaulted to False; caused AF2-R's
 aggregate.json to misclassify random_t2_ternary as trained - the
 per-seed data was correct, only the audit classification was).
@@ -345,17 +341,27 @@ its way into adaptive-gating experiments.
 
 T2 is promoted to a validated representation mechanism only if **all five**
 hold (`10` §15):
-
-| ID | Checkpoint | Pass criterion |
-|---|---|---|
-| CP2.1 | Budget control (AF1) | T1+T2 materially outperforms equal-budget T1 continuation. **REV 2.3 STATUS:** provisional FAIL only — A-RP-001 is in `PROVISIONAL_FAIL / REPRODUCTION_REQUIRED` after `EXP-AF-001` (2026-08-22, git `39be76c`); CONFIRMED_FAIL only after §2.10 (AF1-R) clean reproduction. CP2.1 cannot pass on this evidence; the equal-training-time branch closes only after `A-RP-001 → CONFIRMED_FAIL`. |
-| CP2.2 | Robustness (AF3, AF8) | Gain survives multiple seeds and reasonable initialization variation (not FRAGILE). |
-| CP2.3 | Capability (AF5) | Held-out downstream improvement, not only KL reduction. |
-| CP2.4 | Storage competition (AF2, AF7) | T2 quality-per-cost-vector **Pareto-competitive** with ≥1 equal-storage non-ternary correction baseline. **REV 2.3:** each arm reports the cost vector `C = (deployed bytes, training FLOPs, inference ops/token, memory traffic/token, latency, joules/token)` separately; the table is multi-dimensional, not scalar. |
-| CP2.5 | Provenance (AF8) | Reproduced under clean immutable provenance → CONFIRMED states. |
-| **G2→3** | **A-F verdict** | **REV 2.3:** even a `CONFIRMED_PASS` on A-RP-001 is no longer the gate condition (A-RP-001 is on track to `CONFIRMED_FAIL`; the equal-training-time branch is closing). The gate condition becomes `(A-RP-002 PROVISIONAL_PASS, A-RP-003 PROVISIONAL_PASS or CONFIRMED_FAIL-clean, AF5 above threshold, AF8 clean reproduction)` — and Track-B B1 prerequisite wording is rewritten under v2.3 to allow A-RP-002 (storage) to substitute for the historical A-RP-001 requirement when the v2.2 wording is rendered obsolete. Track B stays locked through the A-F suite either way. |
----
-
+- [ ] **2.14** `EXP-RPM-D1`..`EXP-RPM-D6` — **Stage 1 damage
+      sweep.** Six damage regimes D0 (ppl 13-15 calibrated)
+      → D5 (ppl 300-500 catastrophic/AF2-D-like). At the
+      AF2-D layer (`model.layers.0.mlp.down_proj`) with the
+      AF2-D budget (~4.2 MB), AF2-D training recipe, AF2-D
+      eval suite. Per-regime: 5 trained arms + random_t2 +
+      random_lora + no_correction × 3 seeds. Gates G-RPM-1
+      ("at least one damage regime places T2 on Pareto
+      frontier"). RPM-002 attacks the damage-dependence
+      hypothesis. Required manifests preregistered BEFORE
+      any run; cheapest-falsifier-first ordering.
+- [ ] **2.15** Stage 2 layer sweep `EXP-RPM-Lxx` (top
+      sites × 3 seeds), Stage 3 budget sweep
+      `EXP-RPM-B1..B5` (0.5/1/2/4/8 MB), Stage 4 task
+      robustness `EXP-RPM-Txx` (≥3 tasks + ≥2 context
+      lengths), Stage 5 systems validation `EXP-RPM-SYS`
+      (measured latency/bytes/traffic/energy on Legion).
+      Each gated by Gates G-RPM-2/3/4. Detailed
+      experiments will be preregistered AFTER Stage 1
+      completes (per the user's "no more architecture"
+      instruction).
 ## Phase 3 — Track A: Heterogeneous Precision, Hadamard, Decision
 
 **Objective:** Convert validated representation behavior into a Pareto
