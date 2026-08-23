@@ -1,21 +1,4 @@
-"""EXP-AF-002 - AF2 equal-storage tournament (A-RP-002).
-
-Five trained arms + two untrained structure controls under a single
-shared training loop at matched DEPLOYED bytes on
-model.layers.0.mlp.down_proj of OLMo-1B. Cost-vector framing per
-OPERATING-PLAN rev 2.3 §11.
-
-Trained arms (target ~ 4.21 MB each):
-  t2_ternary    : 2 bpw signed ternary + per-row fp16 scale.
-  int4_residual : 4 bpw signed INT4 + per-row fp16 scale; 50% col mask.
-  int8_residual : 8 bpw signed INT8 + per-row fp16 scale; 25% col mask.
-  lora          : r=216 fp16 down/up parallel residual.
-  dense_adapter : 192-rank bottleneck fp16.
-
-Untrained controls (separate panel; not byte-budgeted):
-  random_t2_ternary
-  random_lora
-"""
+"""EXP-AF-002 - AF2 equal-storage tournament (A-RP-002)."""
 from __future__ import annotations
 
 import argparse
@@ -98,16 +81,20 @@ def _patch_module_forward(parent_module, residual_fn):
 
 
 class T2TernaryAdapter(SiteAdapter):
+    """Latent shape (out_features, in_features) where in_features is
+    the LAST dim of x at the site and out_features is the LAST dim of
+    the site output. The serialized residual is W (full, ternary)
+    applied as F.linear(x, q_ste) * scale."""
     is_untrained = False
 
-    def __init__(self, *, intermediate_size: int, hidden_size: int,
+    def __init__(self, *, in_features: int, out_features: int,
                  device: str = "cpu", dtype=None,
                  train: bool = True, init_seed: Optional[int] = None):
         import torch
         torch.manual_seed(init_seed if init_seed is not None
                           else torch.seed() % (2**31))
         self.latent = torch.nn.Parameter(
-            0.01 * torch.randn(intermediate_size, hidden_size,
+            0.01 * torch.randn(out_features, in_features,
                                device=device, dtype=dtype))
         if not train:
             self.latent.requires_grad_(False)
@@ -152,8 +139,8 @@ class T2TernaryAdapter(SiteAdapter):
                  shape=np.asarray(r.shape, dtype=np.int64))
         (out_dir / "adapter.npz.meta.json").write_text(json.dumps({
             "format": "t2_ternary_2bpw_per_row_fp16_scale",
-            "intermediate_size": int(r.shape[0]),
-            "hidden_size": int(r.shape[1]),
+            "out_features": int(r.shape[0]),
+            "in_features": int(r.shape[1]),
             "pack_bytes_per_code": 2,
             "scale_dtype": "fp16",
         }, indent=2))
@@ -168,7 +155,7 @@ class T2TernaryAdapter(SiteAdapter):
 
 
 def intN_residual_adapter(*, N_bits: int, column_mask_fraction: float,
-                          intermediate_size: int, hidden_size: int,
+                          in_features: int, out_features: int,
                           device: str = "cpu", dtype=None,
                           train: bool = True,
                           init_seed: Optional[int] = None):
@@ -176,12 +163,11 @@ def intN_residual_adapter(*, N_bits: int, column_mask_fraction: float,
     import torch.nn.functional as F
     torch.manual_seed(init_seed if init_seed is not None
                        else torch.seed() % (2**31))
-    keep_count = max(1, int(round(column_mask_fraction * intermediate_size)))
-    keep_mask = torch.zeros(intermediate_size, dtype=torch.bool,
-                             device=device)
+    keep_count = max(1, int(round(column_mask_fraction * out_features)))
+    keep_mask = torch.zeros(out_features, dtype=torch.bool, device=device)
     keep_mask[:keep_count] = True
     latent = torch.nn.Parameter(
-        0.01 * torch.randn(intermediate_size, hidden_size,
+        0.01 * torch.randn(out_features, in_features,
                            device=device, dtype=dtype))
     if not train:
         latent.requires_grad_(False)
@@ -235,8 +221,8 @@ def intN_residual_adapter(*, N_bits: int, column_mask_fraction: float,
         (out_dir / "adapter.npz.meta.json").write_text(json.dumps({
             "format": f"int{N_bits}_per_row_fp16_scale",
             "N_bits": N_bits,
-            "intermediate_size": int(r.shape[0]),
-            "hidden_size": int(r.shape[1]),
+            "out_features": int(r.shape[0]),
+            "in_features": int(r.shape[1]),
             "column_mask_fraction": float(column_mask_fraction),
             "packed_columns": int(keep_count),
         }, indent=2))
@@ -253,16 +239,21 @@ def intN_residual_adapter(*, N_bits: int, column_mask_fraction: float,
     return inst
 
 
-def lora_adapter(*, intermediate_size: int, hidden_size: int, rank: int = 216,
+def lora_adapter(*, in_dim: int, out_dim: int, rank: int = 216,
                  device: str = "cpu", train: bool = True,
                  init_seed: Optional[int] = None):
+    """Low-rank parallel branch.
+        W_down: (rank, in_dim)   fp16
+        W_up:   (out_dim, rank)  fp16
+        residual(x) = (x @ W_down.T) @ W_up.T
+    """
     import torch
     import torch.nn as nn
     torch.manual_seed(init_seed if init_seed is not None
                       else torch.seed() % (2**31))
-    W_down = nn.Parameter(torch.randn(rank, hidden_size, device=device,
+    W_down = nn.Parameter(torch.randn(rank, in_dim, device=device,
                                        dtype=torch.float16) * 0.01)
-    W_up = nn.Parameter(torch.randn(intermediate_size, rank, device=device,
+    W_up = nn.Parameter(torch.randn(out_dim, rank, device=device,
                                      dtype=torch.float16) * 0.01)
     if not train:
         W_down.requires_grad_(False)
@@ -294,7 +285,7 @@ def lora_adapter(*, intermediate_size: int, hidden_size: int, rank: int = 216,
                  W_up=W_up.detach().cpu().numpy().astype(np.float16))
         (out_dir / "adapter.npz.meta.json").write_text(json.dumps({
             "format": "lora_fp16", "rank": rank,
-            "intermediate_size": intermediate_size, "hidden_size": hidden_size,
+            "in_dim": in_dim, "out_dim": out_dim,
         }, indent=2))
         deployed_bytes = (out_dir / "adapter.npz").stat().st_size \
             + (out_dir / "adapter.npz.meta.json").stat().st_size
@@ -309,17 +300,18 @@ def lora_adapter(*, intermediate_size: int, hidden_size: int, rank: int = 216,
     return inst
 
 
-def dense_adapter_bottleneck(*, intermediate_size: int, hidden_size: int,
+def dense_adapter_bottleneck(*, in_dim: int, out_dim: int,
                               bottleneck: int = 192, device: str = "cpu",
                               train: bool = True,
                               init_seed: Optional[int] = None):
+    """Bottleneck-fp16 parallel branch: in_dim -> bottleneck -> out_dim."""
     import torch
     import torch.nn as nn
     torch.manual_seed(init_seed if init_seed is not None
                       else torch.seed() % (2**31))
-    W_down = nn.Parameter(torch.randn(bottleneck, hidden_size, device=device,
+    W_down = nn.Parameter(torch.randn(bottleneck, in_dim, device=device,
                                        dtype=torch.float16) * 0.01)
-    W_up = nn.Parameter(torch.randn(intermediate_size, bottleneck, device=device,
+    W_up = nn.Parameter(torch.randn(out_dim, bottleneck, device=device,
                                      dtype=torch.float16) * 0.01)
     if not train:
         W_down.requires_grad_(False)
@@ -351,7 +343,7 @@ def dense_adapter_bottleneck(*, intermediate_size: int, hidden_size: int,
         (out_dir / "adapter.npz.meta.json").write_text(json.dumps({
             "format": "dense_adapter_fp16_bottleneck",
             "bottleneck": bottleneck,
-            "intermediate_size": intermediate_size, "hidden_size": hidden_size,
+            "in_dim": in_dim, "out_dim": out_dim,
         }, indent=2))
         deployed_bytes = (out_dir / "adapter.npz").stat().st_size \
             + (out_dir / "adapter.npz.meta.json").stat().st_size
@@ -365,6 +357,10 @@ def dense_adapter_bottleneck(*, intermediate_size: int, hidden_size: int,
     inst.serialize = serialize
     return inst
 
+
+# ---------------------------------------------------------------------------
+# Cost targets + arm lists
+# ---------------------------------------------------------------------------
 
 TARGET_DEPLOYED_BYTES = {
     "t2_ternary":   4_194_404,
@@ -396,50 +392,57 @@ def resolve_target_module(model, target_path: str):
 
 def build_site_adapter(arm_id: str, *, target_module, hidden_size: int,
                        intermediate_size: int):
+    """Build a SiteAdapter at the given target_module.
+
+    Site dim semantics: target_module is `down_proj`-equivalent,
+    input dim = intermediate_size (the size of the gate/up output),
+    output dim = hidden_size (the size of the residual stream).
+    """
     import torch
     device = target_module.weight.device
     dtype = target_module.weight.dtype
     if arm_id == "t2_ternary":
-        ad = T2TernaryAdapter(intermediate_size=intermediate_size,
-                              hidden_size=hidden_size, device=device,
-                              dtype=dtype, train=True)
+        ad = T2TernaryAdapter(in_features=intermediate_size,
+                              out_features=hidden_size,
+                              device=device, dtype=dtype, train=True)
         ad.patch(target_module)
         return ad
     if arm_id == "int4_residual":
         ad = intN_residual_adapter(N_bits=4, column_mask_fraction=0.5,
-                                   intermediate_size=intermediate_size,
-                                   hidden_size=hidden_size, device=device,
-                                   dtype=dtype, train=True)
+                                   in_features=intermediate_size,
+                                   out_features=hidden_size,
+                                   device=device, dtype=dtype, train=True)
         ad.patch(target_module)
         return ad
     if arm_id == "int8_residual":
         ad = intN_residual_adapter(N_bits=8, column_mask_fraction=0.25,
-                                   intermediate_size=intermediate_size,
-                                   hidden_size=hidden_size, device=device,
-                                   dtype=dtype, train=True)
+                                   in_features=intermediate_size,
+                                   out_features=hidden_size,
+                                   device=device, dtype=dtype, train=True)
         ad.patch(target_module)
         return ad
     if arm_id == "lora":
-        ad = lora_adapter(intermediate_size=intermediate_size,
-                          hidden_size=hidden_size, rank=216,
+        ad = lora_adapter(in_dim=intermediate_size,
+                          out_dim=hidden_size, rank=216,
                           device=device, train=True)
         ad.patch(target_module)
         return ad
     if arm_id == "dense_adapter":
-        ad = dense_adapter_bottleneck(intermediate_size=intermediate_size,
-                                       hidden_size=hidden_size, bottleneck=192,
+        ad = dense_adapter_bottleneck(in_dim=intermediate_size,
+                                       out_dim=hidden_size, bottleneck=192,
                                        device=device, train=True)
         ad.patch(target_module)
         return ad
     if arm_id == "random_t2_ternary":
-        ad = T2TernaryAdapter(intermediate_size=intermediate_size,
-                              hidden_size=hidden_size, device=device,
-                              dtype=dtype, train=False, init_seed=12345)
+        ad = T2TernaryAdapter(in_features=intermediate_size,
+                              out_features=hidden_size,
+                              device=device, dtype=dtype, train=False,
+                              init_seed=12345)
         ad.patch(target_module)
         return ad
     if arm_id == "random_lora":
-        ad = lora_adapter(intermediate_size=intermediate_size,
-                          hidden_size=hidden_size, rank=216,
+        ad = lora_adapter(in_dim=intermediate_size,
+                          out_dim=hidden_size, rank=216,
                           device=device, train=False, init_seed=12345)
         ad.patch(target_module)
         return ad
