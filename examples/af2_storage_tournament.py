@@ -561,12 +561,15 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
                 model, tokenizer,
                 tasks=args.tasks.split(","), limit=None,
                 batch_size=args.batch_size,
-            )
             if isinstance(eval_results, dict) and "results" in eval_results:
-                eval_summary_dict["tasks"] = {
-                    t: {"metric": k, "value": v}
-                    for t, res in eval_results["results"].items()
-                    for k, v in res.items()
+                ev_tasks = {}
+                for t, res in eval_results["results"].items():
+                    for k, v in res.items():
+                        if "_stderr" in k:
+                            continue
+                        if "acc" in k or "word_perplexity" in k:
+                            ev_tasks[t] = {"metric": k, "value": v}
+                eval_summary_dict["tasks"] = ev_tasks
                     if "acc" in k or "word_perplexity" in k
                 }
             (arm_dir / "eval.full.json").write_text(
