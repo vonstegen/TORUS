@@ -820,3 +820,35 @@
 - `docs/`: VISION, ARCHITECTURE, ROADMAP.
 - `examples/quickstart.py`: end-to-end smoke run.
 - 44 tests across the primitives.
+
+## 0.16.7 / research — URGENT driver revert + regression test (0.16.5 introduced T2TernaryAdapter bug)
+
+### Fixed
+- **`examples/af2_storage_tournament.py` `T2TernaryAdapter.__init__`
+  restored to its 330e8b3 form.** The 0.16.5 commit (7383b57)
+  claimed a minimal is_untrained fix but accidentally removed
+  the `import torch; self.latent = torch.nn.Parameter(...)`
+  block from `__init__` AND moved the `def residual(x):` body +
+  `_patch_module_forward(parent_module, residual)` call from
+  `def patch(self, parent_module):` into `__init__`. Net effect:
+  any construction of `T2TernaryAdapter` would crash with
+  `NameError: name 'parent_module' is not defined`. The bug
+  went undetected because the audit-script tests use synthetic
+  aggregates (no adapter construction) and the existing
+  damage-mode tests don't construct T2TernaryAdapter.
+- The 0.16.5 artifacts remain valid: the AF2-D run was on
+  commit 330e8b3, BEFORE the regression. The 7383b57 commit
+  only added the verdict/INDEX/ROADMAP updates.
+- The 0.16.5 CHANGELOG entry's "T2TernaryAdapter.is_untrained
+  now set in __init__" claim is now correct; the fix is
+  minimal (just `self.is_untrained = (not train)` added to
+  the 330e8b3 __init__ body).
+
+### Added (regression test)
+- `tests/test_t2_ternary_adapter_construction.py` (2 tests):
+  constructs the adapter in both modes, checks `self.latent`
+  exists + correct shape + `requires_grad`, checks
+  `is_untrained` correctness. Verified to FAIL on the
+  7383b57 driver and PASS on the restored driver.
+
+### Tests: 215/215 pass (was 213 in 0.16.6; +2 from the regression test)
