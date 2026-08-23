@@ -1,0 +1,165 @@
+# Experiment record - EXP-AF-001-R - clean reproduction of EXP-AF-001 (confirmation tier)
+# Preregistered 2026-08-22 BEFORE any run under this ID. Thresholds frozen.
+# Required by OPERATING-PLAN rev 2.3 §11 / ROADMAP rev 2.3 §2.10
+# to transition A-RP-001 from PROVISIONAL_FAIL to CONFIRMED_FAIL.
+id: EXP-AF-001-R
+track: A
+subtrack: "AF1-R clean reproduction"
+tier: confirmation
+claims_addressed: [A-RP-001]
+title: "Clean reproduction of EXP-AF-001 under AF8 governance (new namespace, frozen SHA, fresh process, independent token cache)"
+owner: "research-harness"
+date_proposed: "2026-08-22"
+status: PROPOSED
+decision: null
+grade: null
+
+hypothesis: "The EXP-AF-001 result (commit `39be76c`, run `20260822T234553Z`)
+  reproduces under AF8 governance: T1+T2 loses to T1-continued on every
+  capability metric at matched CE, by >2 stderr-of-difference over n=3
+  seeds, with the same wikitext ppl, arc_easy, and lambada_openai deltas
+  within ±2 stderr-of-difference of the AF1 arm means."
+
+rationale: >
+  EXP-AF-001 promoted A-RP-001 to PROVISIONAL_FAIL / REPRODUCTION_REQUIRED
+  under OPERATING-PLAN rev 2.3 lifecycle. CONFIRMED_FAIL only after a
+  clean reproduction. AF1-R is that reproduction. If the new run
+  reproduces the FAIL, A-RP-001 -> CONFIRMED_FAIL closes the
+  equal-training-time branch permanently. If it does NOT reproduce
+  (e.g. arm-mean difference changes sign on any capability metric,
+  or stderrs explode), A-RP-001 -> INVALIDATED, reopen to TESTING,
+  and the underlying discovery evidence (EXP-A-03x T1+T2 ppl
+  427.71->41.44) remains the only data point.
+
+revision: "39be76c"          # FROZEN - the AF1 commit. No code edits.
+run_namespace: "runs/a/EXP-AF-001-R/<timestamp>/seed-00X/<arm>/"
+environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt recorded at run start"
+baseline: "A-RP-001 thresholds verbatim from claims/A-RP-001.yaml
+  quantitative_thresholds. Preregistered here so thresholds cannot be
+  rewound in light of run output."
+
+# ----- what is new in AF1-R vs AF1 (the AF8 governance checklist) ----------
+# The whole point of the reproduction is to enumerate explicitly what
+# differs from AF1 and what stays identical. Everything that stays
+# identical must be reproducible from the frozen `revision`; everything
+# that is new must be independently generated.
+
+new_in_this_run:
+  - "New experiment ID: EXP-AF-001-R (no supersession of EXP-AF-001)."
+  - "New run namespace: runs/a/EXP-AF-001-R/<ts>/ (no reuse of AF1's). One writer per namespace."
+  - "Fresh Python process on legion (nohup + disown; not a fork of the AF1 driver)."
+  - "Independently generated wikitext-103 token cache. The cache file
+    used by AF1 (sha256 in AF1's ARTIFACTS.json) MUST NOT be read or
+    linked to. The new cache is re-tokenized from the wikitext-103
+    parquet shards (re-read from the HF cache, sha256 of each shard
+    recorded) and stored at a new path. Its sha256 must differ from
+    AF1's (provenance notary)."
+  - "Independently generated eval output (full lm-eval-harness runs
+    on the same three tasks; results are regenerated, not copied)."
+  - "env-lock.txt regenerated from `.venv/bin/pip freeze` at run start."
+
+identical_to_af1:
+  - "Code: git checkout at sha 39be76c, no working-tree edits."
+  - "Command: the exact same driver invocation as AF1 (same model,
+    same target module, same n_steps, same batch/seq, same lr, same
+    optimizer, same objective, same eval tasks, same dtype, same --no-calibrate)."
+  - "Preregistered thresholds: PASS bar (B beats A on >=1 metric by >2
+    stderr, no regression >1 stderr on others); FAIL bar (A beats B by
+    >2 stderr on any metric); kill criteria (NaN, base movement in
+    arm B, wall-budget overrun)."
+  - "Seeds: [1, 2, 3]. Same seeds as AF1."
+  - "Driver-side invariants: matched batches by construction (shared
+    token stream, identical sampler seed); arm-B freeze by
+    construction (requires_grad_(False)); tests in
+    tests/test_af1_budget_control.py pin both."
+
+# ----- thresholds (literal copy of AF1, frozen) ----------------------------
+# OPERATING-PLAN rev 2.3 §11 makes explicit that REPRODUCTION is set at
+# the same transition that moves TESTING -> PROVISIONAL_FAIL; this
+# section is what CONFIRMED_FAIL must satisfy on the new run.
+pass_thresholds_reproduction:
+  - "FAIL direction reproduces (the bar required for CONFIRMED_FAIL):
+    on EVERY capability metric, mean(B - A) / se_diff has the SAME SIGN
+    as AF1 (positive for wikitext ppl, negative for arc_easy and
+    lambada_openai) AND magnitude >= 2 stderr-of-difference."
+  - "OR, more stringently: the arm-mean values reproduce within
+    +-2 stderr-of-difference of the AF1 arm means (variation
+    consistent with random sampling noise)."
+
+fail_thresholds_reproduction:
+  - "On any capability metric, the sign of (B - A) flips vs AF1 (T1+T2
+    now beats T1-continued), OR the magnitude drops below 2
+    stderr-of-difference (the result washes out). In either case
+    A-RP-001 -> INVALIDATED and the claim reopens to TESTING."
+
+kill_criteria:
+  - "Same as AF1: NaN/Inf loss in any arm; arm-B base movement (caught
+    by the test suite); 8h wall-budget overrun."
+
+budget: "8 GPU-hours. Same as AF1; the new run should be faster
+  on average (token cache already exists on the HF cache parity,
+  only locally reads), well inside."
+
+# ----- subset-mismatch rationale (provenance honesty) ---------------------
+# EXP-A-001/EXP-A-011 manifests claimed `--limit 200` but the flag was
+# dead. The AF1 verdict documented this: all AF1 evals ran FULL tasks.
+# AF1-R runs the same FULL tasks; no --limit. Comparison vs AF1 is
+# apples-to-apples for both arms.
+evaluation: >
+  FULL evals on wikitext test, arc_easy, lambada_openai; float16
+  throughout. No --limit. Same as AF1.
+
+# ----- decision output rule (governance) ----------------------------------
+# The decision is structured so that the reproduction verdict can be
+# computed by inspection. Reproducibility is the entire point.
+required_decision_outputs:
+  - "Aggregate arm means, stddevs, stderrs per metric."
+  - "Per-metric (B - A) / se_diff and its SIGN."
+  - "Per-seed evals (full JSON), not just aggregates."
+  - "Comparison table vs AF1 (`git show 39be76c ... aggregate.json`)."
+  - "New token-cache sha256 vs AF1's recorded sha256 (must differ)."
+  - "Reproduce verdict: REPRODUCED (CONFIRMED_FAIL materializes) or
+    NOT REPRODUCED (-> INVALIDATED, reopen TESTING)."
+
+# ----- freeze exception logged (OPERATING-PLAN §3, §6) --------------------
+# Audit script must NOT be an experiment run; it is offline tooling that
+# generates the wikitext cache and verifies the cache does not match
+# AF1's, before the driver is launched.
+freeze_exception:
+  change: >
+    (a) New example/audit/audit_af1_reproduction.py: builds the
+    cached wikitext-103 token stream in a fresh path on legion, records
+    sha256 of every input shard and the cache file, fails loudly if
+    the cache matches AF1's recorded cache sha256 (provenance notary).
+    (b) New manifest in research/track-a-residual-ternary/residual-falsification/experiments/AF1-R/manifest.yaml.
+  justification: >
+    Required to execute this preregistered AF1-R reproduction. The
+    audit script makes the AF8 governance check (independent token
+    cache) a hard precondition rather than a checklist item. The
+    AF1 driver is reused as-is from the frozen `revision`.
+  approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN §3)"
+
+revision_field_reason: >
+  revision is the AF1 commit (39be76c), not a new commit, because the
+  experiment must reproduce AF1 under identical code. Any change to
+  the driver between AF1 and AF1-R would invalidate the comparison.
+  The audit script is the only new artifact; it runs before the
+  driver and does not modify it.
+
+artifact_paths: []
+artifacts_manifest: "runs/a/EXP-AF-001-R/<timestamp>/ARTIFACTS.json"
+contamination_risks:
+  - "The shared tok cache from /tmp/wikitext103_train_ids.npy (AF1).
+    Recorded sha256 in AF1's ARTIFACTS.json MUST NOT be matched by
+    the new cache. Enforced by audit_af1_reproduction.py."
+  - "Concurrent writers: AF1-R writer is the only process touching
+    runs/a/EXP-AF-001-R/. AF1 namespace is read-only after its
+    DECIDE commit."
+  - "Eval leakage: same disjointness as AF1 (eval tasks disjoint from
+    wikitext-103 train)."
+supersedes: null
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""
