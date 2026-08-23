@@ -1,0 +1,26 @@
+{
+  "arm": "t1_continued",
+  "seed": 1,
+  "model": "allenai/OLMo-1B-0724-hf",
+  "target_module": null,
+  "no_calibrate": true,
+  "n_steps": 500,
+  "batch_size": 4,
+  "seq_len": 128,
+  "lr": 0.001,
+  "limit": null,
+  "tasks": {
+    "lambada_openai": {
+      "metric": "acc,none",
+      "value": 0.6211915389093732
+    },
+    "arc_easy": {
+      "metric": "acc,none",
+      "value": 0.6611952861952862
+    },
+    "wikitext": {
+      "metric": "word_perplexity,none",
+      "value": 14.0778455309893
+    }
+  }
+}

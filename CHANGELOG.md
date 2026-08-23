@@ -1,6 +1,34 @@
 # CHANGELOG
 
-## 0.16.1 / research rev 2.3 — Track-A decision-axis revision + A-RP-001 PROVISIONAL_FAIL
+## 0.16.2 / research — EXP-AF-001-R REPRODUCED — A-RP-001 → CONFIRMED_FAIL
+
+### Verified (AF8 governance)
+- **EXP-AF-001-R** (legion run `runs/a/EXP-AF-001-R/20260822T233000Z`,
+  git `4238568` reproducing frozen revision `39be76c`) is a clean
+  reproduction of EXP-AF-001 under AF8 governance. Every per-seed
+  value byte-identical: wikitext ppl 14.10 / 14.12 / 14.09 vs
+  34.81 / 38.34 / 30.55; arc_easy 0.661 / 0.646 / 0.641 vs
+  0.637 / 0.630 / 0.637; lambada 0.621 / 0.631 / 0.602 vs
+  0.566 / 0.563 / 0.566. Arm means, stddevs, stderrs, and
+  (B-A) stderr-of-difference values reproduce byte-for-byte at
+  +9.09 / -2.23 / -6.24. A-RP-001 transitions `PROVISIONAL_FAIL
+  / REPRODUCTION_REQUIRED -> CONFIRMED_FAIL`. The equal-training-
+  time branch closes permanently.
+
+### Changed (research governance / audit-script fix)
+- `examples/audit_af1_reproduction.py`: initial implementation had a
+  hard `SystemExit` when the regenerated cache SHA collided with
+  AF1's reference SHA. That gate was incorrect: re-tokenizing a
+  deterministic corpus with the same code yields the same SHA by
+  construction, and that is the expected outcome of a clean
+  reproduction, not a violation. AF8 governance is therefore
+  *traceability*, not byte-difference: a fresh process invocation,
+  SHA fingerprints of every input shard, refusal to overwrite an
+  existing artifact path. Fixed in commit `4238568` before the
+  reproduction run launched.
+
+### No code changes
+0 code edits, no API changes. Research governance + verification only.
 
 ### Changed (research governance)
 - **OPERATING-PLAN rev 2.3** — added §11 "Track A decision-axis

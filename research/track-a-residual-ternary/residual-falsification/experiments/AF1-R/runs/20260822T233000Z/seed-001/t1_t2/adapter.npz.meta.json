@@ -1,0 +1,1 @@
+{"model_name": "allenai/OLMo-1B-0724-hf", "target_modules": ["model.layers.0.mlp.down_proj"], "dtype": "float32", "attn_implementation": "eager", "n_ste": 1}

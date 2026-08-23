@@ -1,0 +1,158 @@
+{
+  "experiment_id": "EXP-AF-001-R",
+  "git_sha": "4238568",
+  "frozen_revision_for_reproduction": "39be76c",
+  "run_dir": "20260822T233000Z",
+  "files": [
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/aggregate.json",
+      "sha256": "51d7d6c7b0b2855446226510172b8067075a8f5e2f0086ac413838b18b5a3a43",
+      "bytes": 2314
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/cache_provenance.json",
+      "sha256": "bed9d024f8376d75c518d8bd1f656a3b3b349ea59a9820f15068e5a94d617d07",
+      "bytes": 1030
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/driver.log",
+      "sha256": "6f1906d7e08ddf3b59d9e1f602e50bc8cd0e5afb420587e07a078ca44d4e74d0",
+      "bytes": 375056
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/env-lock.txt",
+      "sha256": "164229b216a30c2a33895ccd34c112dc4965e2ca6158b879fb5657b526e47967",
+      "bytes": 2211
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/provenance.json",
+      "sha256": "287c0e02ca26bddcdb33d5526800ae3c2f8d380d37a54f94c42ccb1390a9d6c4",
+      "bytes": 929
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-001/t1_continued/eval.full.json",
+      "sha256": "ec6ae19d0307fd3e9c7c82b32b19543dd5269e31c195ba174a898ff28777344a",
+      "bytes": 17412720
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-001/t1_continued/eval.summary.json",
+      "sha256": "1b7eecaf248c018f2641697c39a73ff90af07666d88e647ead18961daf5fc4bc",
+      "bytes": 508
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-001/t1_continued/history.jsonl",
+      "sha256": "eef8fb608729642150a98787b93fcaff675638f528936deb1768b2840f39f2aa",
+      "bytes": 1677
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-001/t1_t2/adapter.npz",
+      "sha256": "2964e8e699369a51656b8f8be911d18abf91c03c5d835c4a0023cf0544854677",
+      "bytes": 134218252
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-001/t1_t2/adapter.npz.meta.json",
+      "sha256": "044aa38bc747aad1caa7e66b1b5a2cdeca49dd8b6e2432ad87b5a1c20175d939",
+      "bytes": 157
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-001/t1_t2/eval.full.json",
+      "sha256": "11574ff89f47a93fe70d20c44d24a217330c0c09dc41e90af45bda00d6e08882",
+      "bytes": 17407872
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-001/t1_t2/eval.summary.json",
+      "sha256": "3ff1c5ce0e8f98970abb0475a9301e5c829b669065142c822d43cb961ea31a96",
+      "bytes": 528
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-001/t1_t2/history.jsonl",
+      "sha256": "9603464f0708926cedd2390af677f1d4839337b428c4426e11333ddea7e2d1e0",
+      "bytes": 1670
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-002/t1_continued/eval.full.json",
+      "sha256": "84d517261e27625d3f7c5b4527461c5c7cd8ef2f72ea88d4dc37acfbe1ed4ad6",
+      "bytes": 17411651
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-002/t1_continued/eval.summary.json",
+      "sha256": "0d24cdecbe0ef875d3a58817a240b1cee876463726195c8a89d47f94ecb8fe53",
+      "bytes": 510
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-002/t1_continued/history.jsonl",
+      "sha256": "a166c07961269151946c569b3f56aef7b382620521e05f83b816d7c7ad800474",
+      "bytes": 1684
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-002/t1_t2/adapter.npz",
+      "sha256": "edbfff36798d08f143c0dcca52860963f368734d9367481ef011ee33b0be38f8",
+      "bytes": 134218252
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-002/t1_t2/adapter.npz.meta.json",
+      "sha256": "044aa38bc747aad1caa7e66b1b5a2cdeca49dd8b6e2432ad87b5a1c20175d939",
+      "bytes": 157
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-002/t1_t2/eval.full.json",
+      "sha256": "a0b6e6334b38c20260a71371dcdf48f81da2660adf7b612274ae65db397df718",
+      "bytes": 17408137
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-002/t1_t2/eval.summary.json",
+      "sha256": "4b11ad947b6652644fd8e4ba209a39f25ff417cfdcd8693e75a574ba07b3ca8b",
+      "bytes": 528
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-002/t1_t2/history.jsonl",
+      "sha256": "86962da3466f8295b1adb4f5285cd93ea6172e9665bc738607b87f1c5ffb7999",
+      "bytes": 1670
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-003/t1_continued/eval.full.json",
+      "sha256": "312988245c6282dcd5f11d8b10fce0084b66667b90fc80dfdf4e9939e28960e1",
+      "bytes": 17409281
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-003/t1_continued/eval.summary.json",
+      "sha256": "32bd6f76a15b5c02e80d4831959c0d3acd6005bdd0e0b3c27e7b9bedeb1d2856",
+      "bytes": 508
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-003/t1_continued/history.jsonl",
+      "sha256": "5e2af7826636bcd5ee626e4fe3b55bf20b253dc83ff45d5aded204ca4f7af2d8",
+      "bytes": 1680
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-003/t1_t2/adapter.npz",
+      "sha256": "0683ea09ff5b55d0ba4f9a531dbfafcbcc87bb0f72809421193cc6a5d5cd5394",
+      "bytes": 134218252
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-003/t1_t2/adapter.npz.meta.json",
+      "sha256": "044aa38bc747aad1caa7e66b1b5a2cdeca49dd8b6e2432ad87b5a1c20175d939",
+      "bytes": 157
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-003/t1_t2/eval.full.json",
+      "sha256": "3ecc0b114c7ba84617dd40ebb7ed218b1fd01956aac9e4b5c7d7239c4fc7665b",
+      "bytes": 17408374
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-003/t1_t2/eval.summary.json",
+      "sha256": "b53c57a33f60f6ad13d8ac4bfc3d93dbccea08deecb86f1b9dbcd19181699a91",
+      "bytes": 529
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/seed-003/t1_t2/history.jsonl",
+      "sha256": "d67b746bbb501c4e12a29ee1bfa7e321892efe00cc4ac69b0e6f50cde1a96b71",
+      "bytes": 1668
+    },
+    {
+      "path": "runs/a/EXP-AF-001-R/20260822T233000Z/wikitext103_train_ids.npy",
+      "sha256": "ace286072df48befa95467339e838b908b1df32f54455ee78379c43f2179be50",
+      "bytes": 959058704
+    }
+  ]
+}

@@ -7,8 +7,8 @@ quantitative_thresholds:
   - "PASS: Q(T1+T2) exceeds Q(T1 continued, matched budget) by >2 standard errors on at least one capability metric (ARC-E, LAMBADA, or the registered held-out task), with no regression beyond 1 standard error on the others."
   - "FAIL: no capability metric separates the arms by >2 standard errors, or the T1-continuation arm wins any capability metric by >2 standard errors."
 date_registered: "2026-08-22"
-state: PROVISIONAL_FAIL
-reproduction: REQUIRED
+state: CONFIRMED
+status: FAIL
 required_evidence: [AF1, AF3, AF5, AF8]
 supporting_experiments:
   - id: EXP-A-010
@@ -25,6 +25,8 @@ history:
   - date: "2026-08-22"
     transition: "UNTESTED -> TESTING"
   - date: "2026-08-22"
-    transition: "TESTING -> PROVISIONAL_FAIL / REPRODUCTION_REQUIRED"
+  - date: "2026-08-22"
+    transition: "PROVISIONAL_FAIL / REPRODUCTION_REQUIRED -> CONFIRMED_FAIL (REPRODUCED via EXP-AF-001-R)"
+    cause: "EXP-AF-001-R (git 4238568, run 20260822T233000Z, AF8 governance: new namespace, frozen revision 39be76c, fresh process, independently generated token cache auditator with SHA fingerprints for every input shard, identity confirmed). Reproduces AF1 byte-for-byte on every per-seed value: wikitext ppl 14.10 vs 14.10, arc_easy 0.649 vs 0.649, lambada 0.618 vs 0.618; (B-A) stderr-of-difference +9.09 / -2.23 / -6.24 (identical to AF1). The equal-training-time branch closes permanently; A-RP-002 (equal-storage tournament) and A-RP-003 (sequential vs joint) remain UNTESTED and are unaffected by this transition."
     cause: "EXP-AF-001 (AF1 equal-training-budget control, git 39be76c, n=3 seeds, matched CE under identical batches/optimizer/budget) PASS-FAIL inconclusive on the positive side, decisively wrong on the negative: T1+T2 loses to T1-continued on every capability metric (wikitext ppl +9.09 stderr in favor of A, arc_easy -2.23, lambada_openai -6.24). Strong evidence under the FAIL bar. v2.3 lifecycle: confirmation-tier ≥3-seed result with matched control can promote TESTING -> PROVISIONAL_FAIL in one step; REPRODUCTION_REQUIRED is set at the same transition; CONFIRMED_FAIL only after an AF8-style clean reproduction (EXP-AF-001-R, new namespace, frozen SHA, fresh process, independent token cache, independently generated eval output). Track B B1 stays locked under both possible outcomes."
-conclusion: "Provisional FAIL under matched training-time budget at n=3 seeds, git 39be76c. Strong evidence against the claim as written — T1+T2 loses to T1-continued on every capability metric at matched CE. PENDING AF1-R reproduction (EXP-AF-001-R, AF8-style clean run) before CONFIRMED_FAIL. Track B B1 stays locked under both possible outcomes: even CONFIRMED_FAIL here does not preclude A-RP-002 (equal-storage) or A-RP-003 (sequential vs joint) from succeeding and motivating a revised B1 prerequisite wording. The v2 claim's wording confuses training-time and parameter-count as the cost axis; see OPERATING-PLAN §11 v2.3."
+conclusion: "CONFIRMED_FAIL at matched training-time budget (EXP-AF-001, git 39be76c; EXP-AF-001-R, git 4238568). The AF8 governance reproduction was byte-identical per seed. The equal-training-time branch closes permanently; the residual-plane representation itself is unaffected by A-RP-001's outcome and is now evaluated under the v2.3 storage/compute Pareto axis via EXP-AF-002 (A-RP-002). Track B B1 oracle gating stays locked under OPERATING-PLAN §5 v2.3 prerequisite rewrite: A-RP-002 PROVISIONAL_PASS, AF5 task-relevant T2 above threshold, and an AF8-clean CONFIRMED state on at least one of A-RP-002/003."

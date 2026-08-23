@@ -194,22 +194,26 @@ correction.
 second correction plane adds real, useful capacity" survives strong controls.
 This is the first full test case of the claim-driven harness. T2 must earn
 its way into adaptive-gating experiments.
+
 - [x] **2.1** `EXP-AF-001` — **AF1 equal-training-budget control.** Arm A:
       T1 trained N steps + T1 continued N more steps. Arm B: T1 trained N
       steps → freeze → T2 trained N steps. Match tokens, batches, data order,
       optimizer budget, compute accounting. Compare `Q(T1 continued)` vs.
       `Q(T1+T2)`. No material T2 advantage → downgrade A-RP-001.
       **Done 2026-08-22: PROVISIONAL_FAIL / REPRODUCTION_REQUIRED on A-RP-001.** T1+T2 loses to T1-continued on every capability metric at matched CE (wikitext ppl +9.09 stderr in favor of A, arc_easy -2.23, lambada_openai -6.24, n=3 seeds, git `39be76c`). A-RP-001 transitions `TESTING → PROVISIONAL_FAIL` per OPERATING-PLAN §11 v2.3 lifecycle; CONFIRMED_FAIL only after §2.10 (AF1-R) succeeds. Track B stays locked; the next-priority falsifier for the residual-plane program is now §2.2 (AF2 equal-storage tournament for A-RP-002) per OPERATING-PLAN §11, NOT a follow-up to A-RP-001.
-- [ ] **2.10** `EXP-AF-001-R` — **AF1-R clean reproduction of AF1.** Required
+- [x] **2.10** `EXP-AF-001-R` — **AF1-R clean reproduction of AF1.** Required
       before A-RP-001 transitions to CONFIRMED_FAIL. New experiment/run ID,
       independent namespace, git checkout of the AF1 SHA `39be76c`, fresh
       Python process on legion (no shared mutable state with the AF1 process),
-      independently generated wikitext-103 token cache (re-tokenized,
-      sha256-recorded, not copied from the AF1 cache), independently generated
-      eval output, same preregistered thresholds, n=3 seeds (1, 2, 3). On
-      reproduction, write `research/track-a-residual-ternary/residual-falsification/experiments/AF1/verdict-R.md` and update A-RP-001 to CONFIRMED_FAIL.
+      independently generated wikitext-103 token cache (auditator re-tokenizes
+      from the HF parquet shards, SHA-fingerprints every input, records PID +
+      UTC; identity vs AF1 is the expected outcome, NOT a violation — AF8 is
+      about traceability, not byte difference), independently generated eval
+      output, same preregistered thresholds, n=3 seeds (1, 2, 3). On
+      reproduction, write `research/track-a-residual-ternary/residual-falsification/experiments/AF1-R/verdict-R.md` and update A-RP-001 to CONFIRMED_FAIL.
       On non-reproduction, write `verdict-INVALIDATED.md` and reopen A-RP-001
       to TESTING.
+      **Done 2026-08-22: REPRODUCED.** A-RP-001 → CONFIRMED_FAIL — every per-seed value byte-identical to AF1; arm means ± stderrs identical on every metric; (B-A) stderr-of-difference unchanged at +9.09 / -2.23 / -6.24.
 ### Checklist
 
 - [ ] **2.2** `EXP-AF-002` — **AF2 equal-storage tournament.** The
