@@ -29,20 +29,12 @@ audit = _load("audit_rpm_d_cross_regime")
 
 
 def _arm_with_variance(name, ppl, ppl_vals, arc, arc_vals, lam, lam_vals):
-    """Per-arm with non-trivial per-seed variance (avoids the
-    diff_se=1e-9 fallback that makes z-scores blow up)."""
     return {
         "matched_bytes": [4199318] * 3,
         "tasks": {
-            "wikitext": {
-                "mean": ppl, "stderr": 1.0, "values": list(ppl_vals)
-            },
-            "arc_easy": {
-                "mean": arc, "stderr": 0.01, "values": list(arc_vals)
-            },
-            "lambada_openai": {
-                "mean": lam, "stderr": 0.01, "values": list(lam_vals)
-            },
+            "wikitext": {"mean": ppl, "stderr": 1.0, "values": list(ppl_vals)},
+            "arc_easy": {"mean": arc, "stderr": 0.01, "values": list(arc_vals)},
+            "lambada_openai": {"mean": lam, "stderr": 0.01, "values": list(lam_vals)},
         },
     }
 
@@ -51,9 +43,31 @@ def _vals(mean, sep):
     return [mean - sep * 0.1, mean, mean + sep * 0.1]
 
 
-def _regime_aggregate_growing(n):
-    """6 regimes where the trained-vs-random separation grows with n
-    (gap increases across all 3 metrics)."""
+def _write_pre_eval(per_regime_ppls: dict) -> None:
+    """Write per-seed pre_train_eval.json under each regime dir.
+
+    per_regime_ppls: {regime_dir (the one passed to the audit): ppl_value}.
+    The audit reads these to get the pre-train baseline; the driver
+    does NOT run a no_correction arm.
+    """
+    for reg_dir, ppl in per_regime_ppls.items():
+        for s in (1, 2, 3):
+            sd = reg_dir / f"seed-{s:03d}"
+            sd.mkdir(parents=True, exist_ok=True)
+            (sd / "pre_train_eval.json").write_text(json.dumps({
+                "seed": s,
+                "tasks": {
+                    "wikitext": {
+                        "metric": "word_perplexity,none",
+                        "value": ppl,
+                    },
+                    "arc_easy": {"metric": "acc_norm,none", "value": 0.50},
+                    "lambada_openai": {"metric": "acc,none", "value": 0.25},
+                },
+            }))
+
+
+def _aggregate_growing(n):
     sep_ppl = 100.0 + n * 50.0
     sep_arc = 0.05 + n * 0.02
     sep_lam = 0.10 + n * 0.05
@@ -71,18 +85,11 @@ def _regime_aggregate_growing(n):
                 0.495 - sep_arc, _vals(0.495 - sep_arc, 0.005),
                 0.255 - sep_lam, _vals(0.255 - sep_lam, 0.005),
             ),
-            "no_correction": _arm_with_variance(
-                "nc", 50.0 + n * 100, _vals(50.0 + n * 100, 1.0),
-                0.50, [0.49, 0.50, 0.51],
-                0.30, [0.29, 0.30, 0.31],
-            ),
         },
     }
 
 
-def _regime_aggregate_shrinking(n):
-    """6 regimes where the trained-vs-random separation shrinks with n
-    (gap decreases across all 3 metrics)."""
+def _aggregate_shrinking(n):
     sep_ppl = max(300.0 - n * 50.0, 10.0)
     sep_arc = max(0.10 - n * 0.015, 0.005)
     sep_lam = max(0.20 - n * 0.030, 0.005)
@@ -100,17 +107,11 @@ def _regime_aggregate_shrinking(n):
                 0.495 + (0.10 - sep_arc), _vals(0.495 + (0.10 - sep_arc), 0.005),
                 0.255 + (0.20 - sep_lam), _vals(0.255 + (0.20 - sep_lam), 0.005),
             ),
-            "no_correction": _arm_with_variance(
-                "nc", 50.0 + n * 100, _vals(50.0 + n * 100, 1.0),
-                0.50, [0.49, 0.50, 0.51],
-                0.30, [0.29, 0.30, 0.31],
-            ),
         },
     }
 
 
-def _aggregate_basic(t2_ppl, random_ppl, no_corr_ppl):
-    """Plain aggregate for non-cross-regime tests."""
+def _aggregate_basic(t2_ppl, random_ppl):
     return {
         "trained_arms": {
             "t2_ternary": _arm_with_variance(
@@ -125,11 +126,6 @@ def _aggregate_basic(t2_ppl, random_ppl, no_corr_ppl):
                 0.495, _vals(0.495, 0.005),
                 0.255, _vals(0.255, 0.005),
             ),
-            "no_correction": _arm_with_variance(
-                "nc", no_corr_ppl, _vals(no_corr_ppl, 1.0),
-                0.50, [0.49, 0.50, 0.51],
-                0.30, [0.29, 0.30, 0.31],
-            ),
         },
     }
 
@@ -142,9 +138,13 @@ def test_per_regime_metrics_extracts_z_scores(tmp_path):
       diff_se = sqrt(1.0^2 + 1.0^2) ~ 1.41
       z ~ (400 - 20) / 1.41 ~ 269 sigma.
     """
-    agg_path = tmp_path / "aggregate.json"
-    agg_path.write_text(json.dumps(_aggregate_basic(20.0, 400.0, 425.0)))
-    m = audit._per_regime_metrics(agg_path)
+    reg_dir = tmp_path / "EXP-RPM-D0" / "ts" / "af2d"
+    reg_dir.mkdir(parents=True)
+    (reg_dir / "aggregate.json").write_text(
+        json.dumps(_aggregate_basic(20.0, 400.0))
+    )
+    _write_pre_eval({reg_dir: 425.0})
+    m = audit._per_regime_metrics(reg_dir)
     assert m["pre_train_ppl"] == 425.0
     assert m["trained_t2_ppl"] == 20.0
     assert m["random_t2_ppl"] == 400.0
@@ -170,11 +170,12 @@ def test_cross_regime_audit_pass_when_monotonic(tmp_path):
     damage severity across all 3 capability metrics. PASS expected."""
     regimes = []
     for n in range(6):
-        agg = _regime_aggregate_growing(n)
+        agg = _aggregate_growing(n)
         reg_dir = tmp_path / f"EXP-RPM-D{n}" / "ts" / "af2d"
         reg_dir.mkdir(parents=True)
         (reg_dir / "aggregate.json").write_text(json.dumps(agg))
         regimes.append(reg_dir)
+    _write_pre_eval({r: 50.0 + 100.0 * 5 for r in regimes})
     result = audit.audit_cross_regime(regimes)
     assert result["n_regimes"] == 6
     assert result["verdict"] == "PASS"
@@ -187,11 +188,12 @@ def test_cross_regime_audit_fail_when_decreasing_z(tmp_path):
     damage severity across all 3 metrics. FAIL expected."""
     regimes = []
     for n in range(6):
-        agg = _regime_aggregate_shrinking(n)
+        agg = _aggregate_shrinking(n)
         reg_dir = tmp_path / f"EXP-RPM-D{n}" / "ts" / "af2d"
         reg_dir.mkdir(parents=True)
         (reg_dir / "aggregate.json").write_text(json.dumps(agg))
         regimes.append(reg_dir)
+    _write_pre_eval({r: 425.0 for r in regimes})
     result = audit.audit_cross_regime(regimes)
     assert result["verdict"] == "FAIL"
 
@@ -200,11 +202,12 @@ def test_cross_regime_audit_fail_with_only_two_regimes(tmp_path):
     """Fewer than three regimes - FAIL (RPM-002 needs 3+ regimes)."""
     regimes = []
     for n in range(2):
-        agg = _aggregate_basic(20.0, 400.0, 425.0)
+        agg = _aggregate_basic(20.0, 400.0)
         reg_dir = tmp_path / f"EXP-RPM-D{n}" / "ts" / "af2d"
         reg_dir.mkdir(parents=True)
         (reg_dir / "aggregate.json").write_text(json.dumps(agg))
         regimes.append(reg_dir)
+    _write_pre_eval({r: 425.0 for r in regimes})
     result = audit.audit_cross_regime(regimes)
     assert result["verdict"] == "FAIL"
     for c in result["metric_checks"].values():
@@ -215,9 +218,13 @@ def test_cross_regime_audit_fail_with_only_two_regimes(tmp_path):
 def test_per_regime_metrics_accepts_directory_path(tmp_path):
     """The audit should accept either the agg.json file OR its
     containing directory."""
-    agg_path = tmp_path / "aggregate.json"
-    agg_path.write_text(json.dumps(_aggregate_basic(20.0, 400.0, 425.0)))
-    m = audit._per_regime_metrics(tmp_path)
+    reg_dir = tmp_path / "EXP-RPM-D0" / "ts" / "af2d"
+    reg_dir.mkdir(parents=True)
+    (reg_dir / "aggregate.json").write_text(
+        json.dumps(_aggregate_basic(20.0, 400.0))
+    )
+    _write_pre_eval({reg_dir: 425.0})
+    m = audit._per_regime_metrics(reg_dir)
     assert m["pre_train_ppl"] == 425.0
 
 

@@ -46,8 +46,6 @@ arms:
   untrained_controls:
   - random_t2_ternary
   - random_lora
-  no_correction:
-  - no_correction
 training:
   corpus: wikitext-103 train split
   token_cache: runs/r/EXP-RPM-D4/<ts>/wikitext103_train_ids.npy (sha256 captured;
@@ -89,8 +87,9 @@ decision_logic_summary: "Run all arms x 3 seeds under AF8 governance. Verify:\n 
   \ n=3 seeds per arm. The Stage 1 cross-regime comparison (RPM-002) is computed AFTER\
   \ all 6 regimes complete."
 stop_conditions:
-- 'All runs complete: 5 trained x 3 seeds + 2 untrained x 3 seeds + 1 no_correction
-  x 3 seeds = 24 runs total.'
+- 'All runs complete: 5 trained x 3 seeds + 2 untrained x 3 seeds = 21 runs total.
+  The no_correction baseline is captured separately via the per-seed pre_train_eval.json
+  (not run by the driver).'
 - Any matched-bytes tolerance violation -> that arm INVALIDATED, re-execute.
 - Any pre-train ppl outside nominal_band -> recorded as observation, run continues
   (regime band is a target, not a hard validation criterion).

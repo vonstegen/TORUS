@@ -64,14 +64,20 @@ def _per_regime_metrics(agg_path: Path) -> dict:
     agg = _load_json(agg_path)
     out = {"source": str(agg_path), "metrics": {}}
 
-    # Use the no_correction arm's wikitext ppl as the pre-train
-    # baseline (it's the FP16-base / damaged-base ppl at this regime).
-    if "no_correction" in agg.get("untrained_controls", {}):
-        no_corr = agg["untrained_controls"]["no_correction"]
-        out["pre_train_ppl"] = no_corr["tasks"]["wikitext"]["mean"]
+    # Per-seed pre-train ppl from seed-XXX/pre_train_eval.json (the
+    # verified damaged-base state BEFORE adapter training). Use this
+    # as the pre-train baseline since the driver does NOT run a
+    # no_correction arm.
+    runs_dir = agg_path.parent
+    pre_ppls = []
+    for seed_dir in sorted(runs_dir.glob("seed-*")):
+        p = seed_dir / "pre_train_eval.json"
+        if p.exists():
+            pre_ppls.append(_load_json(p)["tasks"]["wikitext"]["value"])
+    if pre_ppls:
+        out["pre_train_ppl"] = sum(pre_ppls) / len(pre_ppls)
     else:
         out["pre_train_ppl"] = float("nan")
-
     trained_t2 = agg.get("trained_arms", {}).get("t2_ternary")
     random_t2 = agg.get("untrained_controls", {}).get("random_t2_ternary")
     if not trained_t2 or not random_t2:
