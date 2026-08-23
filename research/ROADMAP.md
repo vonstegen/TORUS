@@ -1,18 +1,18 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
-**Revision:** 2.3 (2026-08-22) — OPERATING-PLAN §11. Three
-changes triggered by AF1:
+**Revision:** 2.4 (2026-08-23) — §2.2 (AF2 equal-storage tournament)
+DONE with PROVISIONAL_PASS on A-RP-002 (t2 ternary Pareto-competitive
+with fp16 LoRA r=216 and fp16 dense_adapter r=192 at matched
+deployed-bytes on model.layers.0.mlp.down_proj, OLMo-1B). §2.11
+added: EXP-AF-002-R (AF8-style clean reproduction) as the required
+next step before A-RP-002 → CONFIRMED_PASS.
+**Revision 2.3** (2026-08-22) — three changes triggered by AF1:
 (a) the primary Track A decision axis is now storage/compute/energy
-Pareto efficiency, not "matched training time" (see OPERATING-PLAN
-§11 and the AF1 verdict);
-(b) Phase 2 §2.1 is marked DONE (PROVISIONAL_FAIL on A-RP-001, not
-  DECIDED FAIL); §2.10 inserts the AF1-R clean reproduction as the
-  next required step before A-RP-001 can transition to
-  CONFIRMED_FAIL;
-(c) §2.2 (AF2 equal-storage tournament) is elevated with cost-vector
-  framing, matching OPERATING-PLAN §11. v2.1 sequencing otherwise
-  holds.
+Pareto efficiency (OPERATING-PLAN §11);
+(b) Phase 2 §2.1 marked DONE (PROVISIONAL_FAIL on A-RP-001, not
+  DECIDED FAIL); §2.10 inserts the AF1-R clean reproduction;
+(c) §2.2 elevated with cost-vector framing.
 Rev 2.0 tracked feedback v2 docs 01–09.
 **Governing directive:** **Isolate. Falsify. Grade. Reproduce. Recombine.**
 **Authority order** (explicit; filename ordering is NOT authority):
@@ -216,7 +216,7 @@ its way into adaptive-gating experiments.
       **Done 2026-08-22: REPRODUCED.** A-RP-001 → CONFIRMED_FAIL — every per-seed value byte-identical to AF1; arm means ± stderrs identical on every metric; (B-A) stderr-of-difference unchanged at +9.09 / -2.23 / -6.24.
 ### Checklist
 
-- [ ] **2.2** `EXP-AF-002` — **AF2 equal-storage tournament.** The
+- [x] **2.2** `EXP-AF-002` — **AF2 equal-storage tournament.** The
       primary Track-A falsifier per OPERATING-PLAN §11 v2.3. T2 ternary vs.
       INT4 residual, smaller INT8 residual, low-rank correction, learned
       group scales, small dense adapter — at matched *physical bytes-in-deployment*
@@ -228,6 +228,13 @@ its way into adaptive-gating experiments.
       at minimum). The claimed bit-density ("1.58 bits/weight") is the
       *floor*, not the reported value. Quality per **vector C** Pareto
       is the decision rule, not "better than no T2."
+      **Done 2026-08-23: PROVISIONAL_PASS on A-RP-002** (run `research/track-a-residual-ternary/residual-falsification/experiments/AF2/runs/20260823T030918Z`, git `0529749`).
+      Trained t2_ternary (4,199,318 B) ties within +/-2 stderr of fp16
+      dense_adapter r=192 (3,932,771 B) on wikitext ppl and arc_easy, and
+      dominates lambada_openai by +2.18 sigma. fp16 LoRA r=216 (4,424,265 B)
+      also within +/-2 sigma of dense_adapter on every metric. int4/int8
+      column-masked variants fail at N=500. PENDING §2.11 EXP-AF-002-R
+      (clean AF8 reproduction) before CONFIRMED_PASS.
 - [ ] **2.3** `EXP-AF-003` — **AF3 initialization robustness.** Init matrix
       {0, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2} × seeds {11, 22, 33}. Aggregate
       mean/std/failure rate/best/worst. Classify ROBUST / MODERATELY
@@ -235,7 +242,17 @@ its way into adaptive-gating experiments.
 - [ ] **2.4** `EXP-AF-004` — **AF4 sequential vs. joint.** Arms: T1→freeze→
       T2; joint(T1,T2) where appropriate; T1→T2→T3 sequential; T1→joint(T2,
       T3); T1-only with matched extra budget. Report gain per training token
-      and per added physical byte. Decides A-RP-003.
+
+- [ ] **2.11** `EXP-AF-002-R` — **AF2-R clean reproduction of AF2.** Required
+      before A-RP-002 transitions to CONFIRMED_PASS. New experiment/run ID,
+      independent namespace, fresh process on legion, independently generated
+      wikitext-103 token cache (auditator re-tokenizes from the HF
+      parquet shards, SHA-fingerprints every input, records PID + UTC;
+      identity vs AF2 is the expected outcome, NOT a violation), independent
+      eval output, same preregistered thresholds, n=3 seeds (1, 2, 3). On
+      reproduction, write `experiments/AF2/verdict-R.md` and update A-RP-002
+      to CONFIRMED_PASS. On non-reproduction, write
+      `verdict-INVALIDATED.md` and reopen A-RP-002 to TESTING.
 - [ ] **2.5** `EXP-AF-005` — **AF5 downstream-transfer gate.** Proxy and
       capability metrics on every AF run (classes per 1.4). Task-relevant T2
       value must exceed the preregistered threshold.

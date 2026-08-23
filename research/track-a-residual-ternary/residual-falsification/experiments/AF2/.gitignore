@@ -1,0 +1,9 @@
+runs/*/seed-*/t2_ternary/adapter.npz
+runs/*/seed-*/int4_residual/adapter.npz
+runs/*/seed-*/int8_residual/adapter.npz
+runs/*/seed-*/lora/adapter.npz
+runs/*/seed-*/dense_adapter/adapter.npz
+runs/*/seed-*/random_t2_ternary/adapter.npz
+runs/*/seed-*/random_lora/adapter.npz
+runs/*/provenance.json
+runs/*/env-lock.txt

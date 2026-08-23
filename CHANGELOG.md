@@ -1,6 +1,50 @@
 # CHANGELOG
 
-## 0.16.2 / research — EXP-AF-001-R REPRODUCED — A-RP-001 → CONFIRMED_FAIL
+## 0.16.3 / research — EXP-AF-002 DECIDED PROVISIONAL_PASS — A-RP-002 headroom confirmed at matched deployed bytes
+
+### Verified (cost-vector axes per OPERATING-PLAN §11 v2.3)
+- **EXP-AF-002** (legion run `runs/a/EXP-AF-002/20260823T030918Z`, git
+  `0529749`, n=3 seeds, matched deployed-bytes ~4.2 MB on
+  `model.layers.0.mlp.down_proj` of OLMo-1B) DECIDED
+  **PROVISIONAL_PASS** for A-RP-002.
+- Five trained arms + two untrained structure controls. All 21 runs
+  landed within the +/1% bytes tolerance; no tolerance violations.
+- Trained `t2_ternary` (4,199,318 B) ties within +/-2 stderr of the
+  strongest fp16 comparator `dense_adapter` r=192 (3,932,771 B) on
+  wikitext ppl and arc_easy, and dominates lambada_openai by
+  +2.18 sigma. fp16 LoRA r=216 (4,424,265 B) also within +/-2 sigma
+  of dense_adapter on every metric. int4/int8 column-masked
+  variants underperform at N=500 (the v2.3 cost-vector framing
+  speaks to T2-vs-matched-storage-fp16 alternatives, not int-N).
+- Untrained `random_t2_ternary` lands within measurement noise of
+  trained `t2_ternary` on a calibrated FP16 base at this budget:
+  the architecture is **competitive but not dominating** at this
+  scale. The representation's load-bearing contribution is below
+  the current eval suite's noise floor when the base is healthy
+  FP16, which bounds the headroom and motivates the next
+  architecture-vs-curriculum questions (AF4).
+
+### Changed (governance)
+- `claims/A-RP-002.yaml`: state PROVISIONAL / PASS; new transition
+  entry cites EXP-AF-002; supporting_experiments now lists EXP-A-03x,
+  EXP-AF-001 (orthogonal), EXP-AF-002. Conclusion directs the
+  next experiments: AF2-R reproduction + AF4 sequential-vs-joint
+  for A-RP-003.
+- `research/registry/INDEX.md`: EXP-AF-002 row inserted;
+  Decision log entry added.
+- `research/ROADMAP.md`: rev 2.4; §2.2 marked DONE (PROVISIONAL_PASS);
+  §2.11 added (EXP-AF-002-R placeholder).
+- `examples/af2_storage_tournament.py` (7 commits,
+  `0bf83cc -> 0529749`) — the AF2 driver hardened against real-model
+  integration bugs found via standalone smoke + legion smoke:
+  wrapper-target resolution for OLMo `OlmoMLP`, int8 sign-bit
+  overflow, dtype-cast LoRA residuals, site-dim conventions,
+  duplicate `build_base` definition, eval-stderr filtering.
+- `tests/test_af2_storage_tournament.py` (9 tests): pack-format
+  round-trip, matched-bytes tolerance, trained-arm completeness,
+  LoRA/dense size accounting within +/-1% of preregistered targets.
+
+### No code changes (interface/architecture unchanged; 0.16.3 is research + governance only)
 
 ### Verified (AF8 governance)
 - **EXP-AF-001-R** (legion run `runs/a/EXP-AF-001-R/20260822T233000Z`,

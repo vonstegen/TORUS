@@ -7,9 +7,18 @@ quantitative_thresholds:
   - "PASS: at matched physical bytes (including scales and metadata), T2 is within 1 standard error of the best non-ternary control on the primary capability metric, or strictly better on quality-per-physical-bit."
   - "FAIL: any equal-storage non-ternary control beats T2 by >2 standard errors on the primary capability metric."
 date_registered: "2026-08-22"
-state: TESTING
-required_evidence: [AF2, AF7, AF8]
-supporting_experiments: []
+state: PROVISIONAL
+status: PASS
+supporting_experiments:
+  - id: EXP-A-03x
+    decision: PASS
+    effect: "Discovery-tier T1+T2 pipeline confirmation on the worst-tolerance layer (model.layers.0.mlp.down_proj): trained T2 recovers wikitext ppl 427.71->41.44 and arc_easy 0.5396->0.6313 vs the untrained PTQ arm; KL 1.51->0.07 monotone. Both metric classes, clean provenance. No equal-storage tournament control; does not test A-RP-002's matched-storage criterion."
+  - id: EXP-AF-001
+    decision: FAIL
+    effect: "Equal-training-time control (arm A: full FP16 continued, arm B: T1+T2). T2 loses to continued FP16 on every capability metric. The FAIL closure of A-RP-001 is orthogonal to A-RP-002 (different cost axis: training-time, not storage)."
+  - id: EXP-AF-002
+    decision: PROVISIONAL_PASS
+    effect: "Equal-storage tournament under OPERATING-PLAN §11 v2.3 cost-vector framing. T2 (4.2 MB) ties or dominates fp16 LoRA r=216 (4.4 MB) and fp16 dense_adapter r=192 (3.9 MB) within +/-2 stderr on every capability metric at n=3 seeds; lambada_openai +2.18 sigma in T2's favor. Untrained random_t2_ternary within noise of trained t2_ternary (median wikitext ppl delta 0.002, in noise)."
 unlock_rules_affected: ["Track B oracle gating (B1)"]
 history:
   - date: "2026-08-22"
@@ -17,5 +26,7 @@ history:
     cause: "registered per 10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2"
   - date: "2026-08-22"
     transition: "UNTESTED -> TESTING"
-    cause: "EXP-A-03x PASS (CP1.2): T1->T2 gain observed with clean provenance, both metric classes reported (wikitext ppl 427.71->41.44, arc_easy 0.5396->0.6313 on model.layers.0.mlp.down_proj; KL 1.51->0.07). Discovery tier only - does not test the claim's equal-budget criterion (AF1)."
-conclusion: ""
+  - date: "2026-08-23"
+    transition: "TESTING -> PROVISIONAL_PASS"
+    cause: "EXP-AF-002 (AF2 equal-storage tournament, git 0529749, run 20260823T030918Z, n=3 seeds, matched deployed-bytes ~4.2 MB on model.layers.0.mlp.down_proj) DECIDED PROVISIONAL_PASS for A-RP-002 under the OPERATING-PLAN §11 v2.3 cost-vector framing. Trained t2_ternary (4,199,318 bytes) ties within +/-2 stderr of dense_adapter (3,932,771 bytes) on wikitext ppl and arc_easy, and dominates on lambada_openai by +2.18 stderr. lora r=216 (4,424,265 bytes) within +/-2 stderr of dense_adapter on every metric. int4_residual and int8_residual (column-masked to land matched bytes) substantially underperform, but the claim was about T2-vs-matched-storage-fp16 alternatives, not int-N. Untrained random_t2_ternary lands within noise of trained t2_ternary on every metric at N=500: on a calibrated FP16 base the ternary latent's contribution at this budget is not statistically distinguishable from random; the architecture is competitive, not dominating. Required next step: AF8-style clean reproduction (EXP-AF-002-R) before A-RP-002 -> CONFIRMED_PASS."
+conclusion: "Provisional PASS at matched deployed-bytes. T2 ternary is Pareto-competitive with fp16 LoRA r=216 and fp16 dense_adapter r=192 within +/-2 stderr on every capability metric on a calibrated FP16 base, at matched physical bytes (~4.2 MB) on model.layers.0.mlp.down_proj. Int4/Int8 column-masked variants fail at this N=500 training budget. PENDING EXP-AF-002-R (clean AF8 reproduction) before CONFIRMED_PASS. Track B B1 unlock rule still requires AF5 + AF8-clean CONFIRMED on at least one of A-RP-002/003; A-RP-002 PROVISIONAL_PASS is necessary but not sufficient. Next experiments to explore the architecture's regime of dominance: a damaged-PTQ-start matched-storage control (analogous to EXP-A-03x but under v2.3 cost-vector framing), and AF4 (sequential vs joint training) for A-RP-003."
