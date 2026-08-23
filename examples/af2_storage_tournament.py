@@ -482,7 +482,76 @@ def eval_arm(model, tokenizer, *, tasks: List[str], limit=None,
 
 def analytic_training_flops(n_steps, b, s, h, i):
     return 6 * n_steps * b * s * (h * i + h * h)
+def damage_target_module(target_module, *, group_size: int = 128,
+                          threshold: float = 0.7) -> dict:
+    """TWN-style per-group absmean ternary damage on a target module's weight.
 
+    Replaces `target_module.weight.data` with the ternary reconstruction
+    (codes * per-group scale) and freezes it. This is the EXP-A-011 PTQ
+    recipe: mean-zero threshold + per-group absmean scale + sign-round +
+    threshold-spike-to-zero. With group_size=128, threshold=0.7,
+    calibrate_norm=False it reproduces EXP-A-011's ppl 427.7 starting state.
+
+    Returns a metadata dict (group_size, threshold, fro_norm_before,
+    fro_norm_after, ratio) for audit. The caller is responsible for
+    calling `eval_arm` on the model BEFORE adapter training when the
+    pre-train band verification is required.
+    """
+    import torch
+    from torus.train.ste import ternary_quantize_with_ste
+
+    w_before = target_module.weight.detach().clone()
+    w_np = w_before.cpu().numpy().astype(np.float32, copy=False)
+    codes, scale, quantized = ternary_quantize_with_ste(
+        w_np, group_size=group_size, threshold=threshold,
+        calibrate_norm=False, ref_weight=w_np,
+    )
+    q_tensor = torch.from_numpy(quantized).to(
+        target_module.weight.device, target_module.weight.dtype)
+    target_module.weight.data.copy_(q_tensor)
+    target_module.weight.requires_grad_(False)
+
+    fro_before = float(torch.linalg.norm(w_before).item())
+    fro_after = float(torch.linalg.norm(target_module.weight).item())
+    return {
+        "group_size": int(group_size),
+        "threshold": float(threshold),
+        "calibrate_norm": False,
+        "fro_norm_before": fro_before,
+        "fro_norm_after": fro_after,
+        "fro_ratio": (fro_after / fro_before) if fro_before > 0 else None,
+    }
+
+
+def pre_train_eval_if_damaged(model, tokenizer, args, seed: int) -> dict | None:
+    """Run a single eval pass on the (already damaged) base, capture metrics.
+
+    Used by AF2-D's --pre-train-eval to verify the damage mode reproduces
+    EXP-A-011 within +/-2 sigma of the preregistered band. Returns the
+    eval summary dict, or None if --damage-ptq is not set.
+    """
+    if not getattr(args, "damage_ptq", False):
+        return None
+    if not getattr(args, "pre_train_eval", False):
+        return None
+    model.eval()
+    results = eval_arm(
+        model, tokenizer,
+        tasks=args.tasks.split(","), limit=None,
+        batch_size=args.batch_size,
+    )
+    summary = {"seed": seed, "model": args.model,
+                "target_module": args.target_module,
+                "base_state": "damaged-PTQ (per --damage-ptq)",
+                "tasks": {}}
+    if isinstance(results, dict) and "results" in results:
+        for t, res in results["results"].items():
+            for k, v in res.items():
+                if "_stderr" in k:
+                    continue
+                if "acc" in k or "word_perplexity" in k:
+                    summary["tasks"][t] = {"metric": k, "value": v}
+    return summary
 
 def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
                  tokenizer, pad_id: int, all_ids: np.ndarray) -> dict:
@@ -492,18 +561,21 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
 
     arm_dir = out_dir / f"seed-{seed:03d}" / arm
     arm_dir.mkdir(parents=True, exist_ok=True)
-
     model = build_base(args.model, dtype=args.dtype, device=args.device)
     target_module = resolve_target_module(model, args.target_module)
+    if getattr(args, "damage_ptq", False):
+        # Apply TWN-style ternary damage to the target module's weight,
+        # in-place and frozen. Mirrors EXP-A-011's PTQ-arm starting state.
+        # Per-arm damage is deterministic given (group_size, threshold);
+        # the per-seed outer loop also computes the damage metadata for
+        # the pre-train eval band verification.
+        damage_target_module(
+            target_module,
+            group_size=getattr(args, "damage_group_size", 128),
+            threshold=getattr(args, "damage_threshold", 0.7),
+        )
     intermediate_size = getattr(model.config, "intermediate_size",
                                   4 * model.config.hidden_size)
-
-    adapter = build_site_adapter(
-        arm, target_module=target_module,
-        hidden_size=model.config.hidden_size,
-        intermediate_size=intermediate_size,
-    )
-
     def forward_fn(ids):
         return model(input_ids=ids).logits
 
@@ -688,6 +760,24 @@ def main() -> None:
     p.add_argument("--device", default="cuda:0")
     p.add_argument("--dtype", default="float32")
     p.add_argument("--eval-dtype", default="float16")
+    p.add_argument("--damage-ptq", action="store_true",
+                    help="TWN-style per-group absmean ternary damage on the "
+                         "target module's weight BEFORE adapter construction. "
+                         "Reproduces EXP-A-011's PTQ-arm starting state "
+                         "(pre-train eval band: ppl [400, 460], arc_easy "
+                         "[0.51, 0.57]). Required for AF2-D (EXP-AF-002-D)."
+                         "Defaults: group_size=128, threshold=0.7, "
+                         "calibrate_norm=False (matches EXP-A-011).")
+    p.add_argument("--damage-group-size", type=int, default=128,
+                    help="Per-group absmean scale group width for --damage-ptq.")
+    p.add_argument("--damage-threshold", type=float, default=0.7,
+                    help="Magnitude below which weights are forced to zero "
+                         "in --damage-ptq (TWN-style sparsity knob).")
+    p.add_argument("--pre-train-eval", action="store_true",
+                    help="When --damage-ptq is set, capture a pre-train eval "
+                         "(BEFORE any adapter training) per seed to verify the "
+                         "damage mode reproduces EXP-A-011 within +/-2 sigma. "
+                         "Saved to seed-XXX/pre_train_eval.json.")
     p.add_argument("--matched-bytes-tolerance-pct", type=float, default=1.0)
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args()
@@ -706,20 +796,74 @@ def main() -> None:
     print(f"[af2] wikitext ids: {len(all_ids):,}", flush=True)
 
     summaries = []
-    for arm in arms:
+    pre_train_evals = {}  # seed -> pre_train_eval dict (when --damage-ptq + --pre-train-eval)
+    if getattr(args, "damage_ptq", False):
+        # Seed-major loop when damage is active: damage + pre-train eval once
+        # per seed (the base state is identical across arms for that seed),
+        # then iterate arms. The pre-train eval verifies the damage mode
+        # reproduces EXP-A-011 within +/-2 sigma of [400, 460] ppl.
         for seed in seeds:
-            print(f"[af2] arm={arm} seed={seed}: starting", flush=True)
-            summary = run_one_seed(
-                arm=arm, seed=seed, args=args,
-                out_dir=args.out_dir, tokenizer=tokenizer, pad_id=pad_id,
-                all_ids=all_ids,
+            print(f"[af2] arm=dmg_ptq seed={seed}: damaging target module", flush=True)
+            import torch
+            from transformers import AutoModelForCausalLM
+            model_dmg = AutoModelForCausalLM.from_pretrained(
+                args.model, torch_dtype=getattr(torch, args.dtype),
+                low_cpu_mem_usage=True,
+            ).to(args.device)
+            target_dmg = resolve_target_module(model_dmg, args.target_module)
+            dmg_meta = damage_target_module(
+                target_dmg,
+                group_size=getattr(args, "damage_group_size", 128),
+                threshold=getattr(args, "damage_threshold", 0.7),
             )
-            summaries.append(summary)
-            print(f"[af2] arm={arm} seed={seed}: done "
-                  f"deployed_bytes={summary['matched_bytes_actual']} "
-                  f"matched={summary['matched_bytes_passed']}", flush=True)
-
-    agg = aggregate(summaries, args.out_dir)
+            print(f"[af2] damage meta seed={seed}: {json.dumps(dmg_meta)}", flush=True)
+            if getattr(args, "pre_train_eval", False):
+                pte = pre_train_eval_if_damaged(model_dmg, tokenizer, args, seed)
+                pte["damage_meta"] = dmg_meta
+                pre_train_evals[seed] = pte
+                seed_dir = args.out_dir / f"seed-{seed:03d}"
+                seed_dir.mkdir(parents=True, exist_ok=True)
+                (seed_dir / "pre_train_eval.json").write_text(json.dumps(pte, indent=2))
+                print(f"[af2] pre_train_eval seed={seed}: "
+                      f"{json.dumps(pte.get('tasks', {}))}", flush=True)
+            del model_dmg
+            import gc as _gc
+            _gc.collect()
+            if args.device.startswith("cuda"):
+                try:
+                    torch.cuda.empty_cache()
+                except Exception:
+                    pass
+            for arm in arms:
+                print(f"[af2] arm={arm} seed={seed}: starting", flush=True)
+                summary = run_one_seed(
+                    arm=arm, seed=seed, args=args,
+                    out_dir=args.out_dir, tokenizer=tokenizer, pad_id=pad_id,
+                    all_ids=all_ids,
+                )
+                summary["damage_meta"] = dmg_meta
+                if seed in pre_train_evals:
+                    summary["pre_train_eval"] = pre_train_evals[seed].get("tasks", {})
+                summaries.append(summary)
+                (args.out_dir / f"seed-{seed:03d}" / arm / "eval.summary.json"
+                 ).write_text(json.dumps(summary, indent=2))
+                print(f"[af2] arm={arm} seed={seed}: done "
+                      f"deployed_bytes={summary['matched_bytes_actual']} "
+                      f"matched={summary['matched_bytes_passed']}", flush=True)
+    else:
+        # Original arm-major order when no damage is requested.
+        for arm in arms:
+            for seed in seeds:
+                print(f"[af2] arm={arm} seed={seed}: starting", flush=True)
+                summary = run_one_seed(
+                    arm=arm, seed=seed, args=args,
+                    out_dir=args.out_dir, tokenizer=tokenizer, pad_id=pad_id,
+                    all_ids=all_ids,
+                )
+                summaries.append(summary)
+                print(f"[af2] arm={arm} seed={seed}: done "
+                      f"deployed_bytes={summary['matched_bytes_actual']} "
+                      f"matched={summary['matched_bytes_passed']}", flush=True)
     print(json.dumps({"n_runs": len(summaries),
                        "tolerance_violations": agg["tolerance_violations"]},
                       indent=2))
