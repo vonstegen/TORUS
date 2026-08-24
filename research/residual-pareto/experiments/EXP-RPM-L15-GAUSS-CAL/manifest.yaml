@@ -1,0 +1,58 @@
+id: EXP-RPM-L15-GAUSS-CAL
+title: "Stage 2 v2 per-site Gaussian CAL \u2014 model.layers.15.mlp.down_proj"
+track: A
+subtrack: Stage 2 v2 (Gaussian damage pilot)
+tier: discovery
+status: PROPOSED
+date_proposed: '2026-08-24T19:31:44Z'
+owner: research harness
+claims_addressed: []
+rationale: 'Per-site Gaussian CAL pilot for Stage 2 v2. Layer 15 down_proj under Gaussian
+  noise (TWN was degenerate; ppl 14.10-15.49). Damage recipe: W'' = W + sigma * std(W)
+  * eps with eps ~ N(0,1) from torch.Generator(seed). Sigma values [0.0, 0.05, 0.1,
+  0.2, 0.5, 1.0]; seeds [1, 2, 3]; 6 x 3 = 18 cells per site. Pre-train eval only
+  (no training) to characterize the sigma -> ppl mapping BEFORE any tournament.'
+hypothesis: Gaussian weight noise produces an informative ppl axis at sites where
+  the TWN recipe is degenerate. At least 3 distinct sigma values per site should yield
+  reproducible ppl bands spanning >= 2 ppl units total.
+kill_criteria: Site is QUALIFYING iff >= 3 sigma values produce ppl in distinct reproducibility
+  bands (round(ppl,0)) separated by >= 1 ppl unit AND spanning >= 2 ppl units total.
+  Tournament proceeds ONLY at QUALIFYING sites; non-qualifying sites are ABORTED with
+  reason 'axis too narrow' (reproducible but uninformative).
+expected_artifacts:
+- runs/r/EXP-RPM-{SITE_ID}-CAL/<timestamp>/sigma-<v>/seed-<n>/pre_train_eval.json
+  (per-seed ppl on damaged base)
+- runs/r/EXP-RPM-{SITE_ID}-CAL/<timestamp>/sigma-<v>/aggregate.json (per-sigma ppl
+  mean +/- stderr across 3 seeds)
+- 'runs/r/EXP-RPM-{SITE_ID}-CAL/<timestamp>/site_cal_summary.json (site-level: sigma
+  -> ppl mapping, qualification verdict)'
+artifact_paths: []
+contamination_risks: []
+experiment:
+  model: allenai/OLMo-1B-hf
+  target_module: model.layers.15.mlp.down_proj
+  arms:
+  - t2_ternary
+  seeds:
+  - 1
+  - 2
+  - 3
+  n_steps: 0
+  batch_size: 4
+  seq_len: 128
+  lr: 0.0
+  tasks: wikitext,arc_easy,lambada_openai
+  damage_gaussian: true
+  damage_sigmas:
+  - 0.0
+  - 0.05
+  - 0.1
+  - 0.2
+  - 0.5
+  - 1.0
+  damage_seed: 0
+  pre_train_eval: true
+supersedes: null
+next_permitted_experiment: EXP-RPM-{SITE_ID} tournament at QUALIFYING sites, sigma
+  chosen from the calibration site's reproducible mid-band. Tournament rejects the
+  site if no reproducible mid-band exists.

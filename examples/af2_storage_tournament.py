@@ -384,6 +384,68 @@ def resolve_target_module(model, target_path: str):
     for sub in leaf.named_children():
         if hasattr(sub[1], "weight") and hasattr(sub[1].weight, "device"):
             return sub[1]
+
+# ---- Stage 2 v2 freeze-exception helpers (2026-08-24) ----
+# Per experiments/STAGE2-V2-FREEZE-EXCEPTION-SPEC.md: path-aware dim
+# resolution (resolve_site_dims) and a Gaussian weight-noise damage mode
+# (damage_target_module_gaussian). Existing TWN behavior is unchanged.
+
+def resolve_site_dims(target_module) -> tuple:
+    """Return (in_features, out_features) for a target Linear or Conv1D.
+
+    For nn.Linear (the default in OLMo-1B-hf and most HF models), weight
+    is stored as (out_features, in_features). For HF Conv1D (GPT-2 style),
+    weight is stored as (in_features, out_features); this helper normalizes
+    the two so callers always get (in, out). Used by Stage 2 v2 to
+    construct adapters at attention q_proj / v_proj sites where input /
+    output are both hidden_size (not intermediate_size).
+    """
+    weight = target_module.weight
+    shape = tuple(weight.shape)
+    if len(shape) != 2:
+        raise ValueError(
+            f"target_module weight must be 2-D; got shape {shape}")
+    cls_name = type(target_module).__name__
+    if cls_name == "Conv1D":
+        in_features, out_features = shape
+    else:
+        out_features, in_features = shape
+    return in_features, out_features
+
+
+def damage_target_module_gaussian(target_module, *, sigma: float,
+                                  seed: int = 0) -> dict:
+    """Deterministic Gaussian weight noise: W' = W + sigma * std(W) * eps.
+
+    `eps` is drawn from torch.Generator(seed=seed), so two consecutive
+    calls with the same (sigma, seed) produce bit-identical noise.
+    Different seeds produce different noise. The damaged weight is
+    in-place and frozen (requires_grad_(False)). Stage 2 v2 damage mode;
+    the existing TWN path is unaffected and gated by --damage-ptq. The
+    two flags are mutually exclusive (enforced in main()).
+    """
+    import torch
+    gen = torch.Generator(device="cpu")
+    gen.manual_seed(int(seed))
+    w_before = target_module.weight.detach().clone()
+    w_std = float(w_before.float().std().item())
+    eps = torch.randn(w_before.shape, generator=gen,
+                       dtype=w_before.dtype).to(w_before.device)
+    damaged = w_before + (sigma * w_std) * eps
+    target_module.weight.data.copy_(damaged)
+    target_module.weight.requires_grad_(False)
+    fro_before = float(torch.linalg.norm(w_before).item())
+    fro_after = float(torch.linalg.norm(target_module.weight).item())
+    return {
+        "sigma": float(sigma),
+        "seed": int(seed),
+        "w_std": w_std,
+        "fro_norm_before": fro_before,
+        "fro_norm_after": fro_after,
+        "fro_ratio": (fro_after / fro_before) if fro_before > 0 else None,
+    }
+
+
 def build_base(model_name: str, *, dtype: str, device: str):
     import torch
     from transformers import AutoModelForCausalLM
@@ -391,59 +453,60 @@ def build_base(model_name: str, *, dtype: str, device: str):
         model_name, torch_dtype=getattr(torch, dtype), low_cpu_mem_usage=True,
     ).to(device)
     return model
-def build_site_adapter(arm_id: str, *, target_module, hidden_size: int,
-                       intermediate_size: int):
+def build_site_adapter(arm_id: str, *, target_module, site_dims: tuple):
     """Build a SiteAdapter at the given target_module.
 
-    Site dim semantics: target_module is `down_proj`-equivalent,
-    input dim = intermediate_size (the size of the gate/up output),
-    output dim = hidden_size (the size of the residual stream).
+    `site_dims` is (in_features, out_features). For MLP down_proj sites
+    this is (intermediate_size, hidden_size). For attention q_proj /
+    v_proj sites this is (hidden_size, hidden_size). Dims come from
+    `resolve_site_dims(target_module)`, not hardcoded config attrs.
     """
     import torch
+    in_features, out_features = site_dims
     device = target_module.weight.device
     dtype = target_module.weight.dtype
     if arm_id == "t2_ternary":
-        ad = T2TernaryAdapter(in_features=intermediate_size,
-                              out_features=hidden_size,
+        ad = T2TernaryAdapter(in_features=in_features,
+                              out_features=out_features,
                               device=device, dtype=dtype, train=True)
         ad.patch(target_module)
         return ad
     if arm_id == "int4_residual":
         ad = intN_residual_adapter(N_bits=4, column_mask_fraction=0.5,
-                                   in_features=intermediate_size,
-                                   out_features=hidden_size,
+                                   in_features=in_features,
+                                   out_features=out_features,
                                    device=device, dtype=dtype, train=True)
         ad.patch(target_module)
         return ad
     if arm_id == "int8_residual":
         ad = intN_residual_adapter(N_bits=8, column_mask_fraction=0.25,
-                                   in_features=intermediate_size,
-                                   out_features=hidden_size,
+                                   in_features=in_features,
+                                   out_features=out_features,
                                    device=device, dtype=dtype, train=True)
         ad.patch(target_module)
         return ad
     if arm_id == "lora":
-        ad = lora_adapter(in_dim=intermediate_size,
-                          out_dim=hidden_size, rank=216,
+        ad = lora_adapter(in_dim=in_features,
+                          out_dim=out_features, rank=216,
                           device=device, train=True)
         ad.patch(target_module)
         return ad
     if arm_id == "dense_adapter":
-        ad = dense_adapter_bottleneck(in_dim=intermediate_size,
-                                       out_dim=hidden_size, bottleneck=192,
+        ad = dense_adapter_bottleneck(in_dim=in_features,
+                                       out_dim=out_features, bottleneck=192,
                                        device=device, train=True)
         ad.patch(target_module)
         return ad
     if arm_id == "random_t2_ternary":
-        ad = T2TernaryAdapter(in_features=intermediate_size,
-                              out_features=hidden_size,
+        ad = T2TernaryAdapter(in_features=in_features,
+                              out_features=out_features,
                               device=device, dtype=dtype, train=False,
                               init_seed=12345)
         ad.patch(target_module)
         return ad
     if arm_id == "random_lora":
-        ad = lora_adapter(in_dim=intermediate_size,
-                          out_dim=hidden_size, rank=216,
+        ad = lora_adapter(in_dim=in_features,
+                          out_dim=out_features, rank=216,
                           device=device, train=False, init_seed=12345)
         ad.patch(target_module)
         return ad
@@ -530,9 +593,8 @@ def pre_train_eval_if_damaged(model, tokenizer, args, seed: int) -> dict | None:
     EXP-A-011 within +/-2 sigma of the preregistered band. Returns the
     eval summary dict, or None if --damage-ptq is not set.
     """
-    if not getattr(args, "damage_ptq", False):
-        return None
-    if not getattr(args, "pre_train_eval", False):
+    if not (getattr(args, "damage_ptq", False)
+            or getattr(args, "damage_gaussian", False)):
         return None
     model.eval()
     results = eval_arm(
@@ -542,7 +604,9 @@ def pre_train_eval_if_damaged(model, tokenizer, args, seed: int) -> dict | None:
     )
     summary = {"seed": seed, "model": args.model,
                 "target_module": args.target_module,
-                "base_state": "damaged-PTQ (per --damage-ptq)",
+                "base_state": ("damaged-PTQ (per --damage-ptq)"
+                               if getattr(args, "damage_ptq", False)
+                else "damaged-Gaussian (per --damage-gaussian)"),
                 "tasks": {}}
     if isinstance(results, dict) and "results" in results:
         for t, res in results["results"].items():
@@ -574,12 +638,18 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
             group_size=getattr(args, "damage_group_size", 128),
             threshold=getattr(args, "damage_threshold", 0.7),
         )
-    intermediate_size = getattr(model.config, "intermediate_size",
-                                  4 * model.config.hidden_size)
+    elif getattr(args, "damage_gaussian", False):
+        # Stage 2 v2 Gaussian weight noise. Frozen. Mutually exclusive
+        # with --damage-ptq (enforced in main()).
+        damage_target_module_gaussian(
+            target_module,
+            sigma=getattr(args, "damage_sigma", 1.0),
+            seed=getattr(args, "damage_seed", 0),
+        )
+    site_dims = resolve_site_dims(target_module)
+    site_in_features, site_out_features = site_dims
     adapter = build_site_adapter(
-        arm, target_module=target_module,
-        hidden_size=model.config.hidden_size,
-        intermediate_size=intermediate_size,
+        arm, target_module=target_module, site_dims=site_dims,
     )
     def forward_fn(ids):
         return model(input_ids=ids).logits
@@ -600,9 +670,8 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
         arm_dir,
         training_flops=analytic_training_flops(
             args.n_steps, args.batch_size, args.seq_len,
-            model.config.hidden_size, intermediate_size),
-        inference_ops_per_token=(2 * model.config.hidden_size
-                                  * intermediate_size),
+            site_out_features, site_in_features),
+        inference_ops_per_token=(2 * site_out_features * site_in_features),
     )
     target_bytes = TARGET_DEPLOYED_BYTES.get(arm, 0)
     matched_pct = (abs(cv.deployed_bytes - target_bytes) / target_bytes * 100
@@ -746,7 +815,7 @@ def aggregate(summaries: list, out_dir: Path) -> dict:
     return out
 
 
-def main() -> None:
+def main(argv: list | None = None) -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--model", required=True)
     p.add_argument("--target-module", required=True)
@@ -777,6 +846,19 @@ def main() -> None:
     p.add_argument("--damage-threshold", type=float, default=0.7,
                     help="Magnitude below which weights are forced to zero "
                          "in --damage-ptq (TWN-style sparsity knob).")
+    p.add_argument("--damage-gaussian", action="store_true",
+                    help="Stage 2 v2: apply deterministic Gaussian weight "
+                         "noise W' = W + sigma * std(W) * eps to the target "
+                         "module's weight BEFORE adapter construction. "
+                         "Mutually exclusive with --damage-ptq. Sigma is "
+                         "set via --damage-sigma (default 1.0); seed via "
+                         "--damage-seed (default 0).")
+    p.add_argument("--damage-sigma", type=float, default=1.0,
+                    help="Sigma multiplier for --damage-gaussian "
+                         "(multiplies std(W)). Default 1.0.")
+    p.add_argument("--damage-seed", type=int, default=0,
+                    help="Seed for the torch.Generator used to draw "
+                         "noise in --damage-gaussian. Default 0 (deterministic).")
     p.add_argument("--pre-train-eval", action="store_true",
                     help="When --damage-ptq is set, capture a pre-train eval "
                          "(BEFORE any adapter training) per seed to verify the "
@@ -784,8 +866,12 @@ def main() -> None:
                          "Saved to seed-XXX/pre_train_eval.json.")
     p.add_argument("--matched-bytes-tolerance-pct", type=float, default=1.0)
     p.add_argument("--out-dir", type=Path, required=True)
-    args = p.parse_args()
-
+    args = p.parse_args(argv)
+    if getattr(args, "damage_ptq", False) and getattr(args, "damage_gaussian", False):
+        raise SystemExit(
+            "Pick one. (Stage 2 v2 uses --damage-gaussian; Stage 1 / 1.5 "
+            "uses --damage-ptq.)"
+        )
     arms = args.arms.split(",")
     seeds = [int(s) for s in args.seeds.split(",")]
 
