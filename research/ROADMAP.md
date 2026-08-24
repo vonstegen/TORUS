@@ -1,6 +1,18 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
+**Revision:** 2.17 (2026-08-24) — **Stage 2 v2 CAL pilot COMPLETED**;
+  2 of 4 sites QUALIFYING (L15, L0-v); 2 NOT QUALIFYING (AF2-D, L0-q).
+  Driver extension (Gaussian weight noise + path-aware dims) landed
+  in `examples/af2_storage_tournament.py` (commit 18e10ba). Stage 1
+  / Stage 1.5 driver SHAs (`692e8ee`) untouched. The two qualifying
+  sites satisfy RPM-006's "≥2 layer categories" PASS+ rule (MLP at
+  L15 + attention v_proj). Tournaments EXP-RPM-L15-GAUSS and
+  EXP-RPM-L0-V-GAUSS launched at the preregistered middle-band
+  σ=0.20 on Legion cuda:0 + cuda:1 in parallel; ~135 min total.
+  Verdict: `research/residual-pareto/experiments/STAGE2-V2-CAL-VERDICT-DRAFT.md`.
+  RPM-001 status: still UNTESTED (energy null); Stage 5 EXP-RPM-SYS
+  remains the next step to lift RPM-001.
 **Revision:** 2.16 (2026-08-24) — **Stage 2 v1 CAL completed**;
   tournaments aborted. L8 and L15 per-site CAL showed the TWN
   damage axis is **degenerate** on layers 8 and 15 down_proj (ppl

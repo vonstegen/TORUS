@@ -1313,5 +1313,38 @@ issue on this dev box, not a code regression — see 0.16.15).
 - `research/ROADMAP.md`: rev 2.16; §2.16 Stage 2 v1 marked DONE; new
   §2.17 Stage 2 v2 added.
 
+
+## 0.16.17 / research — Stage 2 v2 CAL pilot COMPLETE; 2 of 4 sites QUALIFYING
+
+Pilot (4 sites × 6 sigmas × 3 seeds = 72 cells) ran on Legion
+dual TITAN RTX in parallel. Result:
+
+| Site | Span | Bands | Qualifying |
+|---|---:|---:|---|
+| AF2-D down_proj L0  | 2.26  | 2 | NO (TWN remains informative here) |
+| L15 down_proj L15  | 3.49  | 4 | **YES** — tournament L15-GAUSS at σ=0.2 |
+| L0-q attn q_proj L0 | 0.15  | 1 | NO |
+| L0-v attn v_proj L0 | 20070 | 4 | **YES** — tournament L0-V-GAUSS at σ=0.2 |
+
+**The Stage 2 v2 CAL pilot satisfies RPM-006's "≥2 layer categories"
+PASS+ rule** (MLP at L15 + attention v_proj). The Pareto criterion
+will be evaluated by the two tournaments, currently running on
+Legion cuda:0 + cuda:1 in parallel.
+
+Driver: `ddc2b54` (Stage 2 v2 base) → tournament SHA 04243cc.
+Stage 1 / 1.5 driver SHA `692e8ee` untouched.
+
+Added:
+- `experiments/EXP-RPM-{AF2D,L15,L0-Q,L0-V}-GAUSS-CAL/manifest.yaml`
+- `experiments/EXP-RPM-{L15,L0-V}-GAUSS/manifest.yaml` (tournaments)
+- `experiments/STAGE2-V2-CAL-VERDICT.md`
+- `experiments/stage2_v2_cal_summary.json`
+- `gen_stage2_v2_tournament_manifests.py`
+- `close_stage2_v2_cal.py`
+- `stage2-v2-tournaments-launch.sh`
+- `runs/r/EXP-RPM-*-GAUSS-CAL/{timestamp}/site_cal_summary.json`
+
+Tests: 239/244 pass (5 kernel-load failures pre-existing).
+
 ### Tests: 228/233 pass (unchanged).
 results, per the user's "no more architecture" instruction.

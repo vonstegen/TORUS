@@ -1,0 +1,394 @@
+[
+  {
+    "exp_id": "EXP-RPM-AF2D-GAUSS-CAL",
+    "target_module": "model.layers.0.mlp.down_proj",
+    "timestamp": "20260824T204731Z",
+    "n_sigmas": 6,
+    "sigma_to_ppl": [
+      {
+        "sigma": 0.0,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.093198488512625,
+          13.093198488512625,
+          13.093198488512625
+        ],
+        "ppl_mean": 13.093198488512625,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.093198488512625,
+        "ppl_max": 13.093198488512625,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.05,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.096223878313767,
+          13.096223878313767,
+          13.096223878313767
+        ],
+        "ppl_mean": 13.096223878313767,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.096223878313767,
+        "ppl_max": 13.096223878313767,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.1,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.10349878001052,
+          13.10349878001052,
+          13.10349878001052
+        ],
+        "ppl_mean": 13.10349878001052,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.10349878001052,
+        "ppl_max": 13.10349878001052,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.2,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.128038445354047,
+          13.128038445354047,
+          13.128038445354047
+        ],
+        "ppl_mean": 13.128038445354045,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.128038445354047,
+        "ppl_max": 13.128038445354047,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.5,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.372902113803582,
+          13.372902113803582,
+          13.372902113803582
+        ],
+        "ppl_mean": 13.372902113803582,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.372902113803582,
+        "ppl_max": 13.372902113803582,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 1.0,
+        "n_seeds": 3,
+        "ppl_values": [
+          15.351905583619015,
+          15.351905583619015,
+          15.351905583619015
+        ],
+        "ppl_mean": 15.351905583619015,
+        "ppl_stderr": 0.0,
+        "ppl_min": 15.351905583619015,
+        "ppl_max": 15.351905583619015,
+        "ppl_range": 0.0
+      }
+    ],
+    "ppl_min_overall": 13.093198488512625,
+    "ppl_max_overall": 15.351905583619015,
+    "ppl_span": 2.2587070951063897,
+    "n_distinct_ppl_bands": 2,
+    "qualifying": false,
+    "kill_criteria": "QUALIFYING iff >= 3 sigma values produce ppl in distinct reproducibility bands (round(ppl,0)) AND span >= 2 ppl units"
+  },
+  {
+    "exp_id": "EXP-RPM-L15-GAUSS-CAL",
+    "target_module": "model.layers.15.mlp.down_proj",
+    "timestamp": "20260824T210419Z",
+    "n_sigmas": 6,
+    "sigma_to_ppl": [
+      {
+        "sigma": 0.0,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.093198488512625,
+          13.093198488512625,
+          13.093198488512625
+        ],
+        "ppl_mean": 13.093198488512625,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.093198488512625,
+        "ppl_max": 13.093198488512625,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.05,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.099462841558475,
+          13.099462841558475,
+          13.099462841558475
+        ],
+        "ppl_mean": 13.099462841558475,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.099462841558475,
+        "ppl_max": 13.099462841558475,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.1,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.123270599058499,
+          13.123270599058499,
+          13.123270599058499
+        ],
+        "ppl_mean": 13.123270599058499,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.123270599058499,
+        "ppl_max": 13.123270599058499,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.2,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.20317296713916,
+          13.20317296713916,
+          13.20317296713916
+        ],
+        "ppl_mean": 13.20317296713916,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.20317296713916,
+        "ppl_max": 13.20317296713916,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.5,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.752909228535552,
+          13.752909228535552,
+          13.752909228535552
+        ],
+        "ppl_mean": 13.752909228535552,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.752909228535552,
+        "ppl_max": 13.752909228535552,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 1.0,
+        "n_seeds": 3,
+        "ppl_values": [
+          16.577959395617807,
+          16.577959395617807,
+          16.577959395617807
+        ],
+        "ppl_mean": 16.577959395617807,
+        "ppl_stderr": 0.0,
+        "ppl_min": 16.577959395617807,
+        "ppl_max": 16.577959395617807,
+        "ppl_range": 0.0
+      }
+    ],
+    "ppl_min_overall": 13.093198488512625,
+    "ppl_max_overall": 16.577959395617807,
+    "ppl_span": 3.4847609071051817,
+    "n_distinct_ppl_bands": 3,
+    "qualifying": true,
+    "kill_criteria": "QUALIFYING iff >= 3 sigma values produce ppl in distinct reproducibility bands (round(ppl,0)) AND span >= 2 ppl units"
+  },
+  {
+    "exp_id": "EXP-RPM-L0-Q-GAUSS-CAL",
+    "target_module": "model.layers.0.self_attn.q_proj",
+    "timestamp": "20260824T204804Z",
+    "n_sigmas": 6,
+    "sigma_to_ppl": [
+      {
+        "sigma": 0.0,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.093198488512625,
+          13.093198488512625,
+          13.093198488512625
+        ],
+        "ppl_mean": 13.093198488512625,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.093198488512625,
+        "ppl_max": 13.093198488512625,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.05,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.094744372402998,
+          13.094744372402998,
+          13.094744372402998
+        ],
+        "ppl_mean": 13.094744372402998,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.094744372402998,
+        "ppl_max": 13.094744372402998,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.1,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.09692892804214,
+          13.09692892804214,
+          13.09692892804214
+        ],
+        "ppl_mean": 13.09692892804214,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.09692892804214,
+        "ppl_max": 13.09692892804214,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.2,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.101741068450192,
+          13.101741068450192,
+          13.101741068450192
+        ],
+        "ppl_mean": 13.10174106845019,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.101741068450192,
+        "ppl_max": 13.101741068450192,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.5,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.131199834951639,
+          13.131199834951639,
+          13.131199834951639
+        ],
+        "ppl_mean": 13.131199834951639,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.131199834951639,
+        "ppl_max": 13.131199834951639,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 1.0,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.24685961868197,
+          13.24685961868197,
+          13.24685961868197
+        ],
+        "ppl_mean": 13.246859618681972,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.24685961868197,
+        "ppl_max": 13.24685961868197,
+        "ppl_range": 0.0
+      }
+    ],
+    "ppl_min_overall": 13.093198488512625,
+    "ppl_max_overall": 13.246859618681972,
+    "ppl_span": 0.1536611301693469,
+    "n_distinct_ppl_bands": 1,
+    "qualifying": false,
+    "kill_criteria": "QUALIFYING iff >= 3 sigma values produce ppl in distinct reproducibility bands (round(ppl,0)) AND span >= 2 ppl units"
+  },
+  {
+    "exp_id": "EXP-RPM-L0-V-GAUSS-CAL",
+    "target_module": "model.layers.0.self_attn.v_proj",
+    "timestamp": "20260824T210419Z",
+    "n_sigmas": 6,
+    "sigma_to_ppl": [
+      {
+        "sigma": 0.0,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.093198488512625,
+          13.093198488512625,
+          13.093198488512625
+        ],
+        "ppl_mean": 13.093198488512625,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.093198488512625,
+        "ppl_max": 13.093198488512625,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.05,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.119013676453793,
+          13.119013676453793,
+          13.119013676453793
+        ],
+        "ppl_mean": 13.119013676453795,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.119013676453793,
+        "ppl_max": 13.119013676453793,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.1,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.196594151544632,
+          13.196594151544632,
+          13.196594151544632
+        ],
+        "ppl_mean": 13.196594151544632,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.196594151544632,
+        "ppl_max": 13.196594151544632,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.2,
+        "n_seeds": 3,
+        "ppl_values": [
+          13.725253952775883,
+          13.725253952775883,
+          13.725253952775883
+        ],
+        "ppl_mean": 13.725253952775882,
+        "ppl_stderr": 0.0,
+        "ppl_min": 13.725253952775883,
+        "ppl_max": 13.725253952775883,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 0.5,
+        "n_seeds": 3,
+        "ppl_values": [
+          439.2520498804073,
+          439.2520498804073,
+          439.2520498804073
+        ],
+        "ppl_mean": 439.25204988040724,
+        "ppl_stderr": 0.0,
+        "ppl_min": 439.2520498804073,
+        "ppl_max": 439.2520498804073,
+        "ppl_range": 0.0
+      },
+      {
+        "sigma": 1.0,
+        "n_seeds": 3,
+        "ppl_values": [
+          20083.487963109776,
+          20083.487963109776,
+          20083.487963109776
+        ],
+        "ppl_mean": 20083.487963109776,
+        "ppl_stderr": 0.0,
+        "ppl_min": 20083.487963109776,
+        "ppl_max": 20083.487963109776,
+        "ppl_range": 0.0
+      }
+    ],
+    "ppl_min_overall": 13.093198488512625,
+    "ppl_max_overall": 20083.487963109776,
+    "ppl_span": 20070.394764621262,
+    "n_distinct_ppl_bands": 4,
+    "qualifying": true,
+    "kill_criteria": "QUALIFYING iff >= 3 sigma values produce ppl in distinct reproducibility bands (round(ppl,0)) AND span >= 2 ppl units"
+  }
+]

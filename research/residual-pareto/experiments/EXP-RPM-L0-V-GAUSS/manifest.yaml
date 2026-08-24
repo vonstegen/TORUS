@@ -1,0 +1,53 @@
+id: EXP-RPM-L0-V-GAUSS
+title: "Stage 2 v2 tournament \u2014 model.layers.0.self_attn.v_proj @ sigma=0.2"
+track: A
+subtrack: Stage 2 v2 (Gaussian damage tournament)
+tier: discovery
+status: PROPOSED
+date_proposed: '2026-08-24T21:19:55Z'
+owner: research harness
+claims_addressed: []
+rationale: "Stage 2 v2 tournament at QUALIFYING site l0-v-gauss. \u03C3=0.2 selected\
+  \ from preregistered rule: middle band of sigma->ppl curve. Identical protocol to\
+  \ Stage 1 / 1.5 (7 trained arms + 2 random controls, n_steps=500, batch_size=4,\
+  \ seq_len=128, lr=1e-3)."
+hypothesis: "trained T2 TERNARY adapter \u226B random T2 TERNARY adapter on the damaged\
+  \ base at this site, replicating the Stage 1 architecture-vs-training finding under\
+  \ Gaussian damage."
+kill_criteria: Tournament runs to completion (no early kill). Verdict is decided by
+  the post-hoc aggregate.json comparison of trained vs random arms across wikitext/arc_easy/lambada_openai,
+  matching the Stage 1 / 1.5 protocol.
+expected_artifacts:
+- runs/r/EXP-RPM-{SITE_ID}/{timestamp}/seed-{n}/{arm}/eval.summary.json (per-cell)
+- runs/r/EXP-RPM-{SITE_ID}/{timestamp}/aggregate.json (per-site trained-vs-random
+  comparison)
+artifact_paths: []
+experiment:
+  model: allenai/OLMo-1B-0724-hf
+  target_module: model.layers.0.self_attn.v_proj
+  arms:
+  - t2_ternary
+  - int4_residual
+  - int8_residual
+  - lora
+  - dense_adapter
+  - random_t2_ternary
+  - random_lora
+  seeds:
+  - 1
+  - 2
+  - 3
+  n_steps: 500
+  batch_size: 4
+  seq_len: 128
+  lr: 0.001
+  momentum: 0.9
+  grad_clip: 1.0
+  tasks: wikitext,arc_easy,lambada_openai
+  damage_gaussian: true
+  damage_sigma: 0.2
+  damage_seed: 0
+  pre_train_eval: true
+supersedes: null
+next_permitted_experiment: EXP-RPM-{SITE_ID} post-hoc random-arm eval (eval_untrained_arms.py)
+  for the sigma ppl band, followed by RPM-006 decision on the per-site z-score.

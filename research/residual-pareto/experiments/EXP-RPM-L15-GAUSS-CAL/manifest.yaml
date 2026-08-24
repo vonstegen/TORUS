@@ -3,7 +3,7 @@ title: "Stage 2 v2 per-site Gaussian CAL \u2014 model.layers.15.mlp.down_proj"
 track: A
 subtrack: Stage 2 v2 (Gaussian damage pilot)
 tier: discovery
-status: PROPOSED
+status: DECIDED
 date_proposed: '2026-08-24T20:29:42Z'
 owner: research harness
 claims_addressed: []
@@ -28,7 +28,11 @@ expected_artifacts:
   mean +/- stderr across 3 seeds)
 - 'runs/r/EXP-RPM-{SITE_ID}-CAL/<timestamp>/site_cal_summary.json (site-level: sigma
   -> ppl mapping, qualification verdict)'
-artifact_paths: []
+artifact_paths:
+- experiments/EXP-RPM-L15-GAUSS-CAL/manifest.yaml
+- runs/r/EXP-RPM-L15-GAUSS-CAL/20260824T210419Z/site_cal_summary.json
+- experiments/EXP-RPM-L15-GAUSS/manifest.yaml
+- runs/r/EXP-RPM-L15-GAUSS/{timestamp}/aggregate.json
 contamination_risks: []
 experiment:
   model: allenai/OLMo-1B-0724-hf
@@ -55,6 +59,23 @@ experiment:
   damage_seed: 0
   pre_train_eval: true
 supersedes: null
-next_permitted_experiment: EXP-RPM-{SITE_ID} tournament at QUALIFYING sites, sigma
-  chosen from the calibration site's reproducible mid-band. Tournament rejects the
-  site if no reproducible mid-band exists.
+next_permitted_experiment: 'Stage 2 v2 tournament: EXP-RPM-L15-GAUSS. Currently running
+  on Legion (parallel: cuda:0 + cuda:1). Estimated completion ~135 min from launch.'
+decision: "DECIDED \u2014 CAL QUALIFYING at span=3.4848, 3 distinct reproducibility\
+  \ bands. Tournament EXP-RPM-L15-GAUSS launched at the preregistered middle-band\
+  \ \u03C3."
+result_summary: "Stage 2 v2 CAL pilot QUALIFYING at model.layers.15.mlp.down_proj.\
+  \ Span=3.4848 ppl units over 6 sigma values; 3 distinct reproducibility bands. Tournament\
+  \ manifest EXP-RPM-L15-GAUSS generated at the middle band \u03C3.\n\nsigma\u2192\
+  ppl mapping:\n  | \u03C3= 0.00 | ppl_mean=13.0932 \xB1 0.0000 (n=3) |\n  | \u03C3\
+  = 0.05 | ppl_mean=13.0995 \xB1 0.0000 (n=3) |\n  | \u03C3= 0.10 | ppl_mean=13.1233\
+  \ \xB1 0.0000 (n=3) |\n  | \u03C3= 0.20 | ppl_mean=13.2032 \xB1 0.0000 (n=3) |\n\
+  \  | \u03C3= 0.50 | ppl_mean=13.7529 \xB1 0.0000 (n=3) |\n  | \u03C3= 1.00 | ppl_mean=16.5780\
+  \ \xB1 0.0000 (n=3) |"
+conclusion: "Stage 2 v2 CAL pilot QUALIFYING at model.layers.15.mlp.down_proj. Span=3.4848\
+  \ ppl units over 6 sigma values; 3 distinct reproducibility bands. Tournament manifest\
+  \ EXP-RPM-L15-GAUSS generated at the middle band \u03C3.\n\nsigma\u2192ppl mapping:\n\
+  \  | \u03C3= 0.00 | ppl_mean=13.0932 \xB1 0.0000 (n=3) |\n  | \u03C3= 0.05 | ppl_mean=13.0995\
+  \ \xB1 0.0000 (n=3) |\n  | \u03C3= 0.10 | ppl_mean=13.1233 \xB1 0.0000 (n=3) |\n\
+  \  | \u03C3= 0.20 | ppl_mean=13.2032 \xB1 0.0000 (n=3) |\n  | \u03C3= 0.50 | ppl_mean=13.7529\
+  \ \xB1 0.0000 (n=3) |\n  | \u03C3= 1.00 | ppl_mean=16.5780 \xB1 0.0000 (n=3) |"
