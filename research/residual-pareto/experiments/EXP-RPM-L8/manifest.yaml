@@ -1,0 +1,129 @@
+id: EXP-RPM-L8
+track: A
+subtrack: RPM Stage 2 layer sweep (site EXP-RPM-L8)
+tier: confirmation
+claims_addressed:
+- RPM-001
+- RPM-002
+- RPM-006
+title: "RPM Stage 2 layer sweep \u2014 MLP down_proj, middle (layer 8)"
+owner: research-harness
+date_proposed: '2026-08-24'
+status: PROPOSED
+decision: null
+grade: null
+hypothesis: "At the MLP down_proj, middle (layer 8) site (model.layers.8.mlp.down_proj),\
+  \ with damage applied at the threshold selected by the per-site CAL to match the\
+  \ AF2-D ppl target (~425), the matched-storage tournament reproduces the trained\
+  \ \u226B random separation (RPM-006 PASS at this site) AND T2 IS Pareto-optimal\
+  \ on the joint (3 cap \xD7 5 cost B/F/O/M/L) vector (RPM-001 tentative PASS at this\
+  \ site). RPM-002's registered monotonicity test is NOT required at this stage \u2014\
+  \ Stage 2 only tests the architecture-vs-training gap and Pareto status at the AF2-D-equivalent\
+  \ damage point."
+rationale: Layer 8 = middle MLP block; intermediate depth. Bridges between early-layer
+  (AF2-D, layer 0) and late-layer (L15) results. Tests T2 effect at intermediate depth.
+revision: ''
+run_namespace: runs/r/EXP-RPM-L8/<timestamp>/af2d/
+environment: 'legion; x86_64; 2x TITAN RTX; env-lock.txt recorded at run start. AF8
+  governance: new namespace per site; fresh process per site; independent token cache
+  per site.'
+model: allenai/OLMo-1B-0724-hf
+target_module: model.layers.8.mlp.down_proj
+damage_ptq:
+  threshold: null
+  group_size: 128
+  calibrate_norm: false
+  applies: true
+  calibration_source: runs/r/EXP-RPM-L8-CAL/<ts>/
+  pre_train_eval_check: Per-site CAL must complete first to characterize threshold->ppl
+    mapping on this site. The tournament uses the threshold that produces ppl closest
+    to AF2-D (~425).
+arms:
+  trained:
+  - t2_ternary
+  - int4_residual
+  - int8_residual
+  - lora
+  - dense_adapter
+  untrained_controls:
+  - random_t2_ternary
+  - random_lora
+training:
+  corpus: wikitext-103 train split
+  token_cache: runs/r/EXP-RPM-L8/<ts>/wikitext103_train_ids.npy (sha256 captured;
+    AF8 independent re-tokenization)
+  optimizer: SGD lr=1e-3 momentum=0.9 grad-clip=1.0
+  objective: next-token cross-entropy on the damaged base
+  n_steps: 500
+  batch_size: 4
+  seq_len: 128
+  base_frozen: true
+  base_state: damaged-PTQ applied to model.layers.8.mlp.down_proj at the threshold
+    selected by per-site CAL
+  eval_dtype: float16
+  eval_tasks:
+  - wikitext
+  - arc_easy
+  - lambada_openai
+  eval_limit: null
+matched_bytes_tolerance_pct: 1.0
+target_deployed_bytes: 4194404
+quantitative_thresholds:
+  id: EXP-RPM-L8-v1
+  pass:
+  - Damaged starting state ppl within ~25% of the AF2-D reference (ppl 425.76); observation
+    only, not a hard criterion.
+  - "All trained arms within \xB11% matched-bytes tolerance."
+  - "Trained t2_ternary recovers the damaged base (post-train ppl \u2264 3\xD7 the\
+    \ starting ppl)."
+  - "Trained t2_ternary SEPARATES from random_t2_ternary by \u22652\u03C3 on at least\
+    \ one of arc_easy / lambada_openai (RPM-006 site-level PASS)."
+  pass_plus:
+  - "Trained t2_ternary SEPARATES from random_t2_ternary by \u22652\u03C3 on BOTH\
+    \ arc_easy AND lambada_openai."
+  - "T2 IS Pareto-optimal on the joint (3 cap \xD7 5 cost) vector at this site (RPM-001\
+    \ site-level PASS)."
+  fail:
+  - Matched-bytes tolerance violation for any trained arm.
+  - "Trained t2_ternary does not separate from random_t2_ternary by \u22652\u03C3\
+    \ on any capability metric at this site (RPM-006 site-level FAIL)."
+decision_logic_summary: "Run all 7 arms \xD7 3 seeds at this site (model.layers.8.mlp.down_proj)\
+  \ with damage applied at the per-site CAL-matched threshold. PASS criteria per quantitative_thresholds."
+stop_conditions:
+- "All 21 runs complete (7 arms \xD7 3 seeds)."
+- Any matched-bytes tolerance violation -> INVALIDATED, rerun.
+- "T2 does not separate from random by \u22652\u03C3 on any metric -> site-level FAIL\
+  \ recorded."
+expected_artifacts:
+- runs/r/EXP-RPM-L8/<ts>/af2d/aggregate.json
+- runs/r/EXP-RPM-L8/<ts>/af2d/driver.log
+- runs/r/EXP-RPM-L8/<ts>/af2d/seed-001/t2_ternary/eval.summary.json
+- runs/r/EXP-RPM-L8/<ts>/af2d/seed-001/random_t2_ternary/eval.summary.json
+artifact_paths: []
+artifacts_manifest: runs/r/EXP-RPM-L8/<ts>/ARTIFACTS.json
+contamination_risks:
+- Token cache under runs/r/<site>/<ts>/; sha256 captured; one writer per namespace.
+- Damage mode is a function of (threshold, group_size, calibrate_norm) applied to
+  the target module; reproducible from frozen driver SHA + preregistered knobs.
+- Independent re-tokenization per site; AF8 governance.
+freeze_exception:
+  change: Stage 2 reuses the Stage 1 driver (commit 692e8ee) verbatim. NO code modifications.
+    The driver already supports arbitrary down_proj-equivalent target modules via
+    the --target-module CLI flag (the driver builds SiteAdapters based on the patched
+    module's weight shape, but assumes input=intermediate_size, output=hidden_size).
+    We restrict Stage 2 sites to down_proj layers which satisfy this assumption.
+  justification: "Stage 2 tests the architecture-vs-training signal across layer categories\
+    \ without modifying the driver. Layer-category diversity is achieved by varying\
+    \ the LAYER INDEX (0, 8, 15) while keeping the ARCHITECTURE CATEGORY fixed (MLP\
+    \ down_proj). If future Stage 2+ experiments require different architecture categories\
+    \ (e.g. attention projections with input=hidden_size, output=hidden_size), the\
+    \ driver will need to be extended to support those shapes \u2014 that will be\
+    \ a separate freeze-exception preregistration."
+  approved_by: 'harness rule: feature work permitted when required to execute a registered
+    experiment; in this case no feature work is needed.'
+result_summary: ''
+confidence_and_reproduction: ''
+next_permitted_experiment: ''
+experiments_blocked: []
+conclusion: ''
+supersedes: null

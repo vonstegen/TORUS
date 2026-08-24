@@ -1,0 +1,111 @@
+id: EXP-RPM-L15-CAL
+track: A
+subtrack: RPM Stage 2 per-site CAL (site EXP-RPM-L15-CAL)
+tier: calibration
+claims_addressed:
+- RPM-001
+- RPM-002
+- RPM-006
+title: "Stage 2 per-site CAL \u2014 MLP down_proj, late (layer 15)"
+owner: research-harness
+date_proposed: '2026-08-24'
+status: PROPOSED
+decision: null
+grade: null
+hypothesis: 'On model.layers.15.mlp.down_proj, the EXP-RPM-CAL threshold->ppl mapping
+  is qualitatively similar to the AF2-D layer (model.layers.0.mlp.down_proj) mapping
+  from the earlier CAL: thresholds 0.0-0.5 produce ppl in the DEGENERATE region (ppl
+  ~1500), thresholds 0.6-1.0 produce a smooth ppl gradient from ~700 down to ~88.
+  The threshold that produces ppl closest to the AF2-D reference (ppl ~425) will be
+  used for the Stage 2 tournament at this site.'
+rationale: EXP-RPM-CAL (already DECIDED on the AF2-D layer) showed that the damage-axis
+  basis must be the OBSERVED ppl, not the threshold knob. Per-site CAL extends this
+  to other layer sites so that Stage 2 tournaments compare apples-to-apples across
+  layers (same ppl damage target).
+revision: ''
+run_namespace: runs/r/EXP-RPM-L15-CAL/<timestamp>/af2d/
+environment: 'legion; x86_64; 2x TITAN RTX; env-lock.txt recorded at run start. AF8
+  governance: new namespace per site; fresh process per site.'
+model: allenai/OLMo-1B-0724-hf
+target_module: model.layers.15.mlp.down_proj
+damage_ptq:
+  threshold_values:
+  - 0.0
+  - 0.1
+  - 0.2
+  - 0.3
+  - 0.4
+  - 0.5
+  - 0.6
+  - 0.7
+  - 0.8
+  - 0.9
+  - 1.0
+  group_size: 128
+  calibrate_norm: false
+  applies: true
+arms:
+  trained:
+  - t2_ternary
+  untrained_controls: []
+  rationale: t2_ternary used only as a vehicle for --pre-train-eval (the driver captures
+    pre-train eval via the t2_ternary arm; we ignore post-train results and extract
+    pre_train_eval.json).
+training:
+  corpus: wikitext-103 train split
+  token_cache: runs/r/EXP-RPM-L15-CAL/<ts>/wikitext103_train_ids.npy (sha256 captured;
+    AF8 independent re-tokenization)
+  n_steps: 500
+  batch_size: 4
+  seq_len: 128
+  base_state: damaged-PTQ applied to model.layers.15.mlp.down_proj at each preregistered
+    threshold; per-seed pre-train eval captured BEFORE any adapter training.
+  eval_dtype: float16
+  eval_tasks:
+  - wikitext
+  eval_limit: null
+matched_bytes_tolerance_pct: 1.0
+target_deployed_bytes: 4194404
+quantitative_thresholds:
+  id: EXP-RPM-L15-CAL-v1
+  pass:
+  - "All 33 cells complete (11 thresholds \xD7 3 seeds)."
+  - Per-threshold ppl reproducible to displayed precision (stderr = 0 across seeds;
+    deterministic eval).
+  - At least 4 distinct ppl bands observed across the 11 thresholds (so the per-site
+    axis is informative).
+  fail:
+  - Fewer than 33 cells complete (driver crash).
+  - All 11 thresholds produce the same ppl (axis uninformative on this site, similar
+    to AF2-D D1-D3 collapse).
+decision_logic_summary: "For each of 11 preregistered thresholds \xD7 3 seeds, apply\
+  \ --damage-ptq to model.layers.15.mlp.down_proj and capture pre_train_eval.json.\
+  \ Aggregate to per-threshold ppl table. Output: runs/r/EXP-RPM-L15-CAL/<ts>/af2d/aggregate.json\
+  \ with the threshold->ppl mapping for this site."
+stop_conditions:
+- All 33 cells complete.
+- Driver crash on this target module -> record as site-specific limitation; do NOT
+  proceed to Stage 2 tournament without a usable CAL.
+expected_artifacts:
+- runs/r/EXP-RPM-L15-CAL/<ts>/af2d/aggregate.json
+- runs/r/EXP-RPM-L15-CAL/<ts>/af2d/driver.log
+- runs/r/EXP-RPM-L15-CAL/<ts>/af2d/seed-{001,002,003}/t2_ternary/pre_train_eval.json
+artifact_paths: []
+artifacts_manifest: runs/r/EXP-RPM-L15-CAL/<ts>/ARTIFACTS.json
+contamination_risks:
+- Token cache under runs/r/EXP-RPM-L15-CAL/<ts>/; sha256 captured; one writer per
+  namespace.
+- Damage mode reproducible from frozen driver SHA + preregistered knobs.
+freeze_exception:
+  change: Per-site CAL reuses the Stage 1 driver verbatim. NO code modifications.
+    The driver already supports --target-module for any Linear module path.
+  justification: Calibration is eval-only (no adapter training). The driver's pre_train_eval
+    path captures the ppl required for threshold->ppl mapping.
+  approved_by: 'harness rule: feature work permitted when required to execute a registered
+    experiment; no feature work needed.'
+result_summary: ''
+confidence_and_reproduction: ''
+next_permitted_experiment: ''
+experiments_blocked: []
+conclusion: ''
+supersedes: null

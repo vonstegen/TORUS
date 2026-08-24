@@ -1258,5 +1258,60 @@ issue on this dev box, not a code regression — see 0.16.15).
   gate. Stage 5 EXP-RPM-SYS (energy) follows.
 
 ### Tests: 228/233 pass (5 kernel-load failures, pre-existing
-environment issue; unchanged from `e1d6857`).
+
+## 0.16.16 / research — Stage 2 v1 (EXP-RPM-L15/L8) CAL completed; tournaments aborted
+
+### CAL result (L15 + L8 per-site)
+- L15 (model.layers.15.mlp.down_proj): 11 thresholds × 3 seeds = 33
+  cells. Per-threshold ppl: 0.0-0.5 → 14.10-14.13 (DEGENERATE);
+  0.6-1.0 → 14.10-15.49 (also flat). **The TWN damage recipe does
+  not damage layer 15 down_proj at any threshold.**
+- L8 (model.layers.8.mlp.down_proj): 6 thresholds × 3 seeds = 18
+  cells (thr 0.6-1.0 aborted when degenerate confirmed). Per-threshold
+  ppl: 0.0-0.6 → 13.67-13.68 (DEGENERATE). **Same finding: the TWN
+  damage recipe does not damage layer 8 down_proj at any threshold.**
+
+### Tournament status
+- Both tournaments **aborted before completion** because the
+  calibration showed no informative damage axis. Running tournaments
+  at ppl~14 would only replicate the Stage 1 D0 finding (trained ≈
+  random at FP16 reference) without producing new information. The
+  L15 tournament ran one cell (t2_ternary seed-001: pre-train ppl
+  14.23, post-train ppl 14.26 — essentially unchanged) before being
+  aborted mid-int4_residual seed-001.
+
+### Verdict
+- **RPM-001/002/006 status unchanged from rev 2.15** (UNTESTED).
+  The "≥2 layer categories" PASS+ rule for RPM-006 cannot be reached
+  with the current damage recipe on down_proj layers 8 and 15.
+- **Stage 2 v2 preregistration required**: either (a) a different
+  damage recipe (random mask, structured dropout, per-row
+  quantization) that produces informative ppl variation at deeper
+  layers, or (b) different layer categories (attention projections
+  q_proj, v_proj — requires driver extension, freeze exception
+  needed).
+
+### Driver / governance
+- Driver SHA `692e8ee` (Stage 1) **NOT modified**.
+
+### Added
+- `stage2-launch.sh` (Stage 2 v1 launch script).
+- `stage2_select_threshold.py` (helper: pick tournament threshold
+  from per-site CAL).
+- `research/residual-pareto/experiments/gen_stage2_manifests.py`
+  (Stage 2 tournament manifest generator).
+- `research/residual-pareto/experiments/gen_stage2_cal_manifests.py`
+  (per-site CAL manifest generator).
+- `research/residual-pareto/experiments/EXP-RPM-L15{,-CAL}/`
+  `EXP-RPM-L8{,-CAL}/manifest.yaml` ×4.
+- `research/residual-pareto/experiments/RPM-L-L15-L8-CAL-verdict.md`.
+- `close_stage2.py` (manifest close-out script).
+
+### Changed
+- `research/registry/INDEX.md`: 4 EXP-RPM-L* rows added (L15-CAL,
+  L8-CAL, L15, L8).
+- `research/ROADMAP.md`: rev 2.16; §2.16 Stage 2 v1 marked DONE; new
+  §2.17 Stage 2 v2 added.
+
+### Tests: 228/233 pass (unchanged).
 results, per the user's "no more architecture" instruction.

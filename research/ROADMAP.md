@@ -1,22 +1,17 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
-**Revision:** 2.15 (2026-08-24) — **CORRECTIVE**. Prior commits
-(`f9a5bbc` Stage 1.5 PREREG; `68ef6be` Stage 1.5 PREREG entry;
-`bcfd958` post-hoc RPM-001/002/006 DECIDED; `e1d6857` Stage 1.5
-DECIDED + combined S1+S1.5) incorrectly promoted **RPM-002** and
-**RPM-006** to DECIDED PASS based on a coarser test than their
-registered thresholds permit. Correct status: **RPM-001**: UNTESTED
-(tentative Pareto-optimal; energy null until Stage 5 EXP-RPM-SYS);
-**RPM-002**: UNTESTED (registered monotonicity test fails on the
-collected z-score sequences); **RPM-006**: UNTESTED (boundary +
-clean rerun + ≥2 layer categories required). The empirical finding
-(trained T2 ≫ random T2 on every tested damaged regime across two
-damage-axis constructions) IS supported but does not satisfy the
-registered PASS rules. Corrected verdict at
-`research/residual-pareto/experiments/RPM-001-002-006-verdict-corrected.md`.
-**Next step: Stage 2 EXP-RPM-Lxx** (≥2 layer categories) before any
-further promotion of RPM-001/002/006. Stage 5 EXP-RPM-SYS (energy)
+**Revision:** 2.16 (2026-08-24) — **Stage 2 v1 CAL completed**;
+  tournaments aborted. L8 and L15 per-site CAL showed the TWN
+  damage axis is **degenerate** on layers 8 and 15 down_proj (ppl
+  13.67-15.49 across all 11 thresholds, vs AF2-D's 88-1524
+  informative gradient). The architecture-vs-training signal
+  cannot be measured at these sites with this damage recipe.
+  **Stage 2 v2 preregistration required** — different damage
+  recipe (random mask, structured dropout, per-row quantization)
+  or different layer category (gate_proj, q_proj — requires
+  driver extension). Verdict: `RPM-L-L15-L8-CAL-verdict.md`.
+  RPM-001/002/006 status unchanged from rev 2.15 (UNTESTED).
 follows to lift RPM-001 from UNTESTED to CONFIRMED.
 **Revision 2.5** (2026-08-23) — section 2.11 (EXP-AF-002-R clean reproduction)
 DONE with A-RP-002 -> CONFIRMED_PASS. The PASS bar reproduces
@@ -391,24 +386,29 @@ advantage (per RPM proposal §13). The current state:
       regime across both axes (arc_easy z +19 to +116;
       lambada z +62 to +262).** RPM-001/002/006 remain UNTESTED
       per their registered thresholds (see rev 2.15 corrective).
-- [ ] **2.16** Stage 2 layer sweep `EXP-RPM-Lxx` (top
-      sites × 3 seeds; **≥2 layer categories required** —
-      currently only AF2-D / `down_proj` is tested). Recipe
-      per regime. Stage 2 is the immediate next gate because:
-      (a) it supplies missing required evidence for RPM-006
-      (≥2 layer categories); (b) supports the Track B B1
-      unlock per A-RP-002's unlock_rules_affected;
-      (c) distinguishes a broadly architectural effect from one
-      localized to a favorable layer. Before launching: freeze
-      metric keys (e.g. `acc_norm,none` for arc_easy) in the
-      manifest; specify the ppl sign convention for the
-      monotonicity test; document values before any post-hoc
-      corrections. Gated by G-RPM-2.
-- [ ] **3.1** `EXP-A-04x` — **A4 heterogeneous precision map.**
-      Sensitive layers stay FP/INT8/INT4; tolerant layers take T1 or
-      T1+T2 (per A-F outcome). Layer-adaptive precision before
-      token-adaptive precision.
-- [ ] **3.2** `EXP-A-H1` — **Native Hadamard controlled training
+- [x] **2.16** Stage 2 v1 layer sweep `EXP-RPM-Lxx`
+      (MLP down_proj at layers 0, 8, 15) — **CAL completed;
+      tournaments aborted.** Per-site CAL (33 cells × 2 sites)
+      showed the TWN damage axis is degenerate on layers 8 and 15
+      (ppl 13.67-15.49 across all 11 thresholds; AF2-D's
+      threshold axis is the informative one). Tournaments at
+      FP16-like ppl would only replicate Stage 1 D0 (trained ≈
+      random at FP16 reference) and consume Legion compute without
+      new information. **Stage 2 v2 is the next gate.**
+      Verdict: `experiments/RPM-L-L15-L8-CAL-verdict.md`.
+- [ ] **2.17** Stage 2 v2 layer sweep — **REQUIRED.** Stage 2 v1
+      (TWN damage recipe on MLP down_proj layers 0, 8, 15) found
+      that the damage axis is degenerate on layers 8 and 15. v2
+      must use either (a) a different damage recipe (random mask,
+      structured dropout, per-row quantization) that produces
+      informative ppl variation at deeper layers, OR (b) different
+      layer categories (attention projections q_proj, v_proj) via
+      a driver extension (freeze exception required). ≥2 layer
+      categories required by RPM-006 PASS+. Before launching: preregister
+      the new damage recipe's threshold->ppl mapping on AF2-D first
+      (so v2 has a known calibration); freeze metric keys in the
+      manifest; specify the ppl sign convention for monotonicity
+      tests; document values before any post-hoc corrections.
       (discovery → confirmation).** Small model (100M–500M),
       matched arms: standard ternary vs. native rotated ternary
       parameterization, identical architecture/data/optimizer/
