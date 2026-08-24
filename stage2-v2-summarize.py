@@ -9,8 +9,6 @@ Per the preregistered kill criteria:
   QUALIFYING iff >= 3 sigma values produce ppl in distinct
   reproducibility bands (round(ppl,0)) separated by >= 1 ppl unit
   AND spanning >= 2 ppl units total.
-
-The summary output records the qualification verdict per site.
 """
 
 import json
@@ -52,19 +50,42 @@ def load_ppl(pre_train_eval_path: Path) -> float | None:
     return float(wt["value"])
 
 
+def pick_ts_dir(site_dir: Path) -> Path | None:
+    """Pick the timestamp dir with the most pre_train_eval.json files."""
+    ts_dirs = [p for p in site_dir.iterdir() if p.is_dir()]
+    if not ts_dirs:
+        return None
+    best = None
+    best_count = -1
+    for ts in ts_dirs:
+        n = 0
+        for sd in ts.iterdir():
+            if not sd.is_dir() or not sd.name.startswith("sigma-"):
+                continue
+            for sdir in sd.iterdir():
+                if not sdir.is_dir() or not sdir.name.startswith("seed-"):
+                    continue
+                # Recurse one more level for the driver's seed-XXX subdir
+                for pte in sdir.rglob("pre_train_eval.json"):
+                    ppl = load_ppl(pte)
+                    if ppl is not None:
+                        n += 1
+        if n > best_count:
+            best_count = n
+            best = ts
+    return best
+
+
 def summarize_site(exp_id: str, target_module: str) -> dict:
     site_dir = RUNS_DIR / exp_id
     if not site_dir.exists():
         return {"exp_id": exp_id, "target_module": target_module,
                 "error": "no runs directory"}
 
-    # The most-recent timestamp dir wins (any earlier runs are stale).
-    ts_dirs = sorted([p for p in site_dir.iterdir() if p.is_dir()],
-                     reverse=True)
-    if not ts_dirs:
+    ts = pick_ts_dir(site_dir)
+    if ts is None:
         return {"exp_id": exp_id, "target_module": target_module,
                 "error": "no timestamp directory"}
-    ts = ts_dirs[0]
 
     sigma_dirs = sorted([p for p in ts.iterdir()
                          if p.is_dir() and p.name.startswith("sigma-")])
@@ -75,8 +96,7 @@ def summarize_site(exp_id: str, target_module: str) -> dict:
                             if p.is_dir() and p.name.startswith("seed-")])
         ppls = []
         for sdir in seed_dirs:
-            pte = sdir / "pre_train_eval.json"
-            if pte.exists():
+            for pte in sdir.rglob("pre_train_eval.json"):
                 ppl = load_ppl(pte)
                 if ppl is not None:
                     ppls.append(ppl)
