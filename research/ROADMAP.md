@@ -1,17 +1,12 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
-**Revision:** 2.11 (2026-08-24) — EXP-RPM-CAL calibration
-DECIDED. 33/99 cells completed (AF2-D layer, 11 thresholds ×
-3 seeds); driver crashed on attention_k + late_mlp layers
-(T2 adapter assumes down_proj-equivalent shape; not
-modified). Threshold→ppl on AF2-D layer: range [0.0, 0.5]
-is degenerate (all produce ppl 1524.80); range [0.6, 1.0]
-is informative (5 distinct bands: 88, 204, 303, 430, 697).
-**Per user directive 7:** the calibration was the gate before
-any Stage 1.5/Stage 2 damage-sweep preregistration; that
-gate is now satisfied on the AF2-D layer. Stage 2 design
-can use observed ppl (not threshold) as the damage axis.
+**Revision:** 2.12 (2026-08-24) — Stage 1.5 (EXP-RPM-D0'..D5')
+PREREGISTERED (post-EXP-RPM-CAL). Six damage-sweep manifests
+using the OBSERVED ppl axis (CAL) instead of the Stage 1
+threshold axis. Threshold values chosen from CAL so each
+regime maps to a distinct observed-ppl band (FP16, 88,
+204, 303, 430, 697). 126 runs planned; driver NOT modified.
 EXP-AF-002-D (AF2-D damaged-PTQ-start matched-storage tournament
 under v2.3 cost-vector framing).
 **Revision 2.5** (2026-08-23) — section 2.11 (EXP-AF-002-R clean reproduction)
@@ -374,23 +369,16 @@ advantage (per RPM proposal §13). The current state:
       before Stage 1.5/Stage 2 design is satisfied. Verdict
       at `experiments/EXP-RPM-CAL/verdict.md`. Stage 2 design
       may now use observed ppl as the damage axis.
-- [ ] **2.15** Stage 2 layer sweep `EXP-RPM-Lxx` (top
-      sites × 3 seeds), Stage 3 budget sweep
-      `EXP-RPM-B1..B5` (0.5/1/2/4/8 MB), Stage 4 task
-      robustness `EXP-RPM-Txx` (≥3 tasks + ≥2 context
-      lengths), Stage 5 systems validation `EXP-RPM-SYS`
-      (measured latency/bytes/traffic/energy on Legion).
-      Each gated by Gates G-RPM-2/3/4. **Now ready for
-      preregistration** — the EXP-RPM-CAL gate is satisfied;
-      the next experiment's damage axis will be chosen
-      from observed ppl (not the uninformative threshold
-      knob).
-## Phase 3 — Track A: Heterogeneous Precision, Hadamard, Decision
-
-**Objective:** Convert validated representation behavior into a Pareto
-verdict; settle native Hadamard on a small controlled model.
-
-**Subtracks:** A4 heterogeneous precision, A5 native Hadamard training.
+- [ ] **2.15** `EXP-RPM-D0'..D5'` — **Stage 1.5 damage sweep
+      (observed-ppl axis, post-EXP-RPM-CAL).** Six damage
+      regimes mapped to distinct observed-ppl bands
+      (FP16, 88, 204, 303, 430, 697). Same site + recipe
+      as Stage 1. 7 arms × 3 seeds = 21 runs per regime;
+      126 runs total. Driver NOT modified. **Preregistered
+      2026-08-24.** RPM-002 + RPM-006 verdicts remain
+      UNRESOLVED unless random_t2_ternary adapters are
+      evaluated post-hoc.
+- [ ] **2.16** Stage 2 layer sweep `EXP-RPM-Lxx` (top
 
 ### Checklist
 

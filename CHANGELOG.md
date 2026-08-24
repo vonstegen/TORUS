@@ -1082,4 +1082,46 @@ Stage 2/3/4/5 manifests will be preregistered AFTER Stage 1
   preregistration is now ready.
 
 ### Tests: 233/233 pass (unchanged; EXP-RPM-CAL did not modify code).
+
+## 0.16.12 / research — Stage 1.5 (EXP-RPM-D0'..D5') PREREGISTERED
+
+### Registered (Stage 1.5)
+- Six damage-sweep manifests at
+  `research/residual-pareto/experiments/EXP-RPM-D{0..5}p/manifest.yaml`:
+  - **D0'** FP16 reference (no damage; ppl ~13)
+  - **D1'** threshold=1.0 → CAL ppl 88.31 (light)
+  - **D2'** threshold=0.9 → CAL ppl 203.60 (moderate-light)
+  - **D3'** threshold=0.8 → CAL ppl 303.06 (moderate)
+  - **D4'** threshold=0.7 → CAL ppl 429.55 (heavy/catastrophic)
+  - **D5'** threshold=0.6 → CAL ppl 697.29 (severe)
+- **Damage-axis basis = OBSERVED ppl** (from EXP-RPM-CAL on the
+  AF2-D layer), not the uninformative threshold knob. Each
+  manifest preregisters BOTH the threshold knob AND the
+  CAL-observed ppl band so the audit can verify the calibration
+  claim. 6 regimes × 7 arms × 3 seeds = 126 runs planned.
+- **Driver NOT modified** (per "no more architecture") — same
+  Stage 1 driver. The Stage 1.5 calibration gate (per user
+  directive 7) is satisfied.
+
+### Effect on claim status
+- **RPM-002 + RPM-006 remain UNRESOLVED** unless random_t2_ternary
+  adapters are evaluated post-hoc. The Stage 1.5 manifest notes
+  this explicitly in the decision_logic_summary.
+- **RPM-001 still tentative PASS at every regime** (from Stage 1).
+
+### Added
+- `research/residual-pareto/experiments/gen_stage15_manifests.py`
+  records the exact code that produced the 6 manifests.
+- `research/residual-pareto/experiments/EXP-RPM-D{0..5}p/manifest.yaml`
+  ×6.
+
+### Changed (governance)
+- `research/registry/INDEX.md`: 6 EXP-RPM-D{0..5}p rows added
+  (PROPOSED); RPM-001..006 status line notes Stage 1.5
+  preregistration; decision-log entry added.
+- `research/ROADMAP.md`: rev 2.12; section 2.15 (Stage 1.5) added
+  as PROPOSED; section 2.16 (Stage 2-5 placeholder) renumbered.
+
+### Tests: 233/233 pass (unchanged; Stage 1.5 preregistration
+modified no code).
 results, per the user's "no more architecture" instruction.

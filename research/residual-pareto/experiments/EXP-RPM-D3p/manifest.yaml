@@ -1,0 +1,136 @@
+id: EXP-RPM-D3p
+track: A
+subtrack: RPM Stage 1.5 (observed-ppl axis, EXP-RPM-CAL-calibrated)
+tier: confirmation
+claims_addressed:
+- RPM-001
+- RPM-002
+- RPM-006
+title: RPM Stage 1.5 damage sweep (observed-ppl axis, one regime)
+owner: research-harness
+date_proposed: '2026-08-24'
+status: PROPOSED
+decision: null
+grade: null
+hypothesis: "At the AF2-D layer (model.layers.0.mlp.down_proj) with threshold=0.8\
+  \ (group_size=128, calibrate_norm=False), the matched-storage tournament reproduces\
+  \ the AF2-D arm ordering (t2 ties dense on capability at matched bytes) AND T2 IS\
+  \ Pareto-optimal vs the complete frozen comparator set on the joint (3 cap \xD7\
+  \ 5 cost B/F/O/M/L) vector. The damaged-base starting ppl lands in the band [260.0,\
+  \ 360.0] (centered on the EXP-RPM-CAL-calibrated ppl 303.06); deviation noted but\
+  \ does not invalidate (per RPM proposal \xA75). This regime is one of six in the\
+  \ Stage 1.5 observed-ppl axis (calibrated via EXP-RPM-CAL on 2026-08-24)."
+rationale: "Stage 1.5 of the RPM program (proposal \xA75). Moderate damage (threshold=0.8;\
+  \ ppl 303.06 from CAL). The damage mechanism is parameterized by preregistered knobs\
+  \ (threshold=0.8, group_size=128, calibrate_norm=False); the resulting ppl is recorded\
+  \ as an observed covariate. The damage-axis basis is OBSERVED ppl (from EXP-RPM-CAL\
+  \ on the AF2-D layer), NOT the threshold knob \u2014 this addresses Stage 1 finding\
+  \ F1 (threshold axis was non-monotonic and partially uninformative)."
+revision: ''
+run_namespace: runs/r/EXP-RPM-D3p/<timestamp>/af2d/
+environment: legion; x86_64; 2x TITAN RTX; env-lock.txt recorded at run start
+model: allenai/OLMo-1B-0724-hf
+target_module: model.layers.0.mlp.down_proj
+damage_ptq:
+  threshold: 0.8
+  group_size: 128
+  calibrate_norm: false
+  applies: true
+  calibrated_ppl: 303.06
+  calibration_source: EXP-RPM-CAL runs/r/EXP-RPM-CAL/20260824T000924Z/ (2026-08-24)
+  pre_train_eval_check: 'For EXP-RPM-D3p: pre-train wikitext ppl lands in [260.0,
+    360.0] (centered on CAL ppl 303.06; observation, deviation noted but does NOT
+    invalidate).'
+arms:
+  trained:
+  - t2_ternary
+  - int4_residual
+  - int8_residual
+  - lora
+  - dense_adapter
+  untrained_controls:
+  - random_t2_ternary
+  - random_lora
+training:
+  corpus: wikitext-103 train split
+  token_cache: runs/r/EXP-RPM-D3p/<ts>/wikitext103_train_ids.npy (sha256 captured;
+    AF8 independent re-tokenization)
+  optimizer: SGD lr=1e-3 momentum=0.9 grad-clip=1.0
+  objective: next-token cross-entropy on the damaged base
+  n_steps: 500
+  batch_size: 4
+  seq_len: 128
+  base_frozen: true
+  base_state: damaged-PTQ (per --damage-ptq with the regime's preregistered knobs;
+    threshold chosen from EXP-RPM-CAL to target a specific observed-ppl band)
+  eval_dtype: float16
+  eval_tasks:
+  - wikitext
+  - arc_easy
+  - lambada_openai
+  eval_limit: null
+matched_bytes_tolerance_pct: 1.0
+target_deployed_bytes: 4194404
+quantitative_thresholds:
+  id: EXP-RPM-D3p-v1
+  pass:
+  - "Damaged starting state ppl \u2208 [260.0, 360.0] (observed covariate; centered\
+    \ on CAL ppl 303.06)."
+  - "All trained arms within \xB11% matched-bytes tolerance."
+  - "Trained t2_ternary recovers the damaged base (post-train ppl \u2264 1.5\xD7 the\
+    \ starting ppl)."
+  pass_plus:
+  - "Trained t2_ternary beats random_t2_ternary by >2 stderr-of-difference on \u2265\
+    1 capability metric (RPM-006 axis). **NOTE:** random_t2_ternary evals are SKIPPED\
+    \ by the driver, so this check requires post-hoc eval of the random_t2_ternary\
+    \ adapter.npz."
+  - "Trained t2_ternary is Pareto-optimal vs the full registered comparator set on\
+    \ the joint (3 cap \xD7 5 cost) vector (RPM-001 axis)."
+  fail:
+  - Matched-bytes tolerance violation for any trained arm.
+  - "Trained t2_ternary does not recover (post-train ppl > 3\xD7 the starting ppl)."
+decision_logic_summary: "Run all arms \xD7 3 seeds under AF8 governance. Verify:\n\
+  \  (a) damaged starting state ppl \u2208 [260.0, 360.0] (centered on CAL ppl 303.06;\
+  \ observation, deviation noted but does not invalidate);\n  (b) matched-bytes tolerance\
+  \ holds for all trained arms;\n  (c) trained t2_ternary recovers the damaged base\
+  \ substantially.\nAggregate over n=3 seeds per arm. Cross-regime RPM-002 / RPM-006\
+  \ verdicts require random_t2_ternary evals; **those are still skipped by the driver**\
+  \ (Stage 1 data gap unfixed). If Stage 1.5 is launched as-is, RPM-002 and RPM-006\
+  \ will again be UNRESOLVED. The post-hoc eval of random_t2_ternary adapters from\
+  \ Stage 1 and Stage 1.5 remains a separate task."
+stop_conditions:
+- "All 21 runs complete (5 trained \xD7 3 seeds + 2 untrained \xD7 3 seeds = 21 runs\
+  \ total; no_correction arm skipped \u2014 driver doesn't implement it)."
+- Any matched-bytes tolerance violation -> that arm INVALIDATED, re-execute.
+- Any pre-train ppl outside [260.0, 360.0] -> recorded as observation, run continues
+  (regime band is a target, not a hard validation criterion).
+expected_artifacts:
+- 'per-(seed, arm): history.jsonl, eval.summary.json, eval.full.json, adapter.npz
+  + meta, deployed_bytes.json, cost_vector.json'
+- 'per-seed: pre_train_eval.json (capturing the regime''s verified damaged-base state
+  BEFORE adapter training)'
+- 'aggregate.json: trained-arms summary, untrained-arms panel, cost-vector table,
+  Pareto frontier points, damage-mode verification, regime verdict'
+- provenance.json + env-lock.txt + driver.log + ARTIFACTS.json
+artifact_paths: []
+artifacts_manifest: runs/r/EXP-RPM-D3p/<timestamp>/ARTIFACTS.json
+contamination_risks:
+- Token cache under runs/r/EXP-RPM-D3p/<ts>/; sha256 captured; one writer per namespace.
+- Damage mode is a function of (threshold, group_size, calibrate_norm) applied to
+  the target module; reproducible from the frozen driver SHA + preregistered knobs.
+- 'Concurrent writers: the EXP-RPM-D3p writer is the only process touching runs/r/EXP-RPM-D3p/.'
+freeze_exception:
+  change: "New manifest; no driver modifications. Uses the existing --damage-ptq /\
+    \ --damage-threshold / --pre-train-eval flags from the Stage 1 driver. Threshold\
+    \ value chosen per regime from EXP-RPM-CAL's threshold\u2192ppl function so the\
+    \ damage axis is calibrated to observed ppl, not the uninformative threshold knob."
+  justification: Required to execute the preregistered RPM Stage 1.5 damage sweep
+    (EXP-RPM-D0'..D5') using the observed-ppl axis from EXP-RPM-CAL.
+  approved_by: 'harness rule: feature work permitted when required to execute a registered
+    experiment (OPERATING-PLAN section 3)'
+result_summary: ''
+confidence_and_reproduction: ''
+next_permitted_experiment: ''
+experiments_blocked: []
+conclusion: ''
+supersedes: null
