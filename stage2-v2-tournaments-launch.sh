@@ -81,7 +81,7 @@ run_one_site() {
             --tasks wikitext,arc_easy,lambada_openai \
             --ids-cache /tmp/wikitext103_train_ids.npy \
             --device cuda:0 \
-            --dtype float32 \
+            --dtype float16 \
             --eval-dtype float16 \
             --damage-gaussian \
             --damage-sigma "$sigma" \
