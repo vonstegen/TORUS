@@ -4,14 +4,16 @@ track: A
 subtrack: Stage 2 v2 (Gaussian damage pilot)
 tier: discovery
 status: PROPOSED
-date_proposed: '2026-08-24T19:31:44Z'
+date_proposed: '2026-08-24T20:29:42Z'
 owner: research harness
 claims_addressed: []
 rationale: 'Per-site Gaussian CAL pilot for Stage 2 v2. AF2-D reference under Gaussian
   noise (was TWN ppl 88-1524 across D0-D5''). Damage recipe: W'' = W + sigma * std(W)
   * eps with eps ~ N(0,1) from torch.Generator(seed). Sigma values [0.0, 0.05, 0.1,
   0.2, 0.5, 1.0]; seeds [1, 2, 3]; 6 x 3 = 18 cells per site. Pre-train eval only
-  (no training) to characterize the sigma -> ppl mapping BEFORE any tournament.'
+  (no training) to characterize the sigma -> ppl mapping BEFORE any tournament. wikitext-only
+  CAL to bound compute; tournament stage adds arc_easy / lambada_openai on QUALIFYING
+  sites only.'
 hypothesis: Gaussian weight noise produces an informative ppl axis at sites where
   the TWN recipe is degenerate. At least 3 distinct sigma values per site should yield
   reproducible ppl bands spanning >= 2 ppl units total.

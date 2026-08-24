@@ -1,16 +1,23 @@
 #!/usr/bin/env bash
 # Stage 2 v2 CAL pilot launcher.
 #
-# Runs the Gaussian weight-noise calibration sweep on the five sites
+# Runs the Gaussian weight-noise calibration sweep on the four sites
 # registered in research/residual-pareto/experiments/EXP-RPM-*-GAUSS-CAL/.
+# L8 down_proj was dropped from the registry after the freeze-exception
+# commit: with both TWN and Gaussian, layer 8 is plausibly degenerate
+# at FP16 reference; one deeper MLP site (L15) suffices as a falsification
+# probe. The remaining three sites cover MLP (AF2-D, L15) and attention
+# (L0-q, L0-v) layer categories.
 #
 # Usage:
-#   ./stage2-v2-launch.sh                # launch all 5 sites in background
+#   ./stage2-v2-launch.sh                # launch all 4 sites in background
 #   ./stage2-v2-launch.sh af2d-gauss     # launch only that site
 #   ./stage2-v2-launch.sh --foreground af2d-gauss   # foreground (debug)
 #
 # Each site: 6 sigmas × 3 seeds = 18 cells. Eval-only (no training).
-# Estimated ~3 min/cell, ~54 min/site, ~4.5 hours total.
+# wikitext-only CAL (arc_easy / lambada_openai omitted to bound
+# compute; tournament stage will run the full task set on QUALIFYING
+# sites only). Estimated ~3 min/cell, ~54 min/site, ~3.6 hours total.
 #
 # Each cell writes to:
 #   runs/r/EXP-RPM-{SITE}-CAL/{timestamp}/sigma-{v}/seed-{n}/pre_train_eval.json
@@ -26,7 +33,6 @@ mkdir -p "$LOG_DIR"
 # research/residual-pareto/experiments/EXP-RPM-*-GAUSS-CAL/manifest.yaml.
 declare -A SITES=(
     [af2d-gauss]="model.layers.0.mlp.down_proj"
-    [L8-gauss]="model.layers.8.mlp.down_proj"
     [L15-gauss]="model.layers.15.mlp.down_proj"
     [L0-q-gauss]="model.layers.0.self_attn.q_proj"
     [L0-v-gauss]="model.layers.0.self_attn.v_proj"
@@ -95,7 +101,7 @@ launch_one_site() {
                         --n-steps 0 \
                         --batch-size 4 \
                         --seq-len 128 \
-                        --tasks wikitext,arc_easy,lambada_openai \
+                        --tasks wikitext \
                         --ids-cache /tmp/wikitext103_train_ids.npy \
                         --device cuda:0 \
                         --dtype float32 \

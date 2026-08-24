@@ -44,8 +44,6 @@ SEEDS = [1, 2, 3]
 SITES = [
     ("af2d-gauss",     "model.layers.0.mlp.down_proj",
      "AF2-D reference under Gaussian noise (was TWN ppl 88-1524 across D0-D5')"),
-    ("L8-gauss",       "model.layers.8.mlp.down_proj",
-     "Layer 8 down_proj under Gaussian noise (TWN was degenerate; ppl 13.67-13.68)"),
     ("L15-gauss",      "model.layers.15.mlp.down_proj",
      "Layer 15 down_proj under Gaussian noise (TWN was degenerate; ppl 14.10-15.49)"),
     ("L0-q-gauss",     "model.layers.0.self_attn.q_proj",
@@ -72,7 +70,9 @@ def make_manifest(site_id: str, target_module: str, rationale: str):
             f"Damage recipe: W' = W + sigma * std(W) * eps with eps ~ N(0,1) "
             f"from torch.Generator(seed). Sigma values {SIGMAS}; seeds {SEEDS}; "
             f"6 x 3 = 18 cells per site. Pre-train eval only (no training) "
-            f"to characterize the sigma -> ppl mapping BEFORE any tournament."
+            f"to characterize the sigma -> ppl mapping BEFORE any tournament. "
+            f"wikitext-only CAL to bound compute; tournament stage adds "
+            f"arc_easy / lambada_openai on QUALIFYING sites only."
         ),
         "hypothesis": (
             "Gaussian weight noise produces an informative ppl axis at sites "
