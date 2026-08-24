@@ -68,7 +68,7 @@ run_one_site() {
     (
         cd "$TORUS_BASE"
         .venv/bin/python examples/af2_storage_tournament.py \
-            --model allenai/OLMo-1B-hf \
+            --model allenai/OLMo-1B-0724-hf \
             --target-module "$target_module" \
             --arms t2_ternary,int4_residual,int8_residual,lora,dense_adapter,random_t2_ternary,random_lora \
             --seeds 1,2,3 \

@@ -100,7 +100,7 @@ def make_manifest(site_id: str, target_module: str, sigma: float,
         ],
         "artifact_paths": [],
         "experiment": {
-            "model": "allenai/OLMo-1B-hf",
+            "model": "allenai/OLMo-1B-0724-hf",
             "target_module": target_module,
             "arms": ["t2_ternary", "int4_residual", "int8_residual",
                       "lora", "dense_adapter",

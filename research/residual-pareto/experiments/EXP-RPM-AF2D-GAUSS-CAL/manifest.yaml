@@ -31,7 +31,7 @@ expected_artifacts:
 artifact_paths: []
 contamination_risks: []
 experiment:
-  model: allenai/OLMo-1B-hf
+  model: allenai/OLMo-1B-0724-hf
   target_module: model.layers.0.mlp.down_proj
   arms:
   - t2_ternary

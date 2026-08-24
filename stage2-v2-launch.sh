@@ -94,7 +94,7 @@ launch_one_site() {
                         echo "[stage2-v2] --- site=$site_id sigma=$sigma seed=$seed ---"
                     fi
                     .venv/bin/python examples/af2_storage_tournament.py \
-                        --model allenai/OLMo-1B-hf \
+                        --model allenai/OLMo-1B-0724-hf \
                         --target-module "$target_module" \
                         --arms t2_ternary \
                         --seeds "$seed" \

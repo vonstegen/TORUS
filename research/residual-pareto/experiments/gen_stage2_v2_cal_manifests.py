@@ -98,7 +98,7 @@ def make_manifest(site_id: str, target_module: str, rationale: str):
         "artifact_paths": [],
         "contamination_risks": [],
         "experiment": {
-            "model": "allenai/OLMo-1B-hf",
+            "model": "allenai/OLMo-1B-0724-hf",
             "target_module": target_module,
             "arms": ["t2_ternary"],  # CAL only; pre-train eval
             "seeds": SEEDS,
