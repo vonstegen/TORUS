@@ -883,6 +883,8 @@ def main(argv: list | None = None) -> None:
 
     print(f"[af2] loading wikitext-103 ids cache: {args.ids_cache}", flush=True)
     all_ids = load_wikitext_ids(tokenizer, args.ids_cache)
+    summaries = []
+    pre_train_evals = {}  # seed -> pre_train_eval dict when --pre-train-eval is set
     damage_mode = (
         "ptq" if getattr(args, "damage_ptq", False)
         else "gaussian" if getattr(args, "damage_gaussian", False)
