@@ -27,9 +27,10 @@ import json
 import sys
 from pathlib import Path
 
-sys.modules.setdefault("triton", None)
+
 
 import numpy as np
+import triton
 import torch
 
 from examples.af2_storage_tournament import (  # noqa: E402
@@ -55,22 +56,39 @@ def navigate_to_module(model, target_path: str):
 
 
 def patch_random_t2(model, target_module: str, npz_path: Path):
-    """Re-apply a serialized random T2 ternary adapter."""
+    """Re-apply a serialized random T2 ternary adapter.
+
+    Serialization format (matches T2TernaryAdapter.serialize):
+      packed:  uint8, length = ceil(out*in / 4) with 2-bit codes 0/1/2
+              (0=-scale, 1=0, 2=+scale)
+      scale:   fp16, shape (out, 1)
+      shape:   int64, [out, in]
+    """
+    import torch.nn.functional as F
     d = np.load(npz_path)
-    in_features = int(d["in_features"])
-    out_features = int(d["out_features"])
-    q_ste = torch.from_numpy(d["q_ste"]).to(device=next(model.parameters()).device,
-                                            dtype=torch.float16)
+    shape = tuple(int(x) for x in d["shape"])
+    out_features, in_features = shape
     scale = torch.from_numpy(d["scale"]).to(
         device=next(model.parameters()).device, dtype=torch.float16)
+    # Unpack the 2-bit codes: 0 -> -scale, 1 -> 0, 2 -> +scale.
+    packed = d["packed"]
+    n_total = out_features * in_features
+    flat = np.zeros(n_total, dtype=np.int8)
+    for i in range(4):
+        flat[i::4] = (packed >> (2 * i)) & 0x3
+    flat = flat[:n_total]
+    coded = (flat.astype(np.int8) - 1).astype(np.float32)  # 0,1,2 -> -1,0,1
+    q_ste = coded.reshape(shape)
+    q_ste = torch.from_numpy(q_ste).to(
+        device=next(model.parameters()).device, dtype=torch.float16)
+    scale_b = scale.expand(out_features, in_features)
 
     parent = navigate_to_module(model, target_module)
 
     def residual(x):
-        # q_ste: (out, in) ternary codes
-        # scale: (out, 1) per-row scale
-        out = torch.nn.functional.linear(x, q_ste)
-        return out * scale
+        # q_ste * scale = ternary values {-scale, 0, +scale}
+        out = F.linear(x, q_ste * scale_b)
+        return out * scale.squeeze(1)
     _patch_module_forward(parent, residual)
 
 

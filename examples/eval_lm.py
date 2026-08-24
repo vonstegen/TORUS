@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 # Triton bypass — same trick as distill_run.py.
-sys.modules.setdefault("triton", None)
+import triton
 
 import torch  # noqa: E402
 

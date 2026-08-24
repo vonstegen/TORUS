@@ -12,7 +12,7 @@ from typing import List, Optional
 
 import numpy as np
 
-sys.modules.setdefault("triton", None)
+import triton
 
 
 def _load_helper(path: Path, name: str):
