@@ -883,17 +883,19 @@ def main(argv: list | None = None) -> None:
 
     print(f"[af2] loading wikitext-103 ids cache: {args.ids_cache}", flush=True)
     all_ids = load_wikitext_ids(tokenizer, args.ids_cache)
-    print(f"[af2] wikitext ids: {len(all_ids):,}", flush=True)
-
-    summaries = []
-    pre_train_evals = {}  # seed -> pre_train_eval dict (when --damage-ptq + --pre-train-eval)
-    if getattr(args, "damage_ptq", False):
-        # Seed-major loop when damage is active: damage + pre-train eval once
-        # per seed (the base state is identical across arms for that seed),
-        # then iterate arms. The pre-train eval verifies the damage mode
-        # reproduces EXP-A-011 within +/-2 sigma of [400, 460] ppl.
+    damage_mode = (
+        "ptq" if getattr(args, "damage_ptq", False)
+        else "gaussian" if getattr(args, "damage_gaussian", False)
+        else None
+    )
+    if damage_mode is not None:
+        # Seed-major loop when damage is active: damage + pre-train eval
+        # once per seed (the base state is identical across arms for
+        # that seed), then iterate arms. The pre-train eval verifies
+        # the damage mode reproduces the preregistered starting band.
         for seed in seeds:
-            print(f"[af2] arm=dmg_ptq seed={seed}: damaging target module", flush=True)
+            print(f"[af2] arm=dmg_{damage_mode} seed={seed}: damaging target "
+                  f"module", flush=True)
             import torch
             from transformers import AutoModelForCausalLM
             model_dmg = AutoModelForCausalLM.from_pretrained(
@@ -901,19 +903,28 @@ def main(argv: list | None = None) -> None:
                 low_cpu_mem_usage=True,
             ).to(args.device)
             target_dmg = resolve_target_module(model_dmg, args.target_module)
-            dmg_meta = damage_target_module(
-                target_dmg,
-                group_size=getattr(args, "damage_group_size", 128),
-                threshold=getattr(args, "damage_threshold", 0.7),
-            )
-            print(f"[af2] damage meta seed={seed}: {json.dumps(dmg_meta)}", flush=True)
+            if damage_mode == "ptq":
+                dmg_meta = damage_target_module(
+                    target_dmg,
+                    group_size=getattr(args, "damage_group_size", 128),
+                    threshold=getattr(args, "damage_threshold", 0.7),
+                )
+            else:  # gaussian
+                dmg_meta = damage_target_module_gaussian(
+                    target_dmg,
+                    sigma=getattr(args, "damage_sigma", 1.0),
+                    seed=getattr(args, "damage_seed", 0),
+                )
+            print(f"[af2] damage meta seed={seed}: {json.dumps(dmg_meta)}",
+                  flush=True)
             if getattr(args, "pre_train_eval", False):
                 pte = pre_train_eval_if_damaged(model_dmg, tokenizer, args, seed)
                 pte["damage_meta"] = dmg_meta
                 pre_train_evals[seed] = pte
                 seed_dir = args.out_dir / f"seed-{seed:03d}"
                 seed_dir.mkdir(parents=True, exist_ok=True)
-                (seed_dir / "pre_train_eval.json").write_text(json.dumps(pte, indent=2))
+                (seed_dir / "pre_train_eval.json").write_text(
+                    json.dumps(pte, indent=2))
                 print(f"[af2] pre_train_eval seed={seed}: "
                       f"{json.dumps(pte.get('tasks', {}))}", flush=True)
             del model_dmg
@@ -933,10 +944,11 @@ def main(argv: list | None = None) -> None:
                 )
                 summary["damage_meta"] = dmg_meta
                 if seed in pre_train_evals:
-                    summary["pre_train_eval"] = pre_train_evals[seed].get("tasks", {})
+                    summary["pre_train_eval"] = pre_train_evals[
+                        seed].get("tasks", {})
                 summaries.append(summary)
-                (args.out_dir / f"seed-{seed:03d}" / arm / "eval.summary.json"
-                 ).write_text(json.dumps(summary, indent=2))
+                (args.out_dir / f"seed-{seed:03d}" / arm
+                 / "eval.summary.json").write_text(json.dumps(summary, indent=2))
                 print(f"[af2] arm={arm} seed={seed}: done "
                       f"deployed_bytes={summary['matched_bytes_actual']} "
                       f"matched={summary['matched_bytes_passed']}", flush=True)
