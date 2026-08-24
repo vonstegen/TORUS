@@ -152,3 +152,18 @@ results are unaffected.
 - User direction 2026-08-24: "attention driver support → Gaussian
   calibration pilot → freeze qualifying sites and σ values → preregister
   Stage 2 v2 tournaments → execute"
+
+## Post-commit additions (logged for transparency)
+
+### Dtype baseline offset (CAL pilot, 2026-08-24)
+
+The first version of `stage2-v2-launch.sh` used `--dtype float32
+--eval-dtype float16` (mixed precision). Stage 2 v1 used `--dtype
+float16 --eval-dtype float16`. The mixed-precision path produces
+a within-site baseline shift: global FP16 baseline ppl 13.09 vs
+within-site FP32-load + FP16-eval on q_proj (sigma=0) ppl 15.37
+(2.28 ppl units higher). The Stage 2 v2 CAL pilot was launched
+with the mixed-precision setting; the within-site sigma→ppl curve
+is interpretable, but the absolute baseline is shifted. Tournament
+runs (post-CAL) use the corrected fp16/fp16 setting. Documented in
+the pilot verdict (commit `40f4a13`).
