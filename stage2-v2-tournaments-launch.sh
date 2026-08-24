@@ -50,7 +50,7 @@ run_one_site() {
         return
     fi
     local sigma
-    sigma=$(grep -A1 "damage_sigma:" "$manifest" | tail -1 | tr -d ' ')
+    sigma=$(grep -E "^[[:space:]]*damage_sigma:" "$manifest" | head -1 | awk '{print $2}')
     if [ -z "$sigma" ]; then
         echo "[stage2-v2-tournaments] manifest has no damage_sigma; skipping"
         return
