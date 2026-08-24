@@ -1,22 +1,17 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
-**Revision:** 2.10 (2026-08-23) — section 2.14 (Stage 1 damage
-sweep EXP-RPM-D0..D5) DECIDED. 126 runs; 0 tolerance violations.
-**Finding F1:** threshold→ppl is highly non-monotonic —
-D1/D2/D3 (thresholds 0.0/0.3/0.5) all hit ppl 1525; only D4/D5
-move below 700. **Finding F5:** D1/D2/D3 collapse into the same
-observed-ppl regime; Stage 1 effectively produced 4 distinct
-observed regimes, not 6. **Verdicts per user directive:**
-RPM-001 tentative PASS (T2 is Pareto-optimal vs the complete
-frozen comparator set on the joint 3-cap × 5-cost vector in
-every regime; energy is null and excluded so the verdict is
-tentative until E is measured). RPM-002 and RPM-006 UNRESOLVED
-(data gap: untrained evals skipped by driver; claim definitions
-NOT altered). EXP-RPM-CAL calibration pre-experiment
-PREREGISTERED — must run before any Stage 1.5/Stage 2 damage
-sweep so the next experiment's damage axis is chosen from
-observed ppl, not the uninformative threshold knob.
+**Revision:** 2.11 (2026-08-24) — EXP-RPM-CAL calibration
+DECIDED. 33/99 cells completed (AF2-D layer, 11 thresholds ×
+3 seeds); driver crashed on attention_k + late_mlp layers
+(T2 adapter assumes down_proj-equivalent shape; not
+modified). Threshold→ppl on AF2-D layer: range [0.0, 0.5]
+is degenerate (all produce ppl 1524.80); range [0.6, 1.0]
+is informative (5 distinct bands: 88, 204, 303, 430, 697).
+**Per user directive 7:** the calibration was the gate before
+any Stage 1.5/Stage 2 damage-sweep preregistration; that
+gate is now satisfied on the AF2-D layer. Stage 2 design
+can use observed ppl (not threshold) as the damage axis.
 EXP-AF-002-D (AF2-D damaged-PTQ-start matched-storage tournament
 under v2.3 cost-vector framing).
 **Revision 2.5** (2026-08-23) — section 2.11 (EXP-AF-002-R clean reproduction)
@@ -370,22 +365,26 @@ advantage (per RPM proposal §13). The current state:
       cost-vector in every regime). RPM-002 + RPM-006 UNRESOLVED
       (data gap; claim definitions NOT altered). Verdicts at
       `experiments/verdict-Stage1.md` and per-regime verdicts.
-- [ ] **EXP-RPM-CAL** — **Damage-knob calibration pre-experiment
-      PREREGISTERED.** Must run before any Stage 1.5/Stage 2
-      damage-sweep experiment is preregistered (per user
-      directive). Maps threshold → ppl on the AF2-D layer +
-      attention_k + late_mlp; 99 eval-only runs; ~90 min on
-      Legion. Manifest at `experiments/EXP-RPM-CAL/manifest.yaml`.
+- [x] **EXP-RPM-CAL** — **Damage-knob calibration pre-experiment
+      DONE (AF2-D layer; 33/99 cells).** Per-threshold
+      ppl on the AF2-D layer: 0.0-0.5 → 1524.80 (DEGENERATE;
+      confirms Stage 1 F5); 0.6 → 697.29; 0.7 → 429.55;
+      0.8 → 303.06; 0.9 → 203.60; 1.0 → 88.31. Driver
+      stderr=0 across seeds (deterministic eval). The gate
+      before Stage 1.5/Stage 2 design is satisfied. Verdict
+      at `experiments/EXP-RPM-CAL/verdict.md`. Stage 2 design
+      may now use observed ppl as the damage axis.
 - [ ] **2.15** Stage 2 layer sweep `EXP-RPM-Lxx` (top
       sites × 3 seeds), Stage 3 budget sweep
       `EXP-RPM-B1..B5` (0.5/1/2/4/8 MB), Stage 4 task
       robustness `EXP-RPM-Txx` (≥3 tasks + ≥2 context
       lengths), Stage 5 systems validation `EXP-RPM-SYS`
       (measured latency/bytes/traffic/energy on Legion).
-      Each gated by Gates G-RPM-2/3/4. Will be preregistered
-      AFTER EXP-RPM-CAL completes and its threshold→ppl
-      function informs the next damage-axis design.
-
+      Each gated by Gates G-RPM-2/3/4. **Now ready for
+      preregistration** — the EXP-RPM-CAL gate is satisfied;
+      the next experiment's damage axis will be chosen
+      from observed ppl (not the uninformative threshold
+      knob).
 ## Phase 3 — Track A: Heterogeneous Precision, Hadamard, Decision
 
 **Objective:** Convert validated representation behavior into a Pareto

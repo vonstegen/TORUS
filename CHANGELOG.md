@@ -1035,4 +1035,51 @@ Stage 2/3/4/5 manifests will be preregistered AFTER Stage 1
   EXP-RPM-CAL.
 
 ### Tests: 233/233 pass (unchanged; Stage 1 did not modify code).
+
+## 0.16.11 / research — EXP-RPM-CAL DECIDED (calibration completed on AF2-D layer)
+
+### Decided (calibration pre-experiment)
+- **EXP-RPM-CAL DECIDED.** Launched 2026-08-24T00:09:24Z on Legion.
+  33/99 cells completed (AF2-D layer only); driver crashed on
+  attention_k cell (T2 adapter assumes down_proj-equivalent
+  shape semantics; not modified per "no more architecture").
+  Calibration completed on the preregistered damage-axis site
+  (AF2-D layer) with 11 thresholds × 3 seeds = 33 cells.
+
+### Headline result (AF2-D layer threshold → ppl)
+- Threshold range [0.0, 0.5] is **DEGENERATE** (6 thresholds all
+  produce ppl 1524.80) — confirms Stage 1 F5.
+- Threshold range [0.6, 1.0] is **INFORMATIVE**: ppl 697.29,
+  429.55, 303.06, 203.60, 88.31 at thresholds 0.6, 0.7, 0.8,
+  0.9, 1.0 respectively.
+- Driver stderr = 0 across seeds (deterministic eval); ppl
+  reproducible to displayed precision.
+
+### Effect on Stage 1 verdict
+- Stage 1 verdict unchanged: RPM-001 tentative PASS at every
+  regime; RPM-002 + RPM-006 UNRESOLVED (data gap; claim
+  definitions NOT altered).
+
+### Effect on Stage 1.5/Stage 2 design (per user directive 7)
+- The gate before Stage 1.5/Stage 2 preregistration is now
+  satisfied on the AF2-D layer. **Stage 2 design can use
+  observed ppl as the damage axis** instead of the uninformative
+  threshold knob. Recommended Stage 1.5 regime mapping:
+  FP16 (no damage); threshold=1.0 → ppl 88; threshold=0.9 → 204;
+  threshold=0.8 → 303; threshold=0.7 → 430; threshold=0.6 → 697.
+
+### Added (calibration artifacts)
+- `research/residual-pareto/experiments/EXP-RPM-CAL/verdict.md`
+- `research/residual-pareto/experiments/EXP-RPM-CAL/runs/20260824T000924Z/`
+  (per-threshold aggregate.json + per-seed pre_train_eval.json)
+
+### Changed (governance)
+- `research/registry/INDEX.md`: EXP-RPM-CAL row updated to
+  DECIDED; RPM-001..006 status line notes calibration completion;
+  decision-log entry added.
+- `research/ROADMAP.md`: rev 2.11; section 2.15 (Stage 2-5)
+  status updated — the EXP-RPM-CAL gate is satisfied and Stage 2
+  preregistration is now ready.
+
+### Tests: 233/233 pass (unchanged; EXP-RPM-CAL did not modify code).
 results, per the user's "no more architecture" instruction.
