@@ -1124,4 +1124,139 @@ Stage 2/3/4/5 manifests will be preregistered AFTER Stage 1
 
 ### Tests: 233/233 pass (unchanged; Stage 1.5 preregistration
 modified no code).
+
+## 0.16.13 / research — RPM-001/002/006 closure (post-hoc random-arm eval) + Stage 1.5 launch
+
+### Post-hoc eval (Stage 1 + Stage 1.5, 6 regimes × 2 arms × 3 seeds = 36 cells each)
+- Stage 1's driver (examples/af2_storage_tournament.py commit `692e8ee`)
+  skipped lm-eval on `is_untrained` arms. Post-hoc eval re-loaded each
+  random adapter and ran lm-eval to fill the missing `tasks` field.
+  Total: ~48 min on Legion per stage. After metric-picker correction
+  (`acc_norm,none` for arc_easy to match Stage 1 trained-arm choice),
+  trained T2 separates from random T2 by +22σ to +253σ (Stage 1) and
+  +19σ to +262σ (Stage 1.5) on arc_easy and lambada_openai.
+
+### Stage 1.5 launch (EXP-RPM-D0'..D5')
+- 126 runs (6 regimes × 7 arms × 3 seeds). Run window
+  2026-08-24T11:25:41Z → 2026-08-24T15:22:59Z (~4 hours). 0 tolerance
+  violations. Frozen driver SHA `692e8ee` (Stage 1, NOT modified).
+  Damage axis: observed-ppl from EXP-RPM-CAL on the AF2-D layer.
+
+### Added
+- `examples/eval_untrained_arms.py` (post-hoc eval script).
+- `research/residual-pareto/experiments/fix_metric.py` (re-picks
+  `acc_norm,none` for arc_easy from saved eval.full.json).
+- `research/residual-pareto/experiments/analyze_stage1.py` and
+  `analyze_stage15.py` (analysis).
+- `research/residual-pareto/experiments/RPM-001-002-006-verdict.md`
+  and `verdict-15.md` (per-stage verdicts).
+- `research/residual-pareto/experiments/RPM-001-002-006-analysis{,-15,-combined}.{md,json}`.
+
+### Tests: 233/233 pass at commit time (see 0.16.15 for the corrective entry).
+
+## 0.16.14 / research — Stage 1.5 (EXP-RPM-D0'..D5') DECIDED + combined S1+S1.5 verdict
+
+### Decided (Stage 1.5)
+- All 6 Stage 1.5 regimes DECIDED with status `DECIDED` /
+  decision `Pareto (tentative PASS)`. Manifests updated in place.
+
+### Added
+- `stage15-launch.sh` (Stage 1.5 launch script).
+- `research/residual-pareto/experiments/RPM-001-002-006-verdict-15.md`
+  (Stage 1.5 verdict).
+- `research/residual-pareto/experiments/RPM-001-002-006-analysis-15.{md,json}`.
+- `research/residual-pareto/experiments/RPM-001-002-006-analysis-combined.{md,json}`.
+- `research/residual-pareto/experiments/analyze_stage15.py`.
+
+### Note: this commit message claimed `RPM-002 → DECIDED PASS (CONFIRMED,
+replicated)` and `RPM-006 → DECIDED PASS`. **THAT WAS OVERSTATED.**
+The correct status (per the registered PASS thresholds in
+`research/residual-pareto/claims/RPM-{002,006}.yaml`) is:
+- RPM-002: UNTESTED — the registered rule requires ≥3 consecutive
+  damage regimes (in regime order) with non-decreasing effect size;
+  the collected z-score sequences do not contain such a subsequence.
+- RPM-006: UNTESTED — the registered rule requires an identified
+  activation boundary D* + clean rerun reproduction + ≥2 layer
+  categories; we have strong separation but no D* / layer-category
+  evidence.
+- RPM-001: UNTESTED (tentative Pareto-optimal; energy null).
+See 0.16.15 for the corrective entry.
+
+### Tests: 228/233 pass at commit time (5 tests/test_kernels_real.py
+failures for missing libtorus_kernel.so; pre-existing environment
+issue on this dev box, not a code regression — see 0.16.15).
+
+## 0.16.15 / research — CORRECTIVE: revert RPM-001/002/006 to UNTESTED
+
+### Corrected status
+- **RPM-001**: UNTESTED (tentative Pareto-optimal; energy null
+  until Stage 5 EXP-RPM-SYS).
+- **RPM-002**: **UNTESTED** (was incorrectly marked DECIDED PASS at
+  commit `e1d6857`). The registered PASS threshold (claim YAML
+  `research/residual-pareto/claims/RPM-002.yaml`) requires ≥3
+  consecutive damage regimes (in regime order) with non-decreasing
+  trained-vs-random effect size. Computed z-score sequences
+  (Stage 1 arc_easy: 116, 59, 66, 22, 64; Stage 1 lambada: 164, 253,
+  169, 78, 237; Stage 1.5 arc: 19, 48, 40, 20, 28; Stage 1.5 lambada:
+  155, 79, 262, 113, 62) contain NO 3-consecutive non-decreasing
+  subsequence in regime order; the FAIL clause (non-increasing
+  across all consecutive pairs) is also not met. See
+  `experiments/rpm002_registered_test.py`.
+- **RPM-006**: **UNTESTED** (was incorrectly marked DECIDED PASS).
+  The registered PASS threshold requires an identified activation
+  boundary D* + clean rerun reproduction + ≥2 layer categories.
+  Strong separation is observed at every damaged regime but no D* /
+  layer-category evidence. The healthy-base "indistinguishability"
+  clause is also violated by small nonzero z-scores (D0 arc_easy
+  -5.43σ; D0' lambada -3.40σ).
+
+### Pareto audit (RPM-001 evidence)
+- `experiments/pareto_audit.py` confirms T2 IS NOT dominated on
+  the joint (3 cap × 5 cost B/F/O/M/L) vector at any regime.
+  **Correction to prior verdict:** "T2 wins on storage" was
+  misleading. T2 has the second-smallest deployed_bytes
+  (4,199,318); dense_adapter has the smallest (3,932,771). T2's
+  Pareto status derives from the joint capability × cost axis,
+  not from storage alone.
+
+### Stage 1.5 manifest close-out
+- All 6 Stage 1.5 manifests updated in place: `status: DECIDED`,
+  `decision`, `artifact_paths`, `result_summary`, `conclusion`
+  filled per the actual run output. Run script:
+  `experiments/close_manifests.py`.
+
+### ROADMAP rev 2.15 corrective
+- `research/ROADMAP.md`: prior `rev 2.12` self-identification was
+  stale (commit `e1d6857` claimed `rev 2.14` in message; commit
+  `bcfd958` claimed `rev 2.13`). Corrected to `rev 2.15` with
+  note that prior commits overstated the claim statuses.
+- Stage 2 entry (`§2.16`) restored from prior truncation and
+  expanded with preregistration hardening requirements (frozen
+  metric keys, ppl sign convention, registered monotonicity test,
+  documented values before any post-hoc corrections).
+
+### Test-count clarification
+- `bcfd958` claimed `233/233 pass`; `e1d6857` claimed `228/233`
+  (5 kernel .so failures). The discrepancy is environmental:
+  tests/test_kernels_real.py checks load `libtorus_kernel.so`
+  which is build output (gitignored; not in the repo). The dev
+  box state determines pass/fail; no code change affected kernel
+  loading. The 228/233 count from `e1d6857` is the current dev-box
+  state; 233/233 would hold on a dev box with the kernel rebuilt
+  for the running Python interpreter.
+
+### Corrected verdict
+- `research/residual-pareto/experiments/RPM-001-002-006-verdict-corrected.md`
+  supersedes the prior
+  `RPM-001-002-006-verdict.md` and
+  `RPM-001-002-006-verdict-15.md`. Per OPERING
+  (OPERATING-PLAN §3): claim definitions are NOT altered to fit
+  available evidence.
+
+### Next step
+- Stage 2 EXP-RPM-Lxx (≥2 layer categories) is the immediate next
+  gate. Stage 5 EXP-RPM-SYS (energy) follows.
+
+### Tests: 228/233 pass (5 kernel-load failures, pre-existing
+environment issue; unchanged from `e1d6857`).
 results, per the user's "no more architecture" instruction.

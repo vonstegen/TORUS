@@ -1,14 +1,23 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
-**Revision:** 2.12 (2026-08-24) — Stage 1.5 (EXP-RPM-D0'..D5')
-PREREGISTERED (post-EXP-RPM-CAL). Six damage-sweep manifests
-using the OBSERVED ppl axis (CAL) instead of the Stage 1
-threshold axis. Threshold values chosen from CAL so each
-regime maps to a distinct observed-ppl band (FP16, 88,
-204, 303, 430, 697). 126 runs planned; driver NOT modified.
-EXP-AF-002-D (AF2-D damaged-PTQ-start matched-storage tournament
-under v2.3 cost-vector framing).
+**Revision:** 2.15 (2026-08-24) — **CORRECTIVE**. Prior commits
+(`f9a5bbc` Stage 1.5 PREREG; `68ef6be` Stage 1.5 PREREG entry;
+`bcfd958` post-hoc RPM-001/002/006 DECIDED; `e1d6857` Stage 1.5
+DECIDED + combined S1+S1.5) incorrectly promoted **RPM-002** and
+**RPM-006** to DECIDED PASS based on a coarser test than their
+registered thresholds permit. Correct status: **RPM-001**: UNTESTED
+(tentative Pareto-optimal; energy null until Stage 5 EXP-RPM-SYS);
+**RPM-002**: UNTESTED (registered monotonicity test fails on the
+collected z-score sequences); **RPM-006**: UNTESTED (boundary +
+clean rerun + ≥2 layer categories required). The empirical finding
+(trained T2 ≫ random T2 on every tested damaged regime across two
+damage-axis constructions) IS supported but does not satisfy the
+registered PASS rules. Corrected verdict at
+`research/residual-pareto/experiments/RPM-001-002-006-verdict-corrected.md`.
+**Next step: Stage 2 EXP-RPM-Lxx** (≥2 layer categories) before any
+further promotion of RPM-001/002/006. Stage 5 EXP-RPM-SYS (energy)
+follows to lift RPM-001 from UNTESTED to CONFIRMED.
 **Revision 2.5** (2026-08-23) — section 2.11 (EXP-AF-002-R clean reproduction)
 DONE with A-RP-002 -> CONFIRMED_PASS. The PASS bar reproduces
 (t2 within +/-1.1 sigma of dense on every metric); the PASS+ bar
@@ -369,35 +378,51 @@ advantage (per RPM proposal §13). The current state:
       before Stage 1.5/Stage 2 design is satisfied. Verdict
       at `experiments/EXP-RPM-CAL/verdict.md`. Stage 2 design
       may now use observed ppl as the damage axis.
-- [ ] **2.15** `EXP-RPM-D0'..D5'` — **Stage 1.5 damage sweep
+- [x] **2.15** `EXP-RPM-D0'..D5'` — **Stage 1.5 damage sweep
       (observed-ppl axis, post-EXP-RPM-CAL).** Six damage
       regimes mapped to distinct observed-ppl bands
       (FP16, 88, 204, 303, 430, 697). Same site + recipe
       as Stage 1. 7 arms × 3 seeds = 21 runs per regime;
-      126 runs total. Driver NOT modified. **Preregistered
-      2026-08-24.** RPM-002 + RPM-006 verdicts remain
-      UNRESOLVED unless random_t2_ternary adapters are
-      evaluated post-hoc.
+      126 runs total. Driver NOT modified. **DECIDED
+      2026-08-24.** All 6 regimes DECIDED; manifests closed
+      in place. Pareto audit confirms T2 IS NOT dominated on
+      the joint (3 cap × 5 cost) vector at any regime. **Post-hoc
+      random-arm eval confirms trained ≫ random at every damaged
+      regime across both axes (arc_easy z +19 to +116;
+      lambada z +62 to +262).** RPM-001/002/006 remain UNTESTED
+      per their registered thresholds (see rev 2.15 corrective).
 - [ ] **2.16** Stage 2 layer sweep `EXP-RPM-Lxx` (top
-
-### Checklist
-
-- [ ] **3.1** `EXP-A-04x` — **A4 heterogeneous precision map.** Sensitive
-      layers stay FP/INT8/INT4; tolerant layers take T1 or T1+T2 (per A-F
-      outcome). Layer-adaptive precision before token-adaptive precision.
-- [ ] **3.2** `EXP-A-H1` — **Native Hadamard controlled training (discovery
-      → confirmation).** Small model (100M–500M), matched arms: standard
-      ternary vs. native rotated ternary parameterization, identical
-      architecture/data/optimizer/schedule/budget. Measure loss convergence,
-      KL, downstream accuracy/perplexity, gradient conditioning, code-flip
-      rate, throughput/memory traffic, physical bits/weight incl. metadata,
-      joules/token where trustworthy. **Kill criteria preregistered.**
-      H-POST remains NO-SHIP. Large-model Hadamard stays locked until A-H1
+      sites × 3 seeds; **≥2 layer categories required** —
+      currently only AF2-D / `down_proj` is tested). Recipe
+      per regime. Stage 2 is the immediate next gate because:
+      (a) it supplies missing required evidence for RPM-006
+      (≥2 layer categories); (b) supports the Track B B1
+      unlock per A-RP-002's unlock_rules_affected;
+      (c) distinguishes a broadly architectural effect from one
+      localized to a favorable layer. Before launching: freeze
+      metric keys (e.g. `acc_norm,none` for arc_easy) in the
+      manifest; specify the ppl sign convention for the
+      monotonicity test; document values before any post-hoc
+      corrections. Gated by G-RPM-2.
+- [ ] **3.1** `EXP-A-04x` — **A4 heterogeneous precision map.**
+      Sensitive layers stay FP/INT8/INT4; tolerant layers take T1 or
+      T1+T2 (per A-F outcome). Layer-adaptive precision before
+      token-adaptive precision.
+- [ ] **3.2** `EXP-A-H1` — **Native Hadamard controlled training
+      (discovery → confirmation).** Small model (100M–500M),
+      matched arms: standard ternary vs. native rotated ternary
+      parameterization, identical architecture/data/optimizer/
+      schedule/budget. Measure loss convergence, KL, downstream
+      accuracy/perplexity, gradient conditioning, code-flip rate,
+      throughput/memory traffic, physical bits/weight incl.
+      metadata, joules/token where trustworthy. **Kill criteria
+      preregistered.** H-POST remains NO-SHIP. Large-model
       earns `CONFIRMED_PASS`.
-- [ ] **3.3** `EXP-A-05x` — **Pareto report.** Full baseline ladder (FP16 →
-      INT8 → strong 4-bit → T1 → T1+T2 → heterogeneous map) on quality vs.
-      physical bytes/weight (packing + metadata — never "1.58 bits/weight"),
-      memory, operations/token, measured latency.
+- [ ] **3.3** `EXP-A-05x` — **Pareto report.** Full baseline ladder
+      (FP16 → INT8 → strong 4-bit → T1 → T1+T2 → heterogeneous
+      map) on quality vs. physical bytes/weight (packing +
+      metadata — never "1.58 bits/weight"), memory, operations/
+      token, measured latency.
 - [ ] **3.4** Track A grade review under the v2 acceptance rule: no pass on
       KL alone; task-relevant improvement, reproduction, competitive physical
       storage/compute, strong-baseline comparison, clean provenance.
