@@ -1,0 +1,168 @@
+id: EXP-RPM-SYS
+title: "Stage 5 systems measurement (B/F/O/M/L/E cost vector) — AF2-D @ D1p seed-001"
+track: R
+subtrack: RPM-SYS (systems tier; physical-cost Pareto completion)
+tier: confirmation
+status: PROPOSED
+date_proposed: '2026-08-25T00:00:00Z'
+owner: research harness
+claims_addressed: [RPM-001]
+rationale: |
+  RPM-001 tentative PASS at Stage 1 + 1.5 on the 5-cost (B/F/O/M/L) vector.
+  Energy dimension E was null and excluded; Stage 5 EXP-RPM-SYS measures
+  E (and re-measures L/M/O on the AF2-D site) to convert RPM-001 from
+  tentative PASS to CONFIRMED. All 6 cost dimensions per COST-VECTOR-v1.yaml
+  are required at RPM-SYS stage; the missing leg is E.
+
+hypothesis: |
+  At AF2-D layer (model.layers.0.mlp.down_proj) under D1p Gaussian damage
+  (threshold=1.0, CAL ppl=88.31) with seed-001:
+  Trained T2 ternary adapter remains Pareto-non-dominated on the joint
+  (3 cap × 6 cost B/F/O/M/L/E) vector vs every comparator arm
+  (int4_residual, int8_residual, lora, dense_adapter, random_t2_ternary,
+  random_lora, no_correction).
+
+  Specifically: joules_per_token (E) on the patched down_proj layer is
+  not greater than the comparator set; latency_per_token (L) is not
+  greater; memory_traffic_per_token (M) is not greater than the trained
+  comparators.
+
+  If the L/E measurements remove T2 from all Pareto frontiers, the
+  RPM-001 stop-rule fires (COST-VECTOR-v1 stop_rules[1]) and the
+  residual-plane architecture story is closed.
+
+kill_criteria: |
+  Run is killed if any of:
+  - nsys fails to attach to a fresh inference process
+  - nvidia-smi power sampling stalls for >5 seconds during a timed run
+  - Patched forward produces NaN/Inf (training did not converge in Stage 1.5)
+
+  None of these are expected; the manifest is DECIDED only after all 9
+  arms complete 50 timed L runs and 50 E samples at 100ms cadence.
+
+expected_artifacts:
+- runs/r/EXP-RPM-SYS/<ts>/systems_measurements.json (all 6 dims per arm)
+- runs/r/EXP-RPM-SYS/<ts>/per_arm/<arm>/latency_runs.json (50 latencies)
+- runs/r/EXP-RPM-SYS/<ts>/per_arm/<arm>/power_samples.csv (50×100ms power draws)
+- runs/r/EXP-RPM-SYS/<ts>/per_arm/<arm>/nsys_report.nsys-rep (DRAM bytes / kernel breakdown)
+- runs/r/EXP-RPM-SYS/<ts>/pareto_table.json (Pareto-frontier analysis)
+- research/residual-pareto/experiments/EXP-RPM-SYS/verdict.md
+
+artifact_paths: []
+artifacts_manifest: runs/r/EXP-RPM-SYS/<ts>/ARTIFACTS.json
+
+contamination_risks:
+- Re-using the Stage 1.5 patched adapters (D1p seed-001) directly — they
+  are the preregistered input. No re-training. Adapter bytes are sha256-
+  pinned.
+- nvidia-smi power sampling may include other system load (other processes
+  on the GPU). Lock GPU 0 with CUDA_VISIBLE_DEVICES=0 and verify no other
+  process is running on it before each timed run.
+- GPU thermal throttling may bias L/E; warm-up is mandatory (≥5 timed
+  iterations discarded before the 50 counted).
+
+# ----- experiment design -----
+experiment:
+  model: allenai/OLMo-1B-0724-hf
+  site: model.layers.0.mlp.down_proj  # AF2-D reference site
+  damage_regime:
+    id: D1p
+    threshold: 1.0
+    calibration_ppl: 88.31
+    calibration_band: [50, 150]
+    damage_seed: 0
+  seed: 1  # only seed-001 measured for systems (deterministic from bytes)
+  arms:
+  - t2_ternary
+  - int4_residual
+  - int8_residual
+  - lora
+  - dense_adapter
+  - random_t2_ternary
+  - random_lora
+  # no_correction omitted: pre_train_eval already exists in Stage 1.5;
+  # systems measurement on the no-correction base is reused from prior
+  # AF2-D reference, not re-measured (would duplicate Stage 1.5 B/F work).
+  reuse_inputs:
+    adapters_from: runs/r/EXP-RPM-D1p/20260824T120113Z/af2d/seed-001/<arm>/
+    sha256_pin: per-arm adapter.sha256 recorded at RUN
+
+  inference_protocol:
+    batch_size: 1                # fixed for L/E comparability
+    seq_len: 128                  # fixed
+    prompt_tokens: 128            # generated = 50 tokens after warm-up
+    generated_tokens: 50          # measured tokens per run
+    warmup_runs: 5                # discarded
+    timed_runs: 50                # median + IQR over 50 runs
+    temperature: 0                # greedy
+    sampler: argmax               # deterministic
+
+  cost_dimensions:
+    B:
+      source: existing eval.summary.json (deployed_bytes)
+      status: already_measured
+    F:
+      source: existing eval.summary.json (training_flops)
+      status: already_measured
+    O:
+      measurement: instrumented forward pass on the patched layer
+      method: hook counts MAC ops (multiply-accumulate); convention: 1 MAC = 2 FLOPs
+      status: to_measure
+    M:
+      measurement: nsys profile --stats=true (DRAM bytes / kernel) on 50 timed runs
+      method: sum of dram__bytes_read + dram__bytes_write for kernels in the patched layer
+      status: to_measure
+    L:
+      measurement: ms/token median + IQR over 50 timed runs
+      method: cuda.Event(enable_timing=True); wall-clock per generated token
+      status: to_measure
+    E:
+      measurement: nvidia-smi --query-gpu=power.draw at 100ms cadence during 50 timed runs
+      method: integrate (W × 0.1s) = J per sample; sum = J / 50 tokens = J/token
+      sampling_rate_hz: 10
+      integration_method: rectangular
+      status: to_measure
+
+# ----- pass thresholds -----
+pass_thresholds:
+- "T2 Pareto-non-dominated on (B,F,O,M,L,E) vector at D1p seed-001"
+- "T2 joules_per_token <= median(joules_per_token) of all trained comparators"
+- "T2 latency_per_token <= median(latency_per_token) of all trained comparators + 1.5x IQR"
+- "T2 memory_traffic_per_token <= 2x median(memory_traffic_per_token) of all trained comparators"
+- "Stage 1.5 trained-T2 vs random-T2 separation on arc_easy/lambada preserved when re-measured"
+
+fail_thresholds:
+- "T2 joules_per_token > mean(int4_residual, int8_residual) joules_per_token"
+- "T2 latency_per_token > mean(int4_residual, int8_residual) latency_per_token"
+- "T2 memory_traffic_per_token > 3x median(int4_residual, int8_residual, dense_adapter) memory_traffic"
+
+budget:
+  wall_clock: "2 hours on Legion cuda:0 (50 runs × 9 arms × ~3s/run = ~22 min L/E; +60 min nsys profile overhead)"
+  gpu_lock: cuda:0
+  other_gpu_idle: cuda:1 must be idle during EXP-RPM-SYS timed runs (power draw isolation)
+
+stop_conditions:
+- "All 9 arms × 50 L runs + 50 E samples + 1 nsys profile = COMPLETE"
+- "Pareto analysis committed at pareto_table.json"
+
+decision_block:
+  result_summary: ""
+  confidence_and_reproduction: ""
+  next_permitted_experiment: ""
+  experiments_blocked: []
+  conclusion: ""
+
+supersedes: null
+next_permitted_experiment: "EXP-RPM-SYS verdict + RPM-001 transition tentative PASS -> CONFIRMED"
+revision: ""
+run_namespace: "runs/r/EXP-RPM-SYS/<timestamp>/"
+environment: "legion: x86_64, 2x TITAN RTX, CUDA 12.x, torch 2.x, python 3.14"
+baseline: "Stage 1.5 D1p seed-001 adapters (sha256-pinned)"
+controls: ["int4_residual", "int8_residual", "lora", "dense_adapter", "random_t2_ternary", "random_lora"]
+variants: []
+dataset_and_samples: ""
+seeds: [1]
+metrics: ["deployed_bytes (B)", "training_flops (F)", "inference_ops_per_token (O)",
+         "memory_traffic_per_token (M)", "latency_per_token (L)", "joules_per_token (E)",
+         "wikitext ppl", "arc_easy acc", "lambada_openai acc"]
+evidence_categories: ["systems", "representation", "downstream"]
