@@ -1,0 +1,157 @@
+id: EXP-RPM-T01
+title: "Stage 4 task robustness — AF5 held-out capability on AF2-D @ D1p seed-001"
+track: R
+subtrack: RPM-T (task robustness; AF5 gate)
+tier: confirmation
+status: PROPOSED
+date_proposed: '2026-08-25T00:00:00Z'
+owner: research harness
+claims_addressed: [RPM-001, A-RP-002]
+rationale: |
+  AF5 (Downstream-transfer gate) requires capability metrics beyond
+  ARC-E and LAMBADA on at least one held-out task. Stage 1.5 measured
+  wikitext/arc_easy/lambada_openai; Stage 5 (systems) reused those
+  same metrics. Stage 4 EXP-RPM-T01 fills the AF5 requirement by
+  re-measuring all 7 arms + 2 random controls on 4 held-out
+  capability tasks (hellaswag, winogrande, boolq, openbookqa) at
+  the same AF2-D / D1p seed-001 site.
+
+  RPM-001 tentative PASS at Stage 1+1.5 → CONFIRMED_PASS at Stage 5
+  (6-dim cost vector). RPM-002 and RPM-006 already CONFIRMED_PASS
+  (Stage 1.5 cross-regime separation, 10 damaged regimes). AF5 is
+  the remaining Track B B1 unlock rule.
+
+hypothesis: |
+  At AF2-D layer (model.layers.0.mlp.down_proj) under D1p Gaussian
+  damage (threshold=1.0, CAL ppl=88.31) with seed-001:
+
+  1. Trained T2 ternary separates from random T2 ternary by ≥+1σ on
+     ≥3 of 4 held-out capability tasks (architecture-vs-training-
+     signal axis on AF5).
+  2. Trained T2 ternary separates from random_lora by ≥+1σ on ≥3 of 4
+     held-out capability tasks (architecture-vs-training-signal axis
+     on AF5; ternary vs LoRA).
+  3. Trained T2 wins or ties with best trained comparator
+     (int4_residual, int8_residual, lora, dense_adapter) on ≥3 of 4
+     held-out capability tasks.
+
+  If all three sub-hypotheses hold, AF5 is satisfied:
+  task-relevant T2 value is above its preregistered threshold.
+
+kill_criteria: |
+  Run is killed if any of:
+  - Held-out task dataset fails to load (lm-eval-harness dataset
+    download/cache issue)
+  - Patched forward produces NaN/Inf
+  - Per-arm task eval exceeds 10 min wall-time per task
+
+  None of these are expected; the manifest is DECIDED only after all
+  9 arms complete all 4 held-out tasks.
+
+expected_artifacts:
+- runs/r/EXP-RPM-T01/<ts>/per_arm/<arm>/<task>/eval.summary.json
+- runs/r/EXP-RPM-T01/<ts>/per_arm/<arm>/<task>/eval.full.json
+- runs/r/EXP-RPM-T01/<ts>/held_out_summary.json (per-task aggregates)
+- runs/r/EXP-RPM-T01/<ts>/ARTIFACTS.json (sha256 manifest)
+- research/residual-pareto/experiments/EXP-RPM-T01/verdict.md
+
+artifact_paths: []
+artifacts_manifest: runs/r/EXP-RPM-T01/<ts>/ARTIFACTS.json
+
+contamination_risks:
+- Held-out task datasets cached on Legion by previous runs of
+  eval_untrained_arms.py / eval_lm.py / eval_untrained_arms_v2.py.
+  Re-use is permitted (deterministic eval at fp16, batch=16).
+- The damage recipe (Gaussian σ=0.20 seed=0) is deterministic; the
+  Stage 1.5 D1p seed-001 adapters are sha256-pinned and reused.
+
+# ----- experiment design -----
+experiment:
+  model: allenai/OLMo-1B-0724-hf
+  site: model.layers.0.mlp.down_proj
+  damage_regime:
+    id: D1p
+    threshold: 1.0
+    calibration_ppl: 88.31
+    damage_seed: 0
+    damage_sigma: 0.20
+  seed: 1
+  arms:
+  - t2_ternary
+  - int4_residual
+  - int8_residual
+  - lora
+  - dense_adapter
+  - random_t2_ternary
+  - random_lora
+  reuse_inputs:
+    adapters_from: runs/r/EXP-RPM-D1p/20260824T120113Z/af2d/seed-001/<arm>/
+    sha256_pin: per-arm adapter.sha256 recorded at RUN
+
+  held_out_tasks:
+  - task: hellaswag
+    metric: acc_norm
+    n_shots: 0
+    description: "commonsense sentence completion (4-choice MC)"
+    why_held_out: not measured in Stage 1.5/Stage 5
+  - task: winogrande
+    metric: acc
+    n_shots: 0
+    subset: winogrande_xl
+    description: "pronoun resolution (2-choice)"
+    why_held_out: not measured in Stage 1.5/Stage 5
+  - task: boolq
+    metric: acc
+    n_shots: 0
+    description: "yes/no boolean QA (reading comprehension)"
+    why_held_out: not measured in Stage 1.5/Stage 5
+  - task: openbookqa
+    metric: acc_norm
+    n_shots: 0
+    description: "open-book science QA (4-choice MC)"
+    why_held_out: not measured in Stage 1.5/Stage 5
+
+  eval_protocol:
+    batch_size: 16
+    limit: null  # full task set; not subsampled
+
+# ----- pass thresholds -----
+pass_thresholds:
+- "T2 vs random_t2 ≥+1σ on ≥3 of 4 held-out tasks"
+- "T2 vs random_lora ≥+1σ on ≥3 of 4 held-out tasks"
+- "T2 wins or ties with best trained comparator on ≥3 of 4 held-out tasks"
+- "T2 above chance (> random_t2_ternary mean) on ≥3 of 4 held-out tasks"
+
+fail_thresholds:
+- "T2 below chance (< random_t2_ternary mean) on ≥2 of 4 held-out tasks"
+- "T2 ≪ random_lora (>2σ below) on ≥2 of 4 held-out tasks"
+
+budget:
+  wall_clock: "2 hours on Legion cuda:0 (4 tasks × 9 arms × ~3 min/task = ~108 min + overhead)"
+  gpu_lock: cuda:0
+  other_gpu_idle: cuda:1 must be idle during EXP-RPM-T01 timed evals
+
+stop_conditions:
+- "All 9 arms × 4 held-out tasks = 36 evals COMPLETE"
+- "held_out_summary.json aggregated and committed"
+
+decision_block:
+  result_summary: ""
+  confidence_and_reproduction: ""
+  next_permitted_experiment: ""
+  experiments_blocked: []
+  conclusion: ""
+
+supersedes: null
+next_permitted_experiment: "EXP-RPM-T01 verdict + AF5 unlock review for Track B B1"
+revision: ""
+run_namespace: "runs/r/EXP-RPM-T01/<timestamp>/"
+environment: "legion: x86_64, 2x TITAN RTX, CUDA 12.x, torch 2.x, python 3.14, lm-eval-harness"
+baseline: "Stage 1.5 D1p seed-001 adapters (sha256-pinned)"
+controls: ["int4_residual", "int8_residual", "lora", "dense_adapter", "random_t2_ternary", "random_lora"]
+variants: []
+dataset_and_samples: ""
+seeds: [1]
+metrics: ["hellaswag acc_norm", "winogrande acc", "boolq acc", "openbookqa acc_norm",
+         "wikitext ppl (reused)", "arc_easy acc_norm (reused)", "lambada_openai acc (reused)"]
+evidence_categories: ["downstream", "representation"]
