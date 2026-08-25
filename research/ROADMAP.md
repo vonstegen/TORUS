@@ -1,6 +1,19 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
+**Revision:** 2.19 (2026-08-25) — **Stage 4 EXP-RPM-T01 COMPLETE;
+  AF5 FAIL.** All 9 arms × 4 held-out capability tasks (hellaswag,
+  winogrande, boolq, openbookqa) measured at AF2-D / D1p seed-001.
+  T2 vs random_t2 ≥+1σ on **0 of 4 tasks** (max +0.29σ on openbookqa).
+  Architecture-vs-training signal does NOT manifest on these tasks at
+  D1p because the damaged base is already near FP16 baseline on
+  commonsense/QA tasks — the residual correction is unnecessary when
+  the base has not lost capability. T2 ties best trained on 2 of 4
+  (winogrande, boolq). Track B B1 stays locked (AF5 unsatisfied). Stage
+  2 v3 (higher σ on L15 down_proj) remains the next concrete step;
+  higher σ may open up the held-out task signal. Stage 1 / 1.5 driver
+  SHAs (`692e8ee`) untouched. Verdict:
+  `research/residual-pareto/experiments/EXP-RPM-T01/verdict.md`.
 **Revision:** 2.18 (2026-08-25) — **Stage 5 EXP-RPM-SYS COMPLETE.**
   RPM-001 tentative PASS promoted to **CONFIRMED_PASS** on the full
   6-dim (B/F/O/M/L/E) cost vector at AF2-D / D1p seed-001. All 7 arms

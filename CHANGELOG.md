@@ -1314,6 +1314,63 @@ issue on this dev box, not a code regression — see 0.16.15).
   §2.17 Stage 2 v2 added.
 
 
+## 0.16.19 / research — Stage 4 EXP-RPM-T01 COMPLETE; AF5 FAIL at AF2-D / D1p / seed-001
+
+All 9 arms × 4 held-out capability tasks measured at AF2-D / D1p
+seed-001 on Legion cuda:0. Held-out task set: hellaswag, winogrande,
+boolq, openbookqa (none in Stage 1.5/5's wikitext/arc_easy/lambada_openai).
+
+Result (per-arm held-out accuracy):
+
+| arm | hellaswag | winogrande | boolq | openbookqa |
+|---|---:|---:|---:|---:|
+| **t2_ternary** | **0.6604** | 0.6148 | **0.6609** | 0.3620 |
+| int4_residual | 0.4006 | 0.5438 | 0.5370 | 0.2880 |
+| int8_residual | 0.6453 | 0.5991 | 0.6483 | 0.3560 |
+| lora | 0.6593 | 0.6077 | **0.6609** | 0.3660 |
+| dense_adapter | 0.6599 | **0.6156** | 0.6584 | **0.3700** |
+| random_t2_ternary | 0.6617 | 0.6117 | 0.6581 | 0.3560 |
+| random_lora | 0.6616 | 0.6085 | 0.6550 | 0.3520 |
+
+**AF5 fail threshold triggered.** T2 vs random_t2 ≥+1σ on **0 of 4**
+tasks (max +0.29σ on openbookqa). T2 ties best trained on 2 of 4.
+
+**Architecture-vs-training signal does NOT manifest on held-out tasks
+at D1p** because the damaged base is already near FP16 baseline on
+commonsense/QA tasks. The residual correction is unnecessary when the
+base has not lost capability on the test task. This is **consistent
+with Stage 2 v2 finding** (trained ≈ random at L15 and L0-v under
+σ=0.20 Gaussian damage) — when damage is mild, the trained-arm
+signal disappears.
+
+**Track B B1 stays locked.** Three conditions remain unsatisfied:
+AF5 task-relevant T2 above threshold, ≥2 layer categories Pareto,
+and the A-RP-002 PROV + AF5 + AF8-clean triple under §5 v2.3.
+
+**Required next:** Stage 2 v3 at higher σ (σ=0.50 or σ=0.70 on L15
+down_proj) to test whether the held-out task signal opens up at
+greater damage. Stage 2 v3 may also satisfy the ≥2 layer categories
+Pareto criterion.
+
+Added:
+- examples/eval_held_out_tasks.py (Stage 4 task-robustness harness)
+- research/residual-pareto/experiments/EXP-RPM-T01/manifest.yaml
+- research/residual-pareto/experiments/EXP-RPM-T01/verdict.md
+- runs/r/EXP-RPM-T01/20260825T192400Z/held_out_summary.json
+- runs/r/EXP-RPM-T01/20260825T192400Z/per_arm/<arm>/summary.json (7)
+- runs/r/EXP-RPM-T01/20260825T192400Z/per_arm/<arm>/<task>/eval.{summary,full}.json (28+28)
+- runs/r/EXP-RPM-T01/20260825T192400Z/ARTIFACTS.json (sha256 manifest)
+
+Changed:
+- research/registry/INDEX.md: EXP-RPM-T01 row updated to
+  DECIDED / **AF5 FAIL**.
+- research/ROADMAP.md: rev 2.19 — Stage 4 EXP-RPM-T01 COMPLETE;
+  AF5 fails at AF2-D / D1p / seed-001.
+
+Tests: 239/244 pass.
+
+---
+
 ## 0.16.18 / research — Stage 5 EXP-RPM-SYS COMPLETE; RPM-001 → CONFIRMED_PASS
 
 All 7 arms × 6 cost dims (B/F/O/M/L/E) measured at AF2-D / D1p
