@@ -1314,7 +1314,58 @@ issue on this dev box, not a code regression — see 0.16.15).
   §2.17 Stage 2 v2 added.
 
 
-## 0.16.20 / research — Stage 2 v3 EXP-RPM-L15-GAUSS-V3 COMPLETE; architecture-vs-training FAIL at L15 σ=0.5
+## 0.16.21 / research — Stage 2 v4 EXP-RPM-L15-GAUSS-V4 COMPLETE; architecture-vs-training INVERTS at L15 σ=1.0
+
+All 21 trained + 6 post-hoc random-arm cells measured at
+`model.layers.15.mlp.down_proj` under Gaussian σ=1.00 (CAL ppl=16.58)
+on Legion cuda:0. Stage 2 v4 hypothesis (T2 ≥+2σ vs random T2 on ≥1
+capability metric) FAILS, and the **fail threshold triggers**:
+
+T2 vs random_t2 at σ=1.00, 3-seed mean:
+- wikitext: T2 16.6119 vs random_t2 16.5935, Δ=+0.018, z=**+2.64σ**
+  (wrong direction — T2 worse on ppl)
+- arc_easy: T2 0.5390 vs random_t2 0.5408, Δ=−0.002, z=**−2.15σ**
+- lambada_openai: T2 0.5943 vs random_t2 0.5958, Δ=−0.002,
+  z=**−2.26σ**
+
+T2 ≪ random_t2 fail threshold triggered (2 of 3 metrics below −2σ).
+**Architecture-vs-training axis INVERTS at high σ**: low σ (0.20,
+0.50) → trained ≈ random; high σ (1.00) → trained < random.
+
+T2 vs random_lora at σ=1.00: T2 wins on 2 of 3 metrics at ≥+2σ
+(wikitext +3.15σ, lambada +2.87σ) — structural-prior signal
+strengthens at higher damage.
+
+**Track B B1 stays locked, more firmly now** — three conditions
+remain unsatisfied, with the "≥2 layer categories Pareto"
+condition now further undermined by the inversion result.
+
+Required next: a different mechanism is needed to satisfy Track B
+B1 (the L15/Gaussian axis is firmly negative). Options:
+1. TWN damage at L15 (Stage 2 v1 found this degenerate at low
+   thresholds; re-test at higher magnitude), or
+2. Stage 4 v2 (re-measure AF5 task-relevant T2 above threshold
+   with a different held-out task set), or
+3. Stage 1 v2 (re-measure AF2-D TWN damage at multiple damage
+   seeds to confirm the AF2-D trained ≫ random finding).
+
+Added:
+- research/residual-pareto/experiments/EXP-RPM-L15-GAUSS-V4/manifest.yaml
+- research/residual-pareto/experiments/EXP-RPM-L15-GAUSS-V4/verdict.md
+- runs/r/EXP-RPM-L15-GAUSS-V4/20260825T220000Z/{aggregate.json,seed-{001,002,003}/{arm}/{eval.summary.json,eval.full.json,cost.json,cost_vector.json,adapter.npz},ARTIFACTS.json}
+
+Changed:
+- research/registry/INDEX.md: EXP-RPM-L15-GAUSS-V4 row updated to
+  DECIDED / FAIL.
+- stage2-v3-launch.sh: added L15-GAUSS-V4 entry.
+- summarize_stage2_v3.py: added EXP-RPM-L15-GAUSS-V4; dynamic
+  output filename.
+
+Tests: 239/244 pass.
+
+---
+
+## 0.16.20 / research — Stage 2 v3 EXP-RPM-L15-GAUSS-V3 COMPLETE; architecture-vs-training FAIL at L15 σ=0.5; architecture-vs-training FAIL at L15 σ=0.5
 
 All 21 trained + 6 post-hoc random-arm cells measured at
 `model.layers.15.mlp.down_proj` under Gaussian σ=0.50 (CAL ppl=13.75)

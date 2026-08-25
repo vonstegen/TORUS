@@ -1,7 +1,18 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
+**Revision:** 2.21 (2026-08-25) — **Stage 2 v4 EXP-RPM-L15-GAUSS-V4
+  COMPLETE; architecture-vs-training INVERTS at L15 σ=1.00.** All 21
+  trained + 6 random-arm cells measured. T2 vs random_t2: T2 LOSES on
+  2 of 3 metrics at >2σ (arc_easy −2.15σ, lambada −2.26σ; wikitext
+  +2.64σ wrong direction). T2 ≪ random_t2 fail threshold triggered.
+  Architecture-vs-training axis INVERTS at high σ: low σ (0.20, 0.50)
+  → trained ≈ random, high σ (1.00) → trained < random. T2 vs
+  random_lora on wikitext +3.15σ, lambada +2.87σ — structural-prior
+  signal strengthens. **Track B B1 stays locked**, more firmly now.
+  Verdict: `experiments/EXP-RPM-L15-GAUSS-V4/verdict.md`.
 **Revision:** 2.20 (2026-08-25) — **Stage 2 v3 EXP-RPM-L15-GAUSS-V3
+  COMPLETE; architecture-vs-training FAIL at L15 σ=0.50.**
   COMPLETE; architecture-vs-training FAIL at L15 σ=0.50.** All 21 trained +
   6 post-hoc random-arm cells measured. T2 vs random_t2 max z = +1.20σ
   (arc_easy); wikitext Δ −1.54σ, lambada Δ −0.63σ. Trained T2 ≈ random
