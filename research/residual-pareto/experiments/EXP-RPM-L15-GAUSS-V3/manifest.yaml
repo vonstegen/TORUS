@@ -1,0 +1,99 @@
+id: EXP-RPM-L15-GAUSS-V3
+title: "Stage 2 v3 tournament \u2014 model.layers.15.mlp.down_proj @ sigma=0.5"
+track: A
+subtrack: Stage 2 v3 (Gaussian damage, higher sigma)
+tier: discovery
+status: PROPOSED
+date_proposed: '2026-08-25T19:50:00Z'
+owner: research harness
+claims_addressed: []
+rationale: >
+  Stage 2 v2 (EXP-RPM-L15-GAUSS at sigma=0.2) found trained T2 \u2248 random
+  T2 across all capability metrics at L15 down_proj under Gaussian damage,
+  because the damage was too mild to differentiate arms. Stage 2 v2 CAL
+  pilot showed the L15 sigma\u2192ppl curve has 4 distinct reproducibility
+  bands: sigma=0.00 ppl=13.09, sigma=0.20 ppl=13.20, sigma=0.50 ppl=13.75,
+  sigma=1.00 ppl=16.58. Stage 2 v3 preregisters sigma=0.50 to test whether
+  the architecture-vs-training signal (T2 trained \u226B random on damaged
+  bases) emerges at the next-higher damage band. Same layer category as
+  Stage 2 v2 (MLP down_proj at L15) so the sigma effect is isolated from
+  the layer effect. If the trained-vs-random signal does NOT manifest at
+  sigma=0.50 either, the "T2 \u226B random on damaged bases" finding is
+  Stage 1 / 1.5-specific (TWN damage at AF2-D) and Track B B1 stays
+  locked. Stage 4 EXP-RPM-T01 verdict reinforced this hypothesis by
+  showing that at AF2-D D1p the architecture-vs-training signal does NOT
+  manifest on held-out capability tasks even at mild damage, suggesting
+  the signal may need larger damage to emerge.
+hypothesis: >
+  At L15 down_proj under Gaussian damage sigma=0.50 (CAL ppl=13.75), the
+  trained-vs-random T2 architecture-vs-training signal emerges: trained
+  T2 pulls ahead of random T2 by \u22652 sigma on at least one capability
+  metric (wikitext, arc_easy, lambada_openai) across 3 seeds.
+kill_criteria: >
+  All 27 cells (9 arms x 3 seeds) must run to completion (no early kill).
+  Stop rule: if any arm's matched-bytes test fails (deviation > +/-1%
+  from the preregistered storage budget), the run is INVALID and must
+  be rerun cleanly.
+expected_artifacts:
+  - "runs/r/EXP-RPM-L15-GAUSS-V3/{timestamp}/seed-{n}/{arm}/eval.summary.json (per-cell)"
+  - "runs/r/EXP-RPM-L15-GAUSS-V3/{timestamp}/seed-{n}/{arm}/adapter.npz (per-cell)"
+  - "runs/r/EXP-RPM-L15-GAUSS-V3/{timestamp}/seed-{n}/{arm}/cost.json (per-cell)"
+  - "runs/r/EXP-RPM-L15-GAUSS-V3/{timestamp}/seed-{n}/{arm}/cost_vector.json (per-cell)"
+  - "runs/r/EXP-RPM-L15-GAUSS-V3/{timestamp}/aggregate.json (per-site trained-vs-random)"
+  - "runs/r/EXP-RPM-L15-GAUSS-V3/{timestamp}/ARTIFACTS.json (sha256 manifest)"
+  - "runs/r/EXP-RPM-L15-GAUSS-V3/{timestamp}/per_arm/{arm}/eval_summary.json (post-hoc)"
+  - "runs/r/EXP-RPM-L15-GAUSS-V3/{timestamp}/per_arm/{arm}/eval_full.json (post-hoc)"
+artifact_paths: []
+experiment:
+  model: allenai/OLMo-1B-0724-hf
+  target_module: model.layers.15.mlp.down_proj
+  arms:
+    - t2_ternary
+    - int4_residual
+    - int8_residual
+    - lora
+    - dense_adapter
+    - random_t2_ternary
+    - random_lora
+  seeds:
+    - 1
+    - 2
+    - 3
+  n_steps: 500
+  batch_size: 4
+  seq_len: 128
+  lr: 0.001
+  momentum: 0.9
+  grad_clip: 1.0
+  tasks: wikitext,arc_easy,lambada_openai
+  damage_gaussian: true
+  damage_sigma: 0.5
+  damage_seed: 0
+  pre_train_eval: true
+  freeze_exception:
+    scope: experiments/EXP-RPM-L15-GAUSS-V3 only
+    driver_sha_before: '34aa581'
+    driver_sha_after: '34aa581'
+    rationale: 'No driver changes required. Stage 2 v2 Gaussian damage driver (commit 18e10ba) already supports arbitrary sigma; only the manifest values change.'
+    approved_by: 'OPERATING-PLAN \u00a76 v2.3; Stage 2 v2 driver extension covers this scope'
+supersedes: EXP-RPM-L15-GAUSS
+next_permitted_experiment: >
+  If sigma=0.50 yields a positive architecture-vs-training signal (T2
+  trained \u226B random), proceed to Stage 2 v4 (EXP-RPM-L0-V-GAUSS-V3 at
+  sigma=0.50) to test cross-layer-category generalization. If sigma=0.50
+  does NOT yield a positive signal, escalate to sigma=1.00 (Stage 2 v5)
+  or pivot the preregistered hypothesis.
+blocking: []
+falsification_targets:
+  - A-RP-002.yaml: passes require trained-vs-random separation; this
+    test is at a different site/damage so PASS here is supporting
+    evidence, not a substitute for AF2-D TWN damage.
+  - Stage 2 v3 preregistration hypothesis: trained T2 separates from
+    random T2 by >=2 sigma on >=1 capability metric.
+provenance:
+  git_sha: '1a90f0a'
+  driver_sha: '34aa581'
+  model: 'allenai/OLMo-1B-0724-hf'
+  eval_dtype: 'float16'
+  freeze_state: ACTIVE
+  freeze_exception_justification: 'No driver changes required for Stage 2 v3.'
