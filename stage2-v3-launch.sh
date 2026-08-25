@@ -25,12 +25,13 @@ mkdir -p "$LOG_DIR"
 # maps to (target_module, manifest_relative_path).
 declare -A SITES=(
     [L15-GAUSS-V3]="model.layers.15.mlp.down_proj"
+    [L15-GAUSS-V4]="model.layers.15.mlp.down_proj"
 )
 
 selected=""
 for arg in "$@"; do
     case "$arg" in
-        L15-GAUSS-V3|EXP-RPM-L15-GAUSS-V3) selected="$arg" ;;
+        L15-GAUSS-V3|EXP-RPM-L15-GAUSS-V3|L15-GAUSS-V4|EXP-RPM-L15-GAUSS-V4) selected="$arg" ;;
         *) echo "[stage2-v3] unknown arg '$arg'; ignoring" ;;
     esac
 done
