@@ -28,9 +28,9 @@ Usage:
 """
 from __future__ import annotations
 
-import sys as _sys
-
-_sys.modules["triton"] = None  # see distill_run.py for why
+# (triton bypass removed; triton IS installed on Legion; the
+# setdefault was breaking the chained _load_helper exec_module
+# import path through eval_lm.py.)
 
 import argparse
 import gc
