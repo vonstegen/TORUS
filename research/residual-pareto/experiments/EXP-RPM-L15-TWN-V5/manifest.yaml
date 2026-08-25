@@ -1,0 +1,126 @@
+id: EXP-RPM-L15-TWN-V5
+title: "Stage 2 v5 \u2014 L15 down_proj TWN @ group_size=8 (finer granularity)"
+track: A
+subtrack: Stage 2 v5 (TWN damage, finer group granularity)
+tier: discovery
+status: PROPOSED
+date_proposed: '2026-08-25T23:30:00Z'
+owner: research harness
+claims_addressed: []
+rationale: >
+  Stage 2 v1 (TWN, group_size=128, thresholds 0.0-1.0 at L15 down_proj)
+  found ppl 14.10-15.49 across all 11 thresholds: TWN damage is
+  fundamentally degenerate at L15 because layer 15 weight statistics
+  have fewer small-magnitude values to zero out (deeper-layer features
+  are more uniform in magnitude). Stage 2 v2, v3, v4 used Gaussian noise
+  instead of TWN and found trained T2 \u2248 random T2 (\u03C3=0.20, 0.50) or
+  trained < random (\u03C3=1.00); the architecture-vs-training story does
+  not generalize from AF2-D TWN damage to L15 Gaussian damage. Stage 2
+  v5 preregisters TWN damage at L15 with **group_size=8** (vs Stage 2
+  v1's group_size=128). Smaller groups mean finer granularity per-group
+  scale/threshold tests; more weights are exposed to per-group scale
+  variation, so more weights get zeroed at any given threshold. This
+  may produce severe damage at L15 where group_size=128 was
+  degenerate. If group_size=8 produces ppl \u2265200 at some threshold,
+  proceed to the tournament at that threshold and re-test the
+  preregistered Stage 2 hypothesis.
+hypothesis: >
+  At L15 down_proj under TWN damage with group_size=8 (vs Stage 2 v1's
+  128), the threshold axis produces severe damage (ppl \u2265200) on at
+  least one preregistered threshold. At the qualifying threshold,
+  trained T2 separates from random T2 by \u22652 sigma on at least one
+  capability metric (wikitext, arc_easy, lambada_openai) across 3
+  seeds.
+experiment_plan:
+  stage_1_cal_pilot:
+    purpose: characterize the threshold\u2192ppl curve at group_size=8
+    knobs:
+      thresholds: [0.0, 0.3, 0.5, 0.7, 1.0]
+      group_size: 8
+      calibrate_norm: false
+    arms: t2_ternary (pre-train eval only)
+    seeds: [1, 2, 3]
+    cells: 5 \xD7 3 = 15
+    kill_criteria:
+      - No threshold produces ppl \u2265200: ABORT, do not proceed to tournament
+      - All thresholds produce ppl < 30: ABORT (TWN still degenerate even with finer groups)
+  stage_2_tournament:
+    prereq: stage_1_cal_pilot produces at least one threshold with ppl in
+            [200, 500] (the "heavy" band from Stage 1 EXP-RPM-CAL)
+    knobs:
+      group_size: 8
+      threshold: <selected from stage_1>  # threshold producing ppl closest to AF2-D's D5 ppl 430
+    arms: [t2_ternary, int4_residual, int8_residual, lora, dense_adapter, random_t2_ternary, random_lora]
+    seeds: [1, 2, 3]
+    cells: 9 \xD7 3 = 27
+    training_protocol: n_steps=500, batch_size=4, seq_len=128, lr=1e-3, momentum=0.9, grad_clip=1.0
+    eval_tasks: [wikitext, arc_easy, lambada_openai]
+experiment:
+  model: allenai/OLMo-1B-0724-hf
+  target_module: model.layers.15.mlp.down_proj
+  arms:
+    - t2_ternary
+    - int4_residual
+    - int8_residual
+    - lora
+    - dense_adapter
+    - random_t2_ternary
+    - random_lora
+  seeds:
+    - 1
+    - 2
+    - 3
+  n_steps: 500
+  batch_size: 4
+  seq_len: 128
+  lr: 0.001
+  momentum: 0.9
+  grad_clip: 1.0
+  tasks: wikitext,arc_easy,lambada_openai
+  damage_ptq: true
+  damage_threshold: 0.7
+  damage_group_size: 8
+  calibrate_norm: false
+  pre_train_eval: true
+kill_criteria: >
+  Stage 1: No threshold produces ppl >= 200 (TWN at L15 still degenerate
+  even with finer group_size). Stage 2: any cell's matched-bytes test
+  fails (deviation > +/-1% from the preregistered storage budget); the
+  run is INVALID and must be rerun cleanly.
+expected_artifacts:
+  - "runs/r/EXP-RPM-L15-TWN-V5-CAL/{timestamp}/threshold-<value>/seed-{n}/pre_train_eval.json (stage 1)"
+  - "runs/r/EXP-RPM-L15-TWN-V5-CAL/{timestamp}/aggregate.json (stage 1)"
+  - "runs/r/EXP-RPM-L15-TWN-V5/{timestamp}/seed-{n}/{arm}/eval.summary.json (stage 2)"
+  - "runs/r/EXP-RPM-L15-TWN-V5/{timestamp}/seed-{n}/{arm}/adapter.npz (stage 2)"
+  - "runs/r/EXP-RPM-L15-TWN-V5/{timestamp}/aggregate.json (stage 2)"
+  - "runs/r/EXP-RPM-L15-TWN-V5/{timestamp}/ARTIFACTS.json (sha256 manifest)"
+artifact_paths: []
+freeze_exception:
+  scope: experiments/EXP-RPM-L15-TWN-V5 only
+  driver_sha_before: '34aa581'
+  driver_sha_after: '34aa581'
+  rationale: 'No driver changes required. The Stage 1 driver supports --damage-group-size as a CLI flag (line 844 of af2_storage_tournament.py, default 128). Stage 2 v5 only changes the manifest values (group_size=8, threshold from CAL pilot).'
+  approved_by: 'OPERATING-PLAN \u00a76 v2.3; existing CLI surface covers this scope'
+supersedes: EXP-RPM-L15-GAUSS-V4
+next_permitted_experiment: >
+  If Stage 1 CAL pilot produces a qualifying ppl band at group_size=8,
+  proceed to the tournament at the matching threshold. If Stage 1
+  CAL pilot is also degenerate (no threshold with ppl >= 200), the
+  TWN damage recipe is confirmed to be fundamentally degenerate at
+  L15 down_proj regardless of group_size, and the L15/TWN axis is
+  closed. Track B B1 would then require an entirely different
+  mechanism (e.g., TWN at layer 8 with finer groups, or a non-TWN
+  damage mode).
+blocking: []
+falsification_targets:
+  - Stage 2 v5 hypothesis: TWN at group_size=8 produces ppl >= 200
+    at some threshold at L15 down_proj.
+  - Stage 2 (if reached): trained T2 vs random T2 architecture-vs-
+    training signal emerges at the qualifying threshold.
+provenance:
+  git_sha: 'afbef3d'
+  driver_sha: '34aa581'
+  model: 'allenai/OLMo-1B-0724-hf'
+  eval_dtype: 'float16'
+  freeze_state: ACTIVE
+  freeze_exception_justification: 'No driver changes required for Stage 2 v5.'

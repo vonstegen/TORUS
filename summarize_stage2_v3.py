@@ -18,6 +18,7 @@ RUNS_DIR = BASE / "runs" / "r"
 SITES = {
     "EXP-RPM-L15-GAUSS-V3": "model.layers.15.mlp.down_proj",
     "EXP-RPM-L15-GAUSS-V4": "model.layers.15.mlp.down_proj",
+    "EXP-RPM-L15-TWN-V5": "model.layers.15.mlp.down_proj",
 }
 TASKS = ["wikitext", "arc_easy", "lambada_openai"]
 

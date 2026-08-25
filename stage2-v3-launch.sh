@@ -26,6 +26,7 @@ mkdir -p "$LOG_DIR"
 declare -A SITES=(
     [L15-GAUSS-V3]="model.layers.15.mlp.down_proj"
     [L15-GAUSS-V4]="model.layers.15.mlp.down_proj"
+    [L15-TWN-V5]="model.layers.15.mlp.down_proj"
 )
 
 selected=""
