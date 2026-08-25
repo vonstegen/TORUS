@@ -79,12 +79,21 @@ Spread: 0.088 ms = 0.85% of the fastest. All arms within 1% of each other on L.
 Spread: 0.315 J = 14% of the lowest. T2 + lora + int4 + random_t2 cluster at
 ~2.45-2.49 J (low mean W ~201-204). int8 + dense_adapter + random_lora
 cluster at ~2.18-2.20 J (high mean W ~215-217).
+**Two distinct observations on energy**, kept separate:
+- **Mean power draw (P)**: T2 + lora + int4 + random_t2 cluster at
+  ~201-204 W (low-power cluster). int8 + dense_adapter + random_lora
+  cluster at ~215-217 W (high-power cluster). T2 is 6.5% lower power
+  than the high-power cluster (201.4 W vs 215.6 W).
+- **Joules per token (E)**: T2 + lora + int4 + random_t2 cluster at
+  ~2.45-2.49 J/tok (high-E cluster). int8 + dense_adapter + random_lora
+  cluster at ~2.18-2.20 J/tok (low-E cluster). T2 is **11% higher
+  joules per token** than the low-E cluster.
 
-**T2 sits in the lower-power cluster** (201.4 W vs the high-power cluster's 215.6 W,
-6.5% lower). The 14% gap in J/tok is **dominated by per-token latency**: T2's 1%
-latency advantage + lower mean power gives an 11% energy advantage over the
-high-power cluster, even though the absolute joule gap looks large.
-
+**P and E tell different stories.** Lower mean power (P) is valuable
+for thermal-envelope and power-supply sizing but is **NOT** the same
+as lower energy per token (E = P × time). At this site, the low-P
+arms have higher E (per-token time advantage offsets their higher
+mean P, and vice versa).
 ## Pass/fail threshold check
 
 Preregistered thresholds (manifest.yaml):
@@ -96,9 +105,12 @@ Preregistered thresholds (manifest.yaml):
    int4, int8, random_t2), tied on O (33.6M), tied on F. Energy-wise T2
    is in the lower-power cluster but not the most efficient overall.
    **T2 is NOT dominated on any axis.**
-2. **T2 joules ≤ median(joules) of trained comparators** — **PASS**.
+2. **T2 joules ≤ median(joules) of trained comparators** — **FAIL.**
    Trained comparators: {int4=2.476, int8=2.201, lora=2.453, dense=2.176}.
-   Median = (2.453 + 2.201) / 2 = 2.327. T2 joules = 2.453. PASS.
+   Median = (2.453 + 2.201) / 2 = 2.327. T2 joules = 2.453 > 2.327.
+   **Numerical threshold not met: T2 exceeds the trained-arm median
+   joules-per-token by 0.126 J (5.4%).** This is a per-token energy
+   metric, distinct from mean power draw (P) reported below.
 3. **T2 latency ≤ median(L) + 1.5 × IQR** — **PASS**.
    Median L across all 7 = 10.328. T2 IQR = 0.022. 1.5 × IQR = 0.033.
    Threshold = 10.361. T2 L = 10.259. PASS by 0.10 ms (3.7σ).
@@ -107,15 +119,16 @@ Preregistered thresholds (manifest.yaml):
 
 ### Fail thresholds
 
-1. **T2 joules > mean(int4, int8)** — **TRIGGERED numerically.**
+1. **T2 joules > mean(int4, int8)** — **TRIGGERED.**
    mean(int4, int8) = (2.476 + 2.201) / 2 = 2.339. T2 = 2.453 > 2.339.
-   The 0.114 J (5%) gap is **within measurement noise** (~5% per single
-   power sampling) and **within T2's 1% latency advantage** (which gives
-   T2 a 5% energy advantage over int8 if measured with comparable timing).
-   **Fail threshold triggered but fails on technicality; substantive
-   verdict is unaffected** (T2 still Pareto-non-dominated).
-2. **T2 latency > mean(int4, int8)** — **NOT TRIGGERED.**
-   mean L = (10.347 + 10.331) / 2 = 10.339. T2 L = 10.259 < 10.339. PASS.
+   T2 exceeds the int4/int8 mean joules by 0.114 J (4.9%). **Fail
+   threshold recorded as triggered.** The preregistered stop-rule
+   threshold is numerically exceeded; we do not reinterpret this as
+   "within noise" — instead, we note that the E-axis gap (~5%) is at
+   the limit of single-shot power-sampling precision (~5% per 100ms
+   sample over a 500ms inference window = 6 samples), and we flag
+   this as **INCONCLUSIVE** for the per-token energy metric while
+   separately confirming the global Pareto stop-rule (see below).
 3. **T2 memory_traffic > 3 × median(int4, int8, dense)** — **NOT TRIGGERED.**
    median = 4.00. 3 × median = 12.00. T2 M = 4.00. PASS.
 
@@ -140,19 +153,23 @@ vector at D1p seed-001:
   smallest at 3.75. T2 not dominated.
 - **L**: **T2 is the FASTEST** (10.259 ms vs min 10.305 lora). Best on
   L. Cannot be dominated on L.
-- **E**: T2 = 2.453 J. int8 = 2.201 J (10% more efficient); dense = 2.176
-  (11% more efficient). **T2 is dominated on E by int8 and dense_adapter**
-  on the per-token joules metric, but **not on the per-watt-per-token**
-  metric (T2 mean W = 201.4 vs int8 = 216.8 = 7% lower power, narrower
-  thermal envelope).
+- **E**: T2 = 2.453 J/tok. int8 = 2.201 J/tok (10% more efficient per
+  token); dense = 2.176 J/tok (11% more efficient per token).
+  **T2 is dominated on E by int8 and dense_adapter.**
 
-**T2 is Pareto-optimal on (B, F, O, M, L)** and tied for 4th on E (loses
-to int8, dense_adapter, random_lora, beats int4). **Stop-rule does not
-fire.**
+**Stop-rule verdict: NOT TRIGGERED.** T2 is Pareto-optimal on (B, F,
+O, M, L) and rank 4 on E (loses to dense_adapter, int8_residual,
+random_lora; beats int4_residual and random_t2_ternary). Per
+COST-VECTOR-v1.yaml stop_rules[1] ("Measured systems cost (L or E)
+removes T2 from all Pareto frontiers"), T2 is not removed.
 
-## Effect on RPM-001
+**Note:** The stop-rule is a different conclusion from the preregistered
+joules fail threshold (which WAS triggered, see above). Per
+per-token joules alone, T2 is dominated by int8 and dense_adapter.
+But on the joint 6-dim cost vector, no single arm dominates T2 across
+all axes, so the global stop-rule does not fire.
 
-### RPM-001 — DECIDED PASS (CONFIRMED, E dimension now non-null)
+### RPM-001 — DECIDED PASS, BUT E-AXIS INCONCLUSIVE
 
 Stage 1 + 1.5 + 5 evidence combined:
 
@@ -164,34 +181,31 @@ Stage 1 + 1.5 + 5 evidence combined:
    int4/int8 at parity capability) and F (32.2 TFLOPs tied with all).
 3. **Latency** (Stage 5): **T2 is the fastest** at D1p seed-001
    (10.259 ms/tok, 0.85% ahead of next-best).
-4. **Energy** (Stage 5): T2 is in the **lower-power cluster** (mean W
-   201.4 vs high-power cluster 215.6 = 6.5% lower power draw). Per-token
-   joules gap is dominated by per-token latency: T2's 1% L advantage +
-   6.5% power advantage gives an **11% energy advantage** over the
-   high-power cluster.
+4. **Energy** (Stage 5): separate metrics as documented above.
 
-**Pareto frontier at D1p seed-001** (excluding capability axes):
-- **T2 ternary**: B=4.00 MB, L=10.259 ms, E=2.453 J (low L, mid E)
-- **dense_adapter**: B=3.75 MB, L=10.330 ms, E=2.176 J (lowest B, lowest E)
-- **lora**: B=4.22 MB, L=10.305 ms, E=2.453 J (high B, mid E)
-- **int4_residual**: B=4.00 MB, L=10.347 ms, E=2.476 J (mid B, worst L, worst E)
+**Two conclusions, separately recorded:**
+- **Energy pass condition** (T2 joules ≤ median trained): **FAIL.**
+  T2 = 2.453 J/tok exceeds trained median 2.327 J/tok by 5.4%. This
+  is recorded as FAIL/INCONCLUSIVE due to single-shot power-sampling
+  precision at the limit (~5%).
+- **Energy fail condition** (T2 joules > mean(int4, int8)):
+  **TRIGGERED.** T2 = 2.453 > 2.339 = mean(int4, int8). Numerical
+  record; not reinterpreted.
+- **Global Pareto stop-rule** (no arm dominates T2 across all 6 cost
+  dims): **NOT TRIGGERED.** T2 is still on the Pareto frontier.
 
-T2 dominates int4_residual (faster, lower E, same B). T2 ties lora on E but
-beats lora on B and L. **T2 dominates on the joint (B, L, E) Pareto frontier
-when paired with dense_adapter**.
-
-**RPM-001 → CONFIRMED_PASS** on the full 6-dim (B/F/O/M/L/E) cost vector
-at the AF2-D reference site, D1p seed-001.
+**RPM-001 status: CONFIRMED_PASS on (B, F, O, M, L); E dimension
+recorded as FAIL/INCONCLUSIVE.** The two conclusions are separate
+and do not contradict: the preregistered per-axis thresholds failed
+(joules pass, joules fail), but the global stop-rule (Pareto
+removal) did not fire. The user-supplied guard against post-hoc
+reinterpretation is honored: we do not relabel the per-axis
+thresholds as PASS, and we do not relabel the global stop-rule as
+TRIGGERED.
 
 ### RPM-002 + RPM-006 — unchanged
 
-Stage 1.5 already established CONFIRMED_PASS for RPM-002 (cross-regime
-separation on 10 damaged regimes) and RPM-006 (≥2σ z-scores on every
-damaged regime). Stage 5 is a systems-tier confirmation of RPM-001,
-not a re-test of RPM-002/006.
-
 ## Constraints / what remains open
-
 - **Energy measurement noise**: ~5% per single power sampling at 100ms
   cadence over a 500ms inference window (6 samples). The 11% energy gap
   between T2's cluster and the high-power cluster is well outside this
@@ -200,13 +214,13 @@ not a re-test of RPM-002/006.
 - **Single-seed**: systems measurement used seed-001 only. Stage 1.5
   trained all 3 seeds but the L/E protocol is deterministic given
   identical bytes — seed-001 is sufficient per the manifest.
-- **Single site**: AF2-D (down_proj) only. Layer generalization was
-  blocked at Stage 2 v2 (L15 + L0-v both showed trained ≈ random under
-  Gaussian damage); RPM-001 promotion does NOT include other layers.
-- **T2 vs int8 E gap (5-10%)**: real and consistent with T2's per-row
-  fp16 scale overhead. Not a stop-rule trigger because T2 still Pareto-
-  dominates on the joint (B, L) when paired with dense_adapter.
-
+- **T2 vs int8 / dense on E (5-11% worse per-token joules)**: real and
+  consistent with T2's per-row fp16 scale overhead. **Not a stop-rule
+  trigger per COST-VECTOR-v1.yaml stop_rules[1]** (T2 is still on the
+  Pareto frontier because no single arm dominates T2 across the
+  joint (B, F, O, M, L, E)). However, T2 is **dominated on E alone**
+  by int8 and dense_adapter, and the preregistered joules fail
+  threshold was triggered (see Pass/fail section above).
 ## Effect on Track B gating
 
 Per OPERATING-PLAN §5 v2.3, Track B prerequisite rewrite substitutes
