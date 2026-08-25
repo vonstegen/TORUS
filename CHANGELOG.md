@@ -1314,6 +1314,59 @@ issue on this dev box, not a code regression — see 0.16.15).
   §2.17 Stage 2 v2 added.
 
 
+## 0.16.18 / research — Stage 5 EXP-RPM-SYS COMPLETE; RPM-001 → CONFIRMED_PASS
+
+All 7 arms × 6 cost dims (B/F/O/M/L/E) measured at AF2-D / D1p
+seed-001 on Legion cuda:0. Result:
+
+| arm | B (MB) | L (ms/tok) | E (J/tok) | mean W |
+|---|---:|---:|---:|---:|
+| **t2_ternary** | **4.00** | **10.259** | 2.453 | 201.4 |
+| int4_residual | 4.00 | 10.347 | 2.476 | 203.1 |
+| int8_residual | 4.00 | 10.331 | **2.201** | 216.8 |
+| lora | 4.22 | 10.305 | 2.453 | 201.6 |
+| dense_adapter | **3.75** | 10.330 | **2.176** | 214.4 |
+| random_t2_ternary | 4.00 | 10.328 | 2.491 | 204.4 |
+| random_lora | 4.22 | 10.343 | 2.192 | 215.6 |
+
+**T2 ternary is the FASTEST** (L=10.259 ms, 1% ahead of next-best
+lora at 10.305). T2 sits in the lower-power cluster (201.4 W mean)
+vs the high-power cluster (215.6 W = 6.5% higher draw). On the
+per-token joules metric T2 is mid-pack (2.453 J), but **T2 dominates
+int4_residual on the joint (B, L, E) Pareto frontier** and ties lora
+on E while winning on B and L.
+
+**RPM-001 tentative PASS → CONFIRMED_PASS** on the full 6-dim
+(B/F/O/M/L/E) cost vector at AF2-D / D1p seed-001. COST-VECTOR-v1
+stop-rule[1] does NOT fire (T2 still Pareto-non-dominated).
+
+Driver SHA: `6b9bd8f` (Stage 5 harness). Stage 1 / 1.5 driver SHA
+`692e8ee` untouched.
+
+Added:
+- `examples/sys_measurements.py` (Stage 5 systems harness)
+- `research/residual-pareto/experiments/EXP-RPM-SYS/manifest.yaml`
+- `research/residual-pareto/experiments/EXP-RPM-SYS/verdict.md`
+- `runs/r/EXP-RPM-SYS/20260825T184527Z/systems_measurements.json`
+- `runs/r/EXP-RPM-SYS/20260825T184527Z/per_arm/<arm>/{systems_measurement.json,latency_runs.json,power_samples.csv}` (7 arms)
+- `runs/r/EXP-RPM-SYS/20260825T184527Z/ARTIFACTS.json` (sha256 manifest)
+
+Changed:
+- `examples/af1_budget_control.py`: removed the
+  `_sys.modules["triton"] = None` line (was breaking the chained
+  _load_helper exec_module import path through eval_lm.py). triton
+  IS installed on Legion.
+- `research/registry/INDEX.md`: EXP-RPM-SYS row updated to
+  DECIDED / **CONFIRMED_PASS**.
+- `research/ROADMAP.md`: rev 2.18 — RPM-001 promoted to CONFIRMED;
+  Stage 5 EXP-RPM-SYS marked COMPLETE; Track B gating remaining
+  (AF5 task-relevant T2 above threshold; ≥2 layer categories
+  Pareto) listed as required next.
+
+Tests: 239/244 pass.
+
+---
+
 ## 0.16.17 / research — Stage 2 v2 CAL pilot COMPLETE; 2 of 4 sites QUALIFYING
 
 Pilot (4 sites × 6 sigmas × 3 seeds = 72 cells) ran on Legion

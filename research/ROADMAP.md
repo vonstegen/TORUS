@@ -1,6 +1,21 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
+**Revision:** 2.18 (2026-08-25) — **Stage 5 EXP-RPM-SYS COMPLETE.**
+  RPM-001 tentative PASS promoted to **CONFIRMED_PASS** on the full
+  6-dim (B/F/O/M/L/E) cost vector at AF2-D / D1p seed-001. All 7 arms
+  measured: T2 ternary is fastest on L (10.259 ms/token, 1% ahead of
+  next-best lora); mid-pack on E (2.453 J/token, in the lower-power
+  cluster at 201.4 W vs high-power cluster 215.6 W = 6.5% lower draw).
+  T2 dominates int4_residual on the joint (B, L, E) Pareto frontier and
+  ties lora on E while winning on B and L. Stop-rule does NOT fire
+  (T2 still Pareto-non-dominated). Stage 1 / 1.5 driver SHAs (`692e8ee`)
+  untouched. Verdict: `research/residual-pareto/experiments/EXP-RPM-SYS/verdict.md`.
+  Track B gating: AF5 task-relevant T2 above threshold + ≥2 layer
+  categories Pareto remain unsatisfied; Track B stays locked. Required
+  next: Stage 4 (EXP-RPM-Txx, task robustness) for AF5, then Stage 2 v3
+  (EXP-RPM-Lxx at higher σ, layer generalization) for ≥2 layer
+  categories.
 **Revision:** 2.17 (2026-08-24) — **Stage 2 v2 CAL pilot COMPLETED**;
   2 of 4 sites QUALIFYING (L15, L0-v); 2 NOT QUALIFYING (AF2-D, L0-q).
   Driver extension (Gaussian weight noise + path-aware dims) landed

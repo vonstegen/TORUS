@@ -44,6 +44,7 @@ import statistics
 import subprocess
 import threading
 import time
+from contextlib import contextmanager
 from pathlib import Path
 
 import numpy as np
@@ -124,41 +125,41 @@ def patch_intN_residual(model, target_module: str, npz_path: Path,
     scale = torch.from_numpy(d["scale"]).to(
         device=next(model.parameters()).device, dtype=torch.float16)
     if N_bits <= 4:
-        packed = d["packed"]
+        packed = d["packed"].ravel()  # flatten to 1D
         ub_masked = np.zeros(packed.size * 2, dtype=np.uint8)
         ub_masked[0::2] = packed & 0xF
         ub_masked[1::2] = (packed >> 4) & 0xF
     else:
-        ub_masked = d["codes"]
+        ub_masked = d["codes"].ravel()
 
-    n_total = scale.shape[0]
-    in_features = ub_masked.size // n_total
-    out_features = n_total
+    # ub_masked has shape (kept_count, in_features); scale has (kept_count, 1).
+    # We need the full parent out_features (which is 2048 for AF2-D down_proj).
+    kept_count = scale.shape[0]  # = packed_cols for AF2-D
+    in_features = ub_masked.size // kept_count  # 8192 for AF2-D down_proj
+    # out_features comes from the meta or hardcoded; we use the module's actual
+    parent = navigate_to_module(model, target_module)
+    out_features = parent.out_features  # 2048 for AF2-D down_proj
     levels = (1 << (N_bits - 1)) - 1
-    step = 1.0 / levels
 
-    # Reconstruct full out x in tensor (zero where mask=False).
-    full = torch.zeros(out_features, in_features, device=scale.device,
-                       dtype=torch.float16)
-    q_int = torch.from_numpy(ub_masked.astype(np.int64)).to(
-        device=scale.device, dtype=torch.float16)
-    q_int_centered = q_int - levels  # back to [-levels, +levels]
-    q_real = q_int_centered * (scale / levels)  # (n_total, 1) * (n_total, 1) -> broadcast
-    # Place into the first `n_total` rows (the kept columns).
-    # Actually, looking at serialize, ub_masked has size (n_total * in_features)
-    # which equals kept_count * in_features; scale is (kept_count, 1).
-    # Reshape q_real to (kept_count, in_features), then place into full[:kept_count, :].
-    kept_count = n_total // in_features if (n_total * in_features) > 0 else 0
-    # Actually: n_total = scale.shape[0] = kept_count; in_features = ub_masked.size // kept_count
-    in_features = ub_masked.size // n_total
-    kept_count = n_total
-    q_real_2d = q_real.reshape(kept_count, in_features)
+    # Reshape ub_masked (1D, kept_count * in_features) back to 2D
+    # (kept_count, in_features); the int levels live in [0, 2*N_bits-1]
+    # and need to be re-centered to [-levels, +levels] before scaling.
+    ub_2d = ub_masked.reshape(kept_count, in_features)
+    q_int = torch.from_numpy(ub_2d.astype(np.int64)).to(
+        device=next(model.parameters()).device, dtype=torch.float16)
+    q_int_centered = q_int - levels  # (kept_count, in_features)
+    # scale: (kept_count, 1); broadcast over (kept_count, in_features)
+    q_real_2d = q_int_centered * (scale / levels)  # (kept_count, in_features)
+
+    # Full (out_features, in_features) with zeros for the masked rows.
+    full = torch.zeros(out_features, in_features,
+                       device=q_real_2d.device, dtype=torch.float16)
     full[:kept_count, :] = q_real_2d
-    # Keep mask: only first `kept_count` rows are nonzero.
-    keep_mask = torch.zeros(out_features, dtype=torch.bool, device=scale.device)
+    keep_mask = torch.zeros(out_features, dtype=torch.bool,
+                             device=q_real_2d.device)
     keep_mask[:kept_count] = True
 
-    parent = navigate_to_module(model, target_module)
+    # parent is already bound above
 
     def residual(x):
         masked = full * keep_mask.unsqueeze(1).to(full.dtype)
@@ -244,12 +245,17 @@ def build_patched_model(model_name: str, arm: str, npz_path: str,
     return model, tokenizer
 
 
+@contextmanager
 def power_sampler(device: int, csv_path: Path, stop_flag: list):
-    """Sample nvidia-smi power.draw at POWER_SAMPLE_HZ; write CSV."""
+    """Sample nvidia-smi power.draw at POWER_SAMPLE_HZ; write CSV.
+
+    Use --loop-ms=<interval> to make nvidia-smi poll continuously instead
+    of returning a single line and exiting."""
     proc = subprocess.Popen(
         ["nvidia-smi", "--query-gpu=power.draw",
          "--format=csv,noheader,nounits",
-         f"--id={device}"],
+         f"--id={device}",
+         f"--loop-ms={int(1000 / POWER_SAMPLE_HZ)}"],
         stdout=subprocess.PIPE, text=True, bufsize=1,
     )
     samples = []
