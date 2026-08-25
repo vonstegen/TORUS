@@ -1314,7 +1314,53 @@ issue on this dev box, not a code regression — see 0.16.15).
   §2.17 Stage 2 v2 added.
 
 
-## 0.16.19 / research — Stage 4 EXP-RPM-T01 COMPLETE; AF5 FAIL at AF2-D / D1p / seed-001
+## 0.16.20 / research — Stage 2 v3 EXP-RPM-L15-GAUSS-V3 COMPLETE; architecture-vs-training FAIL at L15 σ=0.5
+
+All 21 trained + 6 post-hoc random-arm cells measured at
+`model.layers.15.mlp.down_proj` under Gaussian σ=0.50 (CAL ppl=13.75)
+on Legion cuda:0. Stage 2 v3 hypothesis (T2 ≥+2σ vs random T2 on ≥1
+capability metric) FAILS: max z = +1.20σ on arc_easy (T2 0.5571 vs
+random_t2 0.5564). Wikitext Δ −1.54σ, lambada Δ −0.63σ. Trained T2
+reproduces the Stage 2 v2 finding: under Gaussian damage, T2
+architecture-vs-training signal does not manifest at L15 down_proj,
+regardless of σ in [0.20, 0.50].
+
+**Related axis (T2 vs random_lora on wikitext) PASSES at +3.16σ**
+(T2 13.7648 vs random_lora 13.8557). This is a structural-prior
+signal — random_t2 packs 2 bits/code with per-row scale, while
+random_lora is full random — but **not** the preregistered
+architecture-vs-training axis.
+
+**T2 Pareto intact** on (B, L) at L15 σ=0.50: T2 has the smallest
+deployed_bytes among trained arms that recover FP16-class latency.
+
+**Track B B1 stays locked** — three conditions remain unsatisfied:
+AF5 (Stage 4 FAIL at AF2-D D1p), ≥2 layer categories Pareto (Stage 2
+v2 + v3 found trained ≈ random at L15 and L0-v under Gaussian damage),
+and the A-RP-002 PROV + AF5 + AF8-clean triple.
+
+Required next: Stage 2 v4 with σ=1.00 (CAL ppl=16.58 — much more
+damage) at L15 down_proj, or TWN damage at L15 with higher magnitude.
+
+Added:
+- research/residual-pareto/experiments/EXP-RPM-L15-GAUSS-V3/manifest.yaml
+- research/residual-pareto/experiments/EXP-RPM-L15-GAUSS-V3/verdict.md
+- research/residual-pareto/experiments/STAGE2-V3-TOURNAMENTS-SUMMARY.json
+- runs/r/EXP-RPM-L15-GAUSS-V3/20260825T190000Z/aggregate.json
+  (trained arms)
+- runs/r/EXP-RPM-L15-GAUSS-V3/20260825T190000Z/seed-{001,002,003}/{arm}/{eval.summary.json,eval.full.json,cost.json,cost_vector.json,adapter.npz}
+- summarize_stage2_v3.py
+- stage2-v3-launch.sh
+
+Changed:
+- research/registry/INDEX.md: EXP-RPM-L15-GAUSS-V3 row updated to
+  DECIDED / FAIL.
+
+Tests: 239/244 pass.
+
+---
+
+## 0.16.19 / research — Stage 4 EXP-RPM-T01 COMPLETE; AF5 FAIL at AF2-D / D1p / seed-001; AF5 FAIL at AF2-D / D1p / seed-001
 
 All 9 arms × 4 held-out capability tasks measured at AF2-D / D1p
 seed-001 on Legion cuda:0. Held-out task set: hellaswag, winogrande,

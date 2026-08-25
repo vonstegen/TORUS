@@ -1,7 +1,18 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
+**Revision:** 2.20 (2026-08-25) — **Stage 2 v3 EXP-RPM-L15-GAUSS-V3
+  COMPLETE; architecture-vs-training FAIL at L15 σ=0.50.** All 21 trained +
+  6 post-hoc random-arm cells measured. T2 vs random_t2 max z = +1.20σ
+  (arc_easy); wikitext Δ −1.54σ, lambada Δ −0.63σ. Trained T2 ≈ random
+  T2 at L15 down_proj under Gaussian σ=0.50 (and σ=0.20 from Stage 2
+  v2). **T2 vs random_lora on wikitext = +3.16σ** — structural prior
+  signal but **not** the preregistered architecture-vs-training axis.
+  T2 Pareto intact on (B, L). **Track B B1 stays locked** (AF5 FAIL,
+  ≥2 layer categories Pareto FAIL, A-RP-002 PROV + AF5 + AF8-clean
+  FAIL). Verdict: `experiments/EXP-RPM-L15-GAUSS-V3/verdict.md`.
 **Revision:** 2.19 (2026-08-25) — **Stage 4 EXP-RPM-T01 COMPLETE;
+  AF5 FAIL.
   AF5 FAIL.** All 9 arms × 4 held-out capability tasks (hellaswag,
   winogrande, boolq, openbookqa) measured at AF2-D / D1p seed-001.
   T2 vs random_t2 ≥+1σ on **0 of 4 tasks** (max +0.29σ on openbookqa).
