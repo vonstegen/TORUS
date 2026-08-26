@@ -1,0 +1,31 @@
+id: A-RP-LRN
+claim_version: 1
+track: A
+title: "Learning Adds Value Beyond Ternary Structural Prior"
+statement: "Training the T2 ternary correction adds capability beyond what a random (untrained) T2 ternary correction provides at the same structural budget, on a damaged base."
+quantitative_thresholds:
+  - "PASS: trained T2 beats random T2 by >=2 standard errors on at least two capability metrics across n=3 seeds, with no >=2 sigma regression on any other primary metric, at a specific site/damage regime. The boundary band is the contiguous range of damage severity satisfying this criterion."
+  - "REGIME_CONDITIONAL: PASS at one or more site/damage regimes AND FAIL or NULL at one or more other tested regimes."
+  - "FAIL: across all tested regimes, trained T2 is within +/-1 sigma of random T2 on every capability metric, OR trained T2 is strictly dominated by random T2 on any capability metric."
+date_registered: "2026-08-25"
+state: REGIME_CONDITIONAL
+required_evidence: [EXP-AF-002-D (AF2-D TWN), Stage 2 v2/v3/v4 (L15 Gaussian), Stage 4 EXP-RPM-T01 (AF2-D D1p held-out), EXP-RPM-AF2D-SEVERITY (pending)]
+supporting_experiments:
+  - id: EXP-AF-002-D
+    decision: PASS (LRN axis)
+    effect: "Damaged-PTQ-start matched-storage tournament at AF2-D layer (TWN damage, threshold=0.7, n=3 seeds). Trained t2_ternary vs random_t2_ternary = -226.87 sigma (wikitext ppl, trained better), +25.08 sigma (arc_easy, trained better), +116.83 sigma (lambada_openai, trained better). Strong positive LRN signal at AF2-D TWN damage."
+  - id: Stage 2 v2 (EXP-RPM-L15-GAUSS) and Stage 2 v3 (EXP-RPM-L15-GAUSS-V3)
+    decision: NULL (LRN axis)
+    effect: "L15 down_proj under Gaussian sigma=0.20 (Stage 2 v2) and sigma=0.50 (Stage 2 v3): trained T2 ~ random T2 on every capability metric (max z +1.20 sigma on arc_easy at sigma=0.50). LRN fails to manifest at these damage levels."
+  - id: Stage 2 v4 (EXP-RPM-L15-GAUSS-V4)
+    decision: FAIL (LRN axis)
+    effect: "L15 down_proj under Gaussian sigma=1.00 (n=3 seeds). Trained T2 LOSES to random T2 on arc_easy (-2.15 sigma) and lambada_openai (-2.26 sigma), with only wikitext within noise. The LRN fail threshold (T2 << random T2 on >=2 of 3 metrics) is triggered. LRN inverts at high Gaussian damage."
+  - id: Stage 4 EXP-RPM-T01
+    decision: NULL (LRN axis on held-out tasks)
+    effect: "AF2-D / D1p held-out capability tasks (hellaswag, winogrande, boolq, openbookqa): trained T2 vs random T2 max z +0.29 sigma on openbookqa. LRN fails to manifest on held-out tasks even at the AF2-D site where it was positive on the in-distribution calibration tasks."
+unlock_rules_affected: ["Track B oracle gating (B1) — REPLACES A-RP-002 as the gate dependency for learned adaptive precision"]
+history:
+  - date: "2026-08-25"
+    transition: "-> REGIME_CONDITIONAL"
+    cause: "Decomposed from A-RP-002 per H-RPM-FRAMEWORK-PROPOSAL in response to evidence that LRN is positive at AF2-D TWN damage (Stage 1 / 1.5) but null or inverted at other tested sites (Stage 2 v2/v3/v4 L15 Gaussian; Stage 4 EXP-RPM-T01 held-out tasks). Track B gating now depends on LRN, not the composite A-RP-002. LRN operating band is currently bounded by the AF2-D TWN regime and is NOT yet mapped across damage severity. EXP-RPM-AF2D-SEVERITY (pending) is the next experiment to map the LRN boundary."
+conclusion: "The LRN axis is regime-conditional: strong positive at AF2-D TWN damage, null at AF2-D D1p held-out tasks, null at L15 Gaussian sigma=0.20-0.50, and inverted at L15 Gaussian sigma=1.00. The 'T2 works' framing is too coarse; the LRN operating envelope is bounded. Pending: damage-severity boundary sweep at AF2-D TWN to map the LRN-active region."

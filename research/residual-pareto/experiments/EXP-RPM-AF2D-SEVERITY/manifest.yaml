@@ -1,0 +1,213 @@
+id: EXP-RPM-AF2D-SEVERITY
+title: "Stage 2 v6 \u2014 AF2-D TWN damage-severity boundary sweep (LRN + TSP operating band)"
+track: A
+subtrack: Stage 2 v6 (TWN damage-severity boundary sweep at AF2-D)
+tier: discovery
+status: PROPOSED
+date_proposed: '2026-08-25T23:30:00Z'
+owner: research harness
+claims_addressed:
+  - A-RP-TSP
+  - A-RP-LRN
+rationale: >
+  Per H-RPM-FRAMEWORK-PROPOSAL (commit e1303b7), the A-RP-LRN claim is
+  REGIME_CONDITIONAL: positive at AF2-D TWN damage (Stage 1 / 1.5 z-scores
+  +19 to +262 sigma on arc_easy/lambada) but null or inverted elsewhere
+  (L15 Gaussian sigma=0.20/0.50/1.00). The boundary between LRN-active
+  and LRN-inactive regimes is currently unmapped. The Stage 2 v6
+  experiment sweeps damage severity at AF2-D TWN (the only site/regime
+  where LRN is positive) to characterize the LRN operating band as a
+  function of damage. The Stage 2 v2 CAL pilot established that
+  AF2-D TWN thresholds 0.6-1.0 produce 5 distinct ppl bands (88, 204,
+  303, 430, 697). Stage 2 v6 preregisters a sweep across these 5
+  thresholds with the full Stage 1 / 1.5 tournament protocol frozen.
+  The same experiment also characterizes the TSP axis (T2 vs
+  random_lora) at each damage level, since the two axes may turn on
+  at different damage levels.
+hypothesis: >
+  At AF2-D layer (model.layers.0.mlp.down_proj) under TWN damage, the
+  LRN axis (trained T2 vs random T2) and the TSP axis (T2 vs
+  random_lora) are bounded operating bands in damage severity. The
+  LRN operating band is the contiguous range of preregistered
+  thresholds for which trained T2 separates from random T2 by >=+2
+  sigma on >=2 capability metrics (wikitext, arc_easy, lambada_openai)
+  across n=3 seeds, with no >=2 sigma regression on the remaining
+  metric. The TSP operating band is defined analogously for T2 vs
+  random_lora. The two bands may overlap, may be nested, or may
+  differ.
+experiment_design:
+  frozen_axes:
+    site: model.layers.0.mlp.down_proj  # AF2-D reference; matches Stage 1 / 1.5
+    damage_recipe: TWN (sign-round + threshold-spike-to-zero)
+    group_size: 128                    # EXP-A-011 reference
+    calibrate_norm: false              # EXP-A-011 reference
+    damage_seed: 0                     # EXP-A-011 reference
+    architecture: unchanged from Stage 1 / 1.5 (T2 ternary packed format)
+    training_recipe:
+      n_steps: 500
+      batch_size: 4
+      seq_len: 128
+      lr: 1e-3
+      momentum: 0.9
+      grad_clip: 1.0
+    tasks: wikitext,arc_easy,lambada_openai
+    seeds: [1, 2, 3]
+    matched_storage_budget_bytes: 4194404
+  swept_axis:
+    damage_threshold: [0.6, 0.7, 0.8, 0.9, 1.0]
+    # Stage 2 v2 CAL pilot data (committed):
+    #   thr 0.6 -> ppl 697.29 (severe)
+    #   thr 0.7 -> ppl 429.55 (heavy, matches AF2-D reference)
+    #   thr 0.8 -> ppl 303.06 (moderate-heavy)
+    #   thr 0.9 -> ppl 203.60 (moderate)
+    #   thr 1.0 -> ppl 88.31 (light, near FP16 boundary)
+  arms_per_threshold:
+    - damaged_base       # pre-train eval only; no adapter training
+    - t2_ternary         # trained T2
+    - random_t2_ternary  # untrained T2 with fixed random seed
+    - random_lora        # untrained LoRA with fixed random seed
+    - lora               # trained LoRA at matched storage budget
+  cells:
+    - 5 thresholds x 5 arms x 3 seeds = 75 cells
+    - minus 1 arm (damaged_base has no training) x 5 thresholds x 3 seeds = 15 base-eval cells
+    - net 60 trained-arm cells + 15 base-eval cells = 75 total
+  protocol_per_cell:
+    damaged_base:
+      - apply TWN damage at preregistered threshold
+      - run pre-train eval (wikitext ppl only; arc_easy and lambada are
+        implicit in capability metrics once an adapter is patched)
+      - 3 seeds x 5 thresholds = 15 cells
+    trained_arm (4 trained: t2_ternary, lora):
+      - apply TWN damage at preregistered threshold
+      - train adapter 500 steps with recipe above
+      - run lm-eval-harness on (wikitext, arc_easy, lambada_openai)
+      - 3 seeds x 5 thresholds = 30 cells
+    random_arm (2 random: random_t2_ternary, random_lora):
+      - Stage 2 v2/v3/v4 protocol: skip lm-eval-harness during
+        tournament (driver skips untrained arms); post-hoc eval via
+        examples/eval_untrained_arms_v2.py
+      - 3 seeds x 5 thresholds = 30 cells (split 15 tournament +
+        15 post-hoc)
+    cost: estimated ~5-6 hours wall time on Legion cuda:0
+boundary_criteria:
+  LRN_active:
+    definition: >
+      Damage severity D is in the LRN-active region iff trained T2
+      separates from random T2 by >=+2 standard errors on at least 2
+      of 3 capability metrics (wikitext, arc_easy, lambada_openai)
+      across 3 seeds, with no >=2 sigma regression on the remaining
+      metric. The ">=+2 sigma" comparison uses the pooled standard
+      error of the 6 per-seed values (3 trained + 3 random) and the
+      observed mean difference. "No regression" means the trained T2
+      mean is NOT more than 2 standard errors WORSE than random T2
+      on any single metric.
+    operating_band:
+      definition: >
+        The contiguous range of preregistered thresholds satisfying the
+        LRN_active criterion. The provisional band endpoints are the
+        lowest and highest preregistered thresholds in the band; if the
+        band is non-contiguous, it is reported as a disjoint union.
+      confirmation:
+        - Perform one clean reproduction at an interior threshold of
+          the LRN operating band.
+        - Perform one clean reproduction at a threshold immediately
+          outside the band (one step lower or higher).
+        - If the interior reproduces and the boundary reproduces the
+          expected FAIL, the band is CONFIRMED. If the boundary
+          reverses, the band is REFINED.
+  TSP_active:
+    definition: >
+      Analogous to LRN_active but for T2 vs random_lora. Same metric
+      and sigma criteria. The TSP band may differ from the LRN band.
+  failure_modes:
+    LRN_zero_band:
+      description: No threshold satisfies LRN_active.
+      implication: The Stage 1 / 1.5 finding (LRN positive at AF2-D TWN)
+        was an artifact of threshold=0.7 specifically and does not
+        generalize across damage severity. A-RP-LRN transitions to
+        FAIL or remains REGIME_CONDITIONAL with reduced scope.
+    TSP_zero_band:
+      description: No threshold satisfies TSP_active.
+      implication: The TSP axis (T2 vs random_lora) does not manifest
+        at AF2-D TWN either, despite Stage 1 / 1.5 evidence. A-RP-TSP
+        transitions to FAIL or stays PROVISIONAL_PASS with reduced
+        scope.
+    continuous_band:
+      description: LRN_active satisfied at all 5 thresholds (including
+        threshold=1.0 where damage is light and CAL ppl=88).
+      implication: LRN is robust across damage severity at AF2-D. This
+        would be the strongest possible LRN support. Report band as
+        full preregistered range.
+experiment:
+  model: allenai/OLMo-1B-0724-hf
+  target_module: model.layers.0.mlp.down_proj
+  arms:
+    - damaged_base
+    - t2_ternary
+    - random_t2_ternary
+    - random_lora
+    - lora
+  seeds:
+    - 1
+    - 2
+    - 3
+  n_steps: 500
+  batch_size: 4
+  seq_len: 128
+  lr: 0.001
+  momentum: 0.9
+  grad_clip: 1.0
+  tasks: wikitext,arc_easy,lambada_openai
+  damage_ptq: true
+  damage_threshold: 0.7
+  damage_group_size: 128
+  calibrate_norm: false
+  pre_train_eval: true
+kill_criteria: >
+  Any cell whose matched-bytes test fails (deviation > +/-1% from the
+  4.19 MB preregistered storage budget) is INVALID; the run reruns
+  cleanly.
+expected_artifacts:
+  - "runs/r/EXP-RPM-AF2D-SEVERITY/{timestamp}/threshold-{thr}/seed-{n}/{arm}/{eval.summary.json,eval.full.json,adapter.npz,cost.json,cost_vector.json}"
+  - "runs/r/EXP-RPM-AF2D-SEVERITY/{timestamp}/threshold-{thr}/seed-{n}/{arm}/pre_train_eval.json (damaged_base only)"
+  - "runs/r/EXP-RPM-AF2D-SEVERITY/{timestamp}/aggregate.json"
+  - "runs/r/EXP-RPM-AF2D-SEVERITY/{timestamp}/ARTIFACTS.json"
+  - "research/residual-pareto/experiments/STAGE2-V6-AF2D-SEVERITY-SUMMARY.json"
+  - "research/residual-pareto/experiments/EXP-RPM-AF2D-SEVERITY/verdict.md"
+artifact_paths: []
+freeze_exception:
+  scope: experiments/EXP-RPM-AF2D-SEVERITY only
+  driver_sha_before: '34aa581'
+  driver_sha_after: '34aa581'
+  rationale: 'No driver changes required. Stage 1 / 1.5 / Stage 2 v2 driver already supports --damage-ptq with --damage-threshold and the full training recipe. Only the per-threshold launch orchestration needs a custom launcher.'
+  approved_by: 'OPERATING-PLAN \u00a76 v2.3; existing CLI surface covers this scope'
+supersedes:
+  - Stage 2 v3 (L15 sigma=0.5)  # superseded for layer; AF2-D is now the focus
+  - Stage 2 v4 (L15 sigma=1.0)
+next_permitted_experiment: >
+  If LRN_active and TSP_active bands are characterized with at least
+  one interior point and one boundary point confirmed:
+    - Update A-RP-TSP and A-RP-LRN with the operating-band evidence.
+    - The next Track-B-relevant question is whether the operating
+      band can be predicted from observable damage proxies (per
+      user recommendation).
+  If LRN_active is empty:
+    - A-RP-LRN transitions to FAIL or remains REGIME_CONDITIONAL
+      with the AF2-D TWN threshold=0.7 finding as the only positive
+      point.
+    - Track B adaptive precision remains locked (it cannot be
+      gated on a single threshold).
+blocking: []
+falsification_targets:
+  - A-RP-TSP: the TSP operating band at AF2-D TWN (T2 vs random_lora
+    separation by >=+2 sigma on >=2 metrics across 3 seeds).
+  - A-RP-LRN: the LRN operating band at AF2-D TWN (trained T2 vs
+    random T2 separation by >=+2 sigma on >=2 metrics across 3
+    seeds, with no >=2 sigma regression on the remaining metric).
+provenance:
+  git_sha: 'e1303b7'
+  driver_sha: '34aa581'
+  model: 'allenai/OLMo-1B-0724-hf'
+  eval_dtype: 'float16'
+  freeze_state: ACTIVE
+  freeze_exception_justification: 'No driver changes required for Stage 2 v6.'

@@ -1,0 +1,28 @@
+id: A-RP-TSP
+claim_version: 1
+track: A
+title: "Ternary Structural Prior"
+statement: "The T2 ternary correction structure (2-bit packed codes + per-row fp16 scale) is a useful structural prior that captures information an equal-budget non-ternary or random structural correction does not, on a damaged base."
+quantitative_thresholds:
+  - "PASS: trained-or-random T2 beats an equal-budget non-ternary random control (random_lora) by >=2 standard errors on at least one capability metric across n=3 seeds at a specific site/damage regime, with no regression beyond 1 standard error on the others."
+  - "PROVISIONAL_PASS: positive signals across multiple regimes but no single regime has been reproduced cleanly under AF8 governance yet."
+  - "FAIL: across all tested regimes, equal-budget non-ternary random controls (random_lora) are within +/-1 sigma of T2 on every capability metric, OR T2 is strictly dominated by an equal-budget non-ternary random control on any capability metric."
+date_registered: "2026-08-25"
+state: PROVISIONAL_PASS
+required_evidence: [EXP-AF-002-D (reproduced), Stage 2 v3 (L15 sigma=0.5), Stage 2 v4 (L15 sigma=1.0)]
+supporting_experiments:
+  - id: EXP-AF-002-D
+    decision: PASS_PLUS
+    effect: "Damaged-PTQ-start matched-storage tournament at AF2-D layer (TWN damage, threshold=0.7, n=3 seeds). T2 (4.2 MB) vs random_lora (4.4 MB): T2 wins on every capability metric at z-scores >=+25 sigma (Stage 1.5 verdict). The T2 structural prior beats random LoRA structure decisively on the damaged base. Supports TSP under AF2-D TWN damage."
+  - id: Stage 2 v3 (EXP-RPM-L15-GAUSS-V3)
+    decision: PASS (TSP axis)
+    effect: "L15 down_proj under Gaussian sigma=0.5 (n=3 seeds). T2 vs random_lora on wikitext +3.16 sigma; T2 wins the structural-prior comparison despite the architecture-vs-training axis (T2 vs random_t2) showing no separation. Supports TSP under L15 Gaussian damage."
+  - id: Stage 2 v4 (EXP-RPM-L15-GAUSS-V4)
+    decision: PASS (TSP axis)
+    effect: "L15 down_proj under Gaussian sigma=1.0 (n=3 seeds). T2 vs random_lora on wikitext +3.15 sigma and on lambada_openai +2.87 sigma (T2 wins on 2 of 3 capability metrics at >=+2 sigma). Supports TSP under L15 Gaussian damage even when LRN (training) fails."
+unlock_rules_affected: []
+history:
+  - date: "2026-08-25"
+    transition: "-> PROVISIONAL_PASS"
+    cause: "Decomposed from A-RP-002 per H-RPM-FRAMEWORK-PROPOSAL. Evidence accumulated across AF2-D TWN damage (EXP-AF-002-D PASS+) and L15 Gaussian damage (Stage 2 v3 + v4, T2 beats random_lora on 2-3 capability metrics per regime). REPRODUCTION_REQUIRED for full PASS: a single AF8-governed reproduction at AF2-D TWN damage, plus a damage-severity boundary sweep at AF2-D TWN to characterize the TSP operating envelope."
+conclusion: "The T2 ternary structural prior is promising as a useful prior across multiple damage regimes. Distinguish from the LRN axis (training adds value beyond the prior) which is separately tracked in A-RP-LRN."

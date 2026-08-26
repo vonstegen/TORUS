@@ -504,12 +504,19 @@ advantage (per RPM proposal §13). The current state:
 
 **Unlock rules (enforced, not scheduled):**
 
-- **B1 oracle gating:** requires A-RP-001 `CONFIRMED_PASS`, A-RP-002 at least
-  provisionally supported, AF5 task-relevant T2 value above threshold (G2→3).
+- **B1 oracle gating:** requires A-RP-001 `CONFIRMED_PASS`, **A-RP-LRN**
+  at least provisionally supported (REGIME_CONDITIONAL is insufficient —
+  the LRN operating band must be characterized for the site/damage in
+  question), AF5 task-relevant T2 value above threshold (G2→3). The
+  original dependency on A-RP-002 (composite) was superseded 2026-08-25
+  per H-RPM-FRAMEWORK-PROPOSAL.md: A-RP-TSP (ternary structural prior)
+  supports studying ternary structure, but only A-RP-LRN (training adds
+  value beyond the structural prior) justifies a gate whose purpose is
+  to decide when a *trained correction* should execute. Adaptive
+  precision gating is conditioned on P(trained T2 helps | regime) =
+  positive in identifiable regimes.
 - **B3 OLMoE:** additionally requires dense-model oracle gating to show
   useful savings and T1/T2 to have survived falsification (G2→3 + CP4.1).
-
-### Checklist
 
 - [ ] **4.1** `EXP-B-01x` — **B1 oracle gating (task-aware).** Per candidate
       token/layer/expert, T1 vs. T1+T2 against a task-relevant loss/output;
