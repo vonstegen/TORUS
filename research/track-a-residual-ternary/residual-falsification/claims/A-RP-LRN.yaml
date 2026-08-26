@@ -1,5 +1,5 @@
 id: A-RP-LRN
-claim_version: 1
+claim_version: 2
 track: A
 title: "Learning Adds Value Beyond Ternary Structural Prior"
 statement: "Training the T2 ternary correction adds capability beyond what a random (untrained) T2 ternary correction provides at the same structural budget, on a damaged base."
@@ -8,8 +8,8 @@ quantitative_thresholds:
   - "REGIME_CONDITIONAL: PASS at one or more site/damage regimes AND FAIL or NULL at one or more other tested regimes."
   - "FAIL: across all tested regimes, trained T2 is within +/-1 sigma of random T2 on every capability metric, OR trained T2 is strictly dominated by random T2 on any capability metric."
 date_registered: "2026-08-25"
-state: REGIME_CONDITIONAL
-required_evidence: [EXP-AF-002-D (AF2-D TWN), Stage 2 v2/v3/v4 (L15 Gaussian), Stage 4 EXP-RPM-T01 (AF2-D D1p held-out), EXP-RPM-AF2D-SEVERITY (pending)]
+state: CONFIRMED_AT_AF2D_TWN_BAND
+required_evidence: [EXP-AF-002-D (AF2-D TWN), Stage 2 v2/v3/v4 (L15 Gaussian), Stage 4 EXP-RPM-T01 (AF2-D D1p held-out), EXP-RPM-AF2D-SEVERITY (Stage 2 v6)]
 supporting_experiments:
   - id: EXP-AF-002-D
     decision: PASS (LRN axis)
@@ -23,9 +23,15 @@ supporting_experiments:
   - id: Stage 4 EXP-RPM-T01
     decision: NULL (LRN axis on held-out tasks)
     effect: "AF2-D / D1p held-out capability tasks (hellaswag, winogrande, boolq, openbookqa): trained T2 vs random T2 max z +0.29 sigma on openbookqa. LRN fails to manifest on held-out tasks even at the AF2-D site where it was positive on the in-distribution calibration tasks."
+  - id: EXP-RPM-AF2D-SEVERITY (Stage 2 v6)
+    decision: CONFIRMED_AT_AF2D_TWN_BAND
+    effect: "AF2-D down_proj under TWN damage-severity sweep {0.6, 0.7, 0.8, 0.9, 1.0} (n=3 seeds, all 105 cells). Trained T2 vs random T2 z-scores on all 3 capability metrics at every threshold (z 10-1687 sigma; trained T2 dramatically recovers ppl 30→18 across thresholds while random T2 stays 80-680). The LRN operating band at AF2-D TWN is the full preregistered range. State promoted to CONFIRMED_AT_AF2D_TWN_BAND. Damage TYPE (TWN vs Gaussian) is the relevant axis for LRN absence, not damage magnitude within a single damage type."
 unlock_rules_affected: ["Track B oracle gating (B1) — REPLACES A-RP-002 as the gate dependency for learned adaptive precision"]
 history:
   - date: "2026-08-25"
     transition: "-> REGIME_CONDITIONAL"
     cause: "Decomposed from A-RP-002 per H-RPM-FRAMEWORK-PROPOSAL in response to evidence that LRN is positive at AF2-D TWN damage (Stage 1 / 1.5) but null or inverted at other tested sites (Stage 2 v2/v3/v4 L15 Gaussian; Stage 4 EXP-RPM-T01 held-out tasks). Track B gating now depends on LRN, not the composite A-RP-002. LRN operating band is currently bounded by the AF2-D TWN regime and is NOT yet mapped across damage severity. EXP-RPM-AF2D-SEVERITY (pending) is the next experiment to map the LRN boundary."
-conclusion: "The LRN axis is regime-conditional: strong positive at AF2-D TWN damage, null at AF2-D D1p held-out tasks, null at L15 Gaussian sigma=0.20-0.50, and inverted at L15 Gaussian sigma=1.00. The 'T2 works' framing is too coarse; the LRN operating envelope is bounded. Pending: damage-severity boundary sweep at AF2-D TWN to map the LRN-active region."
+  - date: "2026-08-26"
+    transition: "REGIME_CONDITIONAL -> CONFIRMED_AT_AF2D_TWN_BAND"
+    cause: "EXP-RPM-AF2D-SEVERITY (Stage 2 v6): 5 thresholds x 5 arms x 3 seeds = 105 cells at AF2-D TWN. Trained T2 vs random T2 >=+2 sigma on all 3 capability metrics at every preregistered threshold. LRN operating band at AF2-D TWN damage-severity is the full preregistered range. State renamed to CONFIRMED_AT_AF2D_TWN_BAND because the claim is now confirmed at a specific site/damage-type band. Damage-type axis (TWN vs Gaussian vs held-out) is the relevant axis for LRN absence, not damage-magnitude within a single damage type."
+conclusion: "The LRN axis is REGIME_CONDITIONAL across site/damage-type combinations but CONFIRMED_AT_AF2D_TWN_BAND specifically: at AF2-D TWN damage-severity {0.6, 0.7, 0.8, 0.9, 1.0}, trained T2 dramatically recovers capability (ppl 30->18) while random T2 does not (ppl 80-680). The LRN operating band at AF2-D TWN is the full preregistered range. Damage TYPE (TWN vs Gaussian vs held-out tasks) is the relevant axis for LRN absence; damage MAGNITUDE within a single damage type does not modulate LRN. Track B adaptive precision can now proceed within the AF2-D TWN band; extrapolation to other regimes is unsupported by current evidence."

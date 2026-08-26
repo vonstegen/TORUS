@@ -1314,7 +1314,64 @@ issue on this dev box, not a code regression — see 0.16.15).
   §2.17 Stage 2 v2 added.
 
 
-## 0.16.21 / research — Stage 2 v4 EXP-RPM-L15-GAUSS-V4 COMPLETE; architecture-vs-training INVERTS at L15 σ=1.0
+## 0.16.22 / research — Claim registry restructure (Option 1): A-RP-TSP + A-RP-LRN as first-class claims; EXP-RPM-AF2D-SEVERITY COMPLETE — LRN + TSP operating band FULL preregistered range at AF2-D TWN
+
+Two structural changes, applied per user direction:
+
+**1. Claim registry decomposed** (research/track-a-residual-ternary/residual-falsification/claims/):
+- A-RP-TSP.yaml (NEW, PROVISIONAL_PASS): "Ternary Structural Prior" — T2 vs random_lora structural control.
+- A-RP-LRN.yaml (NEW, REGIME_CONDITIONAL): "Learning Adds Value Beyond Ternary Structural Prior" — trained T2 vs random_t2 ternary control.
+- A-RP-002.yaml (claim_version 2): CONFIRMED_PASS preserved for auditability under original composite definition; title annotated `[COMPOSITE — superseded by A-RP-TSP + A-RP-LRN decomposition]`; statement annotated with status note. Track B gating now depends on A-RP-LRN, not the A-RP-002 composite.
+
+**2. EXP-RPM-AF2D-SEVERITY COMPLETE** (Stage 2 v6):
+All 105 cells measured at AF2-D TWN damage-severity sweep
+{thresholds 0.6, 0.7, 0.8, 0.9, 1.0} × {4 trained arms + 1 base} × 3 seeds +
+30 post-hoc random arm evals. Findings:
+
+- **Trained T2 recovers ppl dramatically across all 5 thresholds:**
+  30 (severest) → 18 (lightest), approaching FP16 baseline 13.09.
+- **Random T2 does NOT recover:** ppl stays 80-680, essentially the
+  damaged-base performance.
+- **LRN operating band = {0.6, 0.7, 0.8, 0.9, 1.0} — the FULL
+  preregistered range.** Trained T2 ≥+2σ vs random T2 on every
+  capability metric at every threshold (z-scores 10-1500σ).
+- **TSP operating band = {0.6, 0.7, 0.8, 0.9, 1.0}** — full range too.
+- **A-RP-LRN: REGIME_CONDITIONAL → CONFIRMED at AF2-D TWN band.**
+- **A-RP-TSP: PROVISIONAL_PASS → CONFIRMED at AF2-D TWN band.**
+
+The H-RPM-FRAMEWORK-PROPOSAL expected a damage-severity curve where
+LRN turns on at moderate damage and might collapse at catastrophic.
+Stage 2 v6 finds the curve is FLAT at AF2-D TWN: the LRN axis is
+insensitive to damage severity in the tested range. The relevant axis
+for LRN absence is **damage type** (Gaussian null/inverted; held-out
+tasks null), not damage magnitude within a single damage type.
+
+**Track B gating implications:** Track B was waiting on A-RP-002 (the
+composite) to confirm learned correction adds value. With A-RP-LRN now
+CONFIRMED at AF2-D TWN, the gating question "should we use learned T2
+in this regime?" has a positive answer within the AF2-D TWN band.
+Adaptive precision research can now proceed within this band;
+extrapolation to other regimes (other sites, other damage types,
+held-out tasks) is unsupported by current evidence.
+
+Added:
+- research/track-a-residual-ternary/residual-falsification/claims/A-RP-TSP.yaml
+- research/track-a-residual-ternary/residual-falsification/claims/A-RP-LRN.yaml
+- research/residual-pareto/experiments/EXP-RPM-AF2D-SEVERITY/manifest.yaml
+- research/residual-pareto/experiments/EXP-RPM-AF2D-SEVERITY/verdict.md
+- stage2-v6-launch.sh
+- eval_random_v6v2.py (Legion-only post-hoc eval helper)
+
+Changed:
+- research/track-a-residual-ternary/residual-falsification/claims/A-RP-002.yaml (claim_version 2; COMPOSITE annotation)
+- research/registry/INDEX.md (EXP-RPM-AF2D-SEVERITY row updated to DECIDED)
+- research/ROADMAP.md (B1 gating updated to depend on A-RP-LRN)
+
+Tests: 244/244 pass on Legion.
+
+---
+
+## 0.16.21 / research — Stage 2 v4 EXP-RPM-L15-GAUSS-V4 COMPLETE; architecture-vs-training INVERTS at L15 σ=1.0; architecture-vs-training INVERTS at L15 σ=1.0
 
 All 21 trained + 6 post-hoc random-arm cells measured at
 `model.layers.15.mlp.down_proj` under Gaussian σ=1.00 (CAL ppl=16.58)

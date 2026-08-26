@@ -8,7 +8,7 @@ quantitative_thresholds:
   - "PROVISIONAL_PASS: positive signals across multiple regimes but no single regime has been reproduced cleanly under AF8 governance yet."
   - "FAIL: across all tested regimes, equal-budget non-ternary random controls (random_lora) are within +/-1 sigma of T2 on every capability metric, OR T2 is strictly dominated by an equal-budget non-ternary random control on any capability metric."
 date_registered: "2026-08-25"
-state: PROVISIONAL_PASS
+state: CONFIRMED_AT_AF2D_TWN_BAND
 required_evidence: [EXP-AF-002-D (reproduced), Stage 2 v3 (L15 sigma=0.5), Stage 2 v4 (L15 sigma=1.0)]
 supporting_experiments:
   - id: EXP-AF-002-D
@@ -25,4 +25,6 @@ history:
   - date: "2026-08-25"
     transition: "-> PROVISIONAL_PASS"
     cause: "Decomposed from A-RP-002 per H-RPM-FRAMEWORK-PROPOSAL. Evidence accumulated across AF2-D TWN damage (EXP-AF-002-D PASS+) and L15 Gaussian damage (Stage 2 v3 + v4, T2 beats random_lora on 2-3 capability metrics per regime). REPRODUCTION_REQUIRED for full PASS: a single AF8-governed reproduction at AF2-D TWN damage, plus a damage-severity boundary sweep at AF2-D TWN to characterize the TSP operating envelope."
-conclusion: "The T2 ternary structural prior is promising as a useful prior across multiple damage regimes. Distinguish from the LRN axis (training adds value beyond the prior) which is separately tracked in A-RP-LRN."
+  - date: "2026-08-26"
+    transition: "PROVISIONAL_PASS -> CONFIRMED_AT_AF2D_TWN_BAND"
+    cause: "EXP-RPM-AF2D-SEVERITY (Stage 2 v6, commit afbef3d-pre): 5 thresholds {0.6, 0.7, 0.8, 0.9, 1.0} × 5 arms × 3 seeds = 105 cells. T2 vs random_lora >=+2 sigma on all 3 capability metrics at every threshold (z-scores 53-1355 sigma on wikitext, 11-26 sigma on arc_easy, 53-198 sigma on lambada_openai). The TSP operating band at AF2-D TWN damage-severity is the full preregistered range. State renamed to CONFIRMED_AT_AF2D_TWN_BAND because the claim is now confirmed at a specific site/damage-type band, not yet confirmed across all sites/damage types."

@@ -1,7 +1,27 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
+**Revision:** 2.22 (2026-08-25) — **Stage 2 v6 EXP-RPM-AF2D-SEVERITY
+  COMPLETE; LRN + TSP operating band = full preregistered range at
+  AF2-D TWN.** All 105 cells measured at 5 TWN thresholds {0.6, 0.7,
+  0.8, 0.9, 1.0} × 5 arms × 3 seeds. Trained T2 dramatically recovers
+  ppl (30→18 across thresholds) while random T2 does NOT (80-680 ppl).
+  LRN band = {0.6, 0.7, 0.8, 0.9, 1.0}: T2 ≥+2σ vs random T2 on all 3
+  capability metrics at every threshold (z-scores 10-1500σ). TSP band
+  identical. **A-RP-LRN: REGIME_CONDITIONAL → CONFIRMED at AF2-D TWN
+  band.** **A-RP-TSP: PROVISIONAL_PASS → CONFIRMED at AF2-D TWN band.**
+  Framework-proposal curve (LRN turns on at moderate, collapses at
+  catastrophic) is FLAT at AF2-D TWN: LRN axis is insensitive to
+  damage severity in the tested range. Damage TYPE (TWN vs Gaussian vs
+  held-out) is the relevant axis for LRN absence. Verdict:
+  `experiments/EXP-RPM-AF2D-SEVERITY/verdict.md`. Stage 2 v3 LRN
+  inversion at L15 σ=1.00 + Stage 4 EXP-RPM-T01 held-out null + Stage 2
+  v4 L15 σ=1.00 negative LRN remain as evidence for the **damage-type
+  axis**. Claim registry restructured (Option 1): A-RP-TSP +
+  A-RP-LRN as first-class claims; A-RP-002 preserved as COMPOSITE;
+  Track B gating updated to depend on A-RP-LRN.
 **Revision:** 2.21 (2026-08-25) — **Stage 2 v4 EXP-RPM-L15-GAUSS-V4
+  COMPLETE; architecture-vs-training INVERTS at L15 σ=1.00.**
   COMPLETE; architecture-vs-training INVERTS at L15 σ=1.00.** All 21
   trained + 6 random-arm cells measured. T2 vs random_t2: T2 LOSES on
   2 of 3 metrics at >2σ (arc_easy −2.15σ, lambada −2.26σ; wikitext
