@@ -1367,7 +1367,10 @@ Changed:
 - research/registry/INDEX.md (EXP-RPM-AF2D-SEVERITY row updated to DECIDED)
 - research/ROADMAP.md (B1 gating updated to depend on A-RP-LRN)
 
-Tests: 244/244 pass on Legion.
+**Stage 2 v7 EXP-RPM-AF2D-CONFIRM-V7 COMPLETE — Boundary confirmation at AF2-D TWN thr {0.6, 0.8, 1.0} with FRESH seeds {4, 5, 6} REPRODUCES v6 finding.** LRN z-scores +67 to +296σ on all 3 capability metrics at all 3 thresholds; TSP z-scores +52 to +279σ same. Trained T2 ppl 17-26 vs random T2 83-681 vs random LoRA 71-534 across thresholds. Scientific status upgraded: "full preregistered range observed" → "reproduced operating band across the full preregistered AF2-D/TWN severity range". A-RP-LRN and A-RP-TSP both supported by two independent seed sets. Manifest at `research/residual-pareto/experiments/EXP-RPM-AF2D-CONFIRM-V7/manifest.yaml`; verdict at `verdict.md`. Analysis script: `analyze_v7.py`.
+
+Tests: 244/244 pass on Legion (no code changes; verification of v7 is by experimental reproduction, not unit tests).
+
 
 ---
 

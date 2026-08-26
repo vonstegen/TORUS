@@ -2,6 +2,7 @@
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
 **Revision:** 2.22 (2026-08-25) — **Stage 2 v6 EXP-RPM-AF2D-SEVERITY
+- Stage 2 v7 (EXP-RPM-AF2D-CONFIRM-V7): CONFIRMED — boundary confirmation at AF2-D TWN thr {0.6, 0.8, 1.0} with FRESH seeds {4, 5, 6} reproduces the v6 finding. Both LRN and TSP active at all 3 preregistered thresholds. Scientific status: 'reproduced operating band across the full preregistered AF2-D/TWN severity range'.
   COMPLETE; LRN + TSP operating band = full preregistered range at
   AF2-D TWN.** All 105 cells measured at 5 TWN thresholds {0.6, 0.7,
   0.8, 0.9, 1.0} × 5 arms × 3 seeds. Trained T2 dramatically recovers
