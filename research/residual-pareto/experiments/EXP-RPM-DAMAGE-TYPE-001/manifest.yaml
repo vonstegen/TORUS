@@ -1,0 +1,184 @@
+id: EXP-RPM-DAMAGE-TYPE-001
+title: "Stage 3 v1 \u2014 AF2-D damage-mechanism comparison at calibrated magnitudes (TWN vs Gaussian)"
+track: A
+subtrack: Stage 3 v1 (AF2-D damage-mechanism mapping at matched damage magnitude)
+tier: confirmation (with calibration phase)
+status: PROPOSED
+date_proposed: '2026-08-26T13:30:00Z'
+owner: research harness
+claims_addressed:
+  - A-RP-LRN
+  - A-RP-TSP
+rationale: >
+  Stage 2 v6/v7 (commits 75c20d3, 8fe04f0) established the AF2-D/TWN
+  operating band reproduces across the full preregistered severity range
+  {0.6, 0.7, 0.8, 0.9, 1.0} under TWN damage, with seeds {1, 2, 3, 4,
+  5, 6}. The next scientific question is the DAMAGE-MECHANISM axis:
+  P(learned residual signal matters | damage mechanism, layer, task,
+  budget). The user's caveat (TWN thr=0.7 vs Gaussian \u03c3=1.0 are not
+  inherently equivalent damage magnitudes \u2014 empirical evidence shows
+  TWN thr=0.6 produces base ppl ~697 while Gaussian \u03c3=1.0 produces
+  base ppl ~16.6) is critical. This experiment therefore separates
+  mechanism effect from magnitude effect via a two-stage design.
+
+  Stage A (CALIBRATION): probe TWN thresholds and Gaussian sigmas at
+  AF2-D to find parameter values that produce approximately equal
+  damage magnitudes (post-damage, pre-correction wikitext ppl).
+
+  Stage B (COMPARISON): at each calibrated (mechanism, magnitude) point,
+  run the standard tournament (T2 vs random T2, T2 vs random LoRA, T2
+  vs LoRA) to test whether LRN and TSP are preserved across damage
+  mechanisms at matched magnitude.
+
+  The user's interpretation framework (narrow: T2 is good at correcting
+  TWN; broad: ternary residual has general learned-recovery property)
+  is testable with this design. If T2 behaves differently across
+  mechanisms at matched magnitude, that pinpoints WHERE in damage-space
+  ternary residual precision is advantageous \u2014 closer to the
+  original Pareto-frontier thesis than universal superiority.
+hypothesis: >
+  At AF2-D layer (model.layers.0.mlp.down_proj), LRN and TSP operating
+  bands preserve their qualitative structure across damage mechanisms
+  TWN and Gaussian when damage magnitude is held constant. Specifically,
+  trained T2 separates from random T2 by >=+2 sigma on >=2 of 3 capability
+  metrics at calibrated magnitudes in BOTH mechanisms (LRN axis), and
+  trained T2 separates from random LoRA similarly (TSP axis). The
+  z-score magnitudes and recovery ratios are comparable across mechanisms
+  (within a factor of 2-3x), supporting the broader interpretation that
+  ternary residual correction has a general learned-recovery property.
+frozen_axes_from_v6_v7:
+  site: model.layers.0.mlp.down_proj
+  model: allenai/OLMo-1B-0724-hf
+  tasks: wikitext,arc_easy,lambada_openai
+  matched_storage_budget_bytes: 4194404
+  eval_protocol: lm-eval-harness, batch_size=16, identical to v6/v7
+  training_recipe:
+    n_steps: 500
+    batch_size: 4
+    seq_len: 128
+    lr: 1e-3
+    momentum: 0.9
+    grad_clip: 1.0
+  arms_per_cell:
+    trained:
+      - damaged_base
+      - t2_ternary
+      - lora
+    random_control_post_hoc:
+      - random_t2_ternary
+      - random_lora
+  seeds: [1, 2, 3]
+swept_axes:
+  damage_mechanism: [TWN, Gaussian]
+  damage_magnitude_band:
+    - small: target_base_ppl_25_to_50
+    - medium: target_base_ppl_150_to_300
+    - large: target_base_ppl_500_to_900
+stage_a_calibration:
+  purpose: >
+    Find TWN thresholds and Gaussian sigmas that produce post-damage,
+    pre-correction wikitext base ppl within each target band.
+  method: >
+    Probe 4-6 parameter values per mechanism per band at AF2-D using a
+    lightweight damage+eval pass (no training, no full tournament).
+    Use the same damage_meta.fro_ratio and pre_train_eval.json wikitext
+    ppl as in v6/v7 to map parameter to damage magnitude.
+  parameter_grid:
+    TWN:
+      candidates: [0.3, 0.5, 0.7, 0.9, 1.0]
+      note: higher thr = more aggressive damage; from v6/v7 we know
+            thr=0.6 \u2192 ~700 ppl, thr=1.0 \u2192 ~80 ppl (smaller
+            damage because thr=1.0 keeps more non-zero weights)
+            Wait: recheck v7 data. Actually thr=1.0 \u2192 smaller damage
+            (more weights retained as non-zero); thr=0.6 \u2192 larger
+            damage (more weights zeroed).
+    Gaussian:
+      candidates: [0.5, 1.0, 2.0, 3.0, 5.0]
+      note: from v3/v4, \u03c3=0.5 \u2192 ~13.8 ppl, \u03c3=1.0 \u2192 ~16.6 ppl
+            (small damage). To reach medium/large bands may need
+            \u03c3 \u2265 5-10. Calibration phase determines actual values.
+  cost: ~1 hour (probe sweep, ~25 cells, single GPU, sequential)
+  deliverable: parameter_to_magnitude mapping table per mechanism
+stage_b_comparison:
+  purpose: >
+    Run full tournament at each calibrated (mechanism, magnitude) point
+    and compare LRN/TSP z-scores across mechanisms at matched magnitude.
+  cells: 6 mechanism-points \u00d7 4 arms \u00d7 3 seeds = 72 trained-arm cells;
+        plus 6 mechanism-points \u00d7 1 base-eval \u00d7 3 seeds = 18 base cells;
+        plus 6 mechanism-points \u00d7 2 random \u00d7 3 seeds = 36 random cells
+        (post-hoc eval).
+        Net: 126 cells.
+  cost: ~6 hours (sequential, single GPU, each cell ~3 min)
+  total_experiment_cost: ~7 hours (Stage A + Stage B)
+cross_mechanism_criterion:
+  LRN_preserved_at_magnitude:
+    definition: >
+      At each damage magnitude band {small, medium, large}, LRN is
+      "preserved across mechanisms" iff for BOTH {TWN, Gaussian}
+      calibrated points, trained T2 >=+2 sigma vs random T2 on >=2 of
+      3 capability metrics, no >=2 sigma regression on the third.
+  TSP_preserved_at_magnitude:
+    definition: analogous for trained T2 vs random LoRA.
+  magnitude_matched_comparison:
+    metric: signed_recovery_ratio = (random_T2_ppl - trained_T2_ppl) /
+                                      random_T2_ppl
+    criterion: >
+      For each magnitude band, the signed_recovery_ratio is within a
+      factor of 3x between TWN and Gaussian calibrated points. If
+      comparable, the broader interpretation (general learned recovery)
+      is supported. If the ratios differ by >10x, the narrow
+      interpretation (T2 is mechanism-specific) is supported.
+  damage_magnitude_separation:
+    criterion: >
+      Within each magnitude band, the post-damage base ppl must be
+      within 2x between the TWN and Gaussian calibrated points. If
+      calibration fails to achieve this, that band is excluded from
+      cross-mechanism comparison.
+expected_artifacts:
+  - "runs/r/EXP-RPM-DAMAGE-TYPE-001/{timestamp}/stage_a_probe/{mechanism}/{param}/damage_meta.json + pre_train_eval.json"
+  - "runs/r/EXP-RPM-DAMAGE-TYPE-001/{timestamp}/stage_b_tournament/{mechanism}/{magnitude_band}/seed-{n}/{arm}/eval.summary.json"
+  - "research/residual-pareto/experiments/EXP-RPM-DAMAGE-TYPE-001/calibration_table.md"
+  - "research/residual-pareto/experiments/EXP-RPM-DAMAGE-TYPE-001/verdict.md"
+kill_criteria: >
+  Any cell whose matched-bytes test fails (deviation > +/-1% from
+  4.19 MB preregistered) is INVALID; rerun cleanly.
+  Any probe in Stage A that produces base ppl outside its target band
+  (>2x deviation from band center) is excluded from calibration.
+falsification_targets:
+  - Hypothesis (LRN/TSP preserved across damage mechanisms at matched
+    magnitude) is FALSIFIED if at any of the 3 magnitude bands, LRN
+    or TSP is preserved in one mechanism but not the other. The
+    band-by-band result is the primary outcome.
+  - The narrow interpretation (T2 mechanism-specific to TWN) is
+    supported if Gaussian damage produces LRN absent or inverted at
+    matched magnitude.
+  - The broader interpretation (general learned recovery) is supported
+    if LRN/TSP magnitude is comparable across mechanisms at matched
+    magnitude (within 3x ratio).
+provenance:
+  v6_git_sha: '75c20d3'
+  v7_git_sha: '8fe04f0'
+  driver_sha: '34aa581'
+  model: 'allenai/OLMo-1B-0724-hf'
+  eval_dtype: 'float16'
+  freeze_state: ACTIVE
+  freeze_exception_justification: 'No driver changes required. Reuses Stage 2 v6/v7 driver + post-hoc eval script; only the parameter sweep differs.'
+supersedes: []
+next_permitted_experiment: >
+  If mechanism effect dominates (T2 fails at Gaussian but works at TWN
+  at matched magnitude): the operating band is mechanism-specific; the
+  Track B gating question is now P(T2 helps | damage mechanism) and
+  the next experiment should explore WHICH damage mechanisms admit
+  LRN-positive bands.
+  If magnitude effect dominates (T2 works at large magnitudes in both
+  mechanisms, fails at small in both): the operating band is magnitude-
+  bounded, mechanism-agnostic; the next experiment should map the LRN
+  boundary in damage MAGNITUDE.
+  If both effects are comparable (LRN/TSP preserved at matched magnitude
+  across mechanisms): the operating band is broad; the next experiment
+  can move toward Track B conditional modeling.
+blocking: []
+unlock_rules_affected:
+  - "Track B adaptive precision gating depends on whether the operating
+    band is mechanism-specific or mechanism-agnostic. This experiment
+    resolves that question."
