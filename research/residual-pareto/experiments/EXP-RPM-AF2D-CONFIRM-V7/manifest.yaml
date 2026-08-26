@@ -1,0 +1,165 @@
+id: EXP-RPM-AF2D-CONFIRM-V7
+title: "Stage 2 v7 \u2014 AF2-D TWN band-boundary confirmation (fresh seeds at thr 0.6, 0.8, 1.0)"
+track: A
+subtrack: Stage 2 v7 (AF2-D TWN band-boundary confirmation, fresh seeds)
+tier: confirmation
+status: PROPOSED
+date_proposed: '2026-08-26T01:30:00Z'
+owner: research harness
+claims_addressed:
+  - A-RP-LRN
+  - A-RP-TSP
+rationale: >
+  Stage 2 v6 (EXP-RPM-AF2D-SEVERITY, commit 75c20d3) found the LRN +
+  TSP operating band at AF2-D TWN damage-severity is the FULL
+  preregistered range {0.6, 0.7, 0.8, 0.9, 1.0}. The boundary
+  criterion (trained T2 >=+2 sigma vs random T2 on >=2 of 3 capability
+  metrics, no >=2 sigma regression elsewhere) was satisfied at all 5
+  thresholds with fresh evidence. However, the finding is based on
+  seeds {1, 2, 3}. Stage 2 v7 preregisters a boundary confirmation at
+  three preregistered thresholds (the lower boundary at 0.6, the
+  interior at 0.8, and the upper boundary at 1.0) using fresh seeds
+  to test whether the band is reproducible independently of the
+  original seed set. Per user direction: this is confirmatory, NOT
+  exploratory; no parameter changes from v6, no range expansion.
+  If v7 reproduces at all 3 thresholds, the scientific status
+  changes from "full preregistered range observed" to "reproduced
+  operating band across the full preregistered AF2-D/TWN severity
+  range", which is a stronger claim.
+hypothesis: >
+  At AF2-D layer (model.layers.0.mlp.down_proj) under TWN damage at
+  thr in {0.6, 0.8, 1.0}, the boundary criterion (trained T2 >=+2
+  sigma vs random T2 on >=2 of 3 capability metrics, no >=2 sigma
+  regression elsewhere) is reproduced with FRESH seeds (4, 5, 6).
+  Same criterion is reproduced for TSP (trained T2 vs random LoRA).
+frozen_axes_from_v6:
+  site: model.layers.0.mlp.down_proj
+  damage_recipe: TWN with group_size=128, calibrate_norm=false, damage_seed=0
+  architecture: unchanged from Stage 1 / 1.5 / Stage 2 v6
+  training_recipe:
+    n_steps: 500
+    batch_size: 4
+    seq_len: 128
+    lr: 1e-3
+    momentum: 0.9
+    grad_clip: 1.0
+  tasks: wikitext,arc_easy,lambada_openai
+  matched_storage_budget_bytes: 4194404
+  eval_protocol: lm-eval-harness, batch_size=16, identical to v6
+  threshold_set: {0.6, 0.8, 1.0}  # 3 of 5 v6 thresholds; deliberately
+                                     # bounded to confirmation
+swept_axis:
+  seeds: [4, 5, 6]  # FRESH seeds, not in {1, 2, 3}
+arms_per_threshold:
+  - damaged_base
+  - t2_ternary
+  - lora
+  - random_t2_ternary
+  - random_lora
+cells:
+  - 3 thresholds x 4 trained arms x 3 seeds = 36 trained-arm cells
+  - 3 thresholds x 1 base arm x 3 seeds = 9 base-eval cells
+  - 3 thresholds x 2 random arms x 3 seeds = 18 random-arm cells
+    (post-hoc eval via examples/eval_random_v6v2.py adapted for V7 path)
+  - net 36 trained + 9 base + 18 random = 63 cells (smaller than v6's 105
+    because only 3 of 5 thresholds; same per-cell protocol)
+boundary_criterion:
+  LRN_active:
+    definition: >
+      Damage severity D is in the LRN-active region iff trained T2
+      separates from random T2 by >=+2 standard errors on at least 2
+      of 3 capability metrics (wikitext, arc_easy, lambada_openai)
+      across 3 seeds, with no >=2 sigma regression on the remaining
+      metric.
+  TSP_active:
+    definition: >
+      Analogous to LRN_active but for T2 vs random_lora.
+  confirmation_criterion:
+    - At each preregistered confirmation threshold (0.6, 0.8, 1.0), the
+      boundary criterion is satisfied for BOTH LRN and TSP on the FRESH
+      seed set {4, 5, 6}.
+    - If all 3 thresholds reproduce: the band is CONFIRMED.
+    - If 1-2 thresholds reproduce: the band is REFINED to the
+      reproducing subset.
+    - If 0 thresholds reproduce: the v6 finding is INVALIDATED
+      (specific to the {1, 2, 3} seed set); restart the discovery
+      branch.
+  statistical_note: >
+    Z-scores at the v6 magnitudes (10-1500 sigma) are extremely
+    inflated by the trained-only stderr convention (random arms are
+    deterministic across seeds; the random arm has zero seed-variance
+    by construction). The qualitative conclusion is robust to stderr
+    convention, but the exact z-scores will be different at v7 because
+    v7 uses fresh training seeds. The reproduction criterion is the
+    QUALITATIVE pattern (trained T2 recovers, random does not), not
+    the exact z-score magnitude.
+experiment:
+  model: allenai/OLMo-1B-0724-hf
+  target_module: model.layers.0.mlp.down_proj
+  arms:
+    - damaged_base
+    - t2_ternary
+    - random_t2_ternary
+    - random_lora
+    - lora
+  seeds:
+    - 4
+    - 5
+    - 6
+  n_steps: 500
+  batch_size: 4
+  seq_len: 128
+  lr: 0.001
+  momentum: 0.9
+  grad_clip: 1.0
+  tasks: wikitext,arc_easy,lambada_openai
+  damage_ptq: true
+  damage_threshold: 0.7  # default; overridden per launch by launcher
+  damage_group_size: 128
+  calibrate_norm: false
+  pre_train_eval: true
+kill_criteria: >
+  Any cell whose matched-bytes test fails (deviation > +/-1% from
+  4.19 MB preregistered) is INVALID; rerun cleanly.
+expected_artifacts:
+  - "runs/r/EXP-RPM-AF2D-CONFIRM-V7/{timestamp}/threshold-{thr}/seed-{n}/{arm}/{eval.summary.json,eval.full.json,adapter.npz,cost.json,cost_vector.json,pre_train_eval.json}"
+  - "runs/r/EXP-RPM-AF2D-CONFIRM-V7/{timestamp}/aggregate.json (per-threshold)"
+  - "runs/r/EXP-RPM-AF2D-CONFIRM-V7/{timestamp}/ARTIFACTS.json (sha256 manifest)"
+  - "research/residual-pareto/experiments/STAGE2-V7-CONFIRMATION-SUMMARY.json"
+  - "research/residual-pareto/experiments/EXP-RPM-AF2D-CONFIRM-V7/verdict.md"
+artifact_paths: []
+freeze_exception:
+  scope: experiments/EXP-RPM-AF2D-CONFIRM-V7 only
+  driver_sha_before: '34aa581'
+  driver_sha_after: '34aa581'
+  rationale: 'No driver changes required. Same Stage 2 v6 driver + post-hoc eval script; only the seed set and threshold subset change.'
+  approved_by: 'OPERATING-PLAN \u00a76 v2.3; existing CLI surface covers this scope'
+supersedes:
+  - Stage 2 v6 confirmation step (the post-discovery confirmation preregistered in v6 manifest but not yet executed)
+next_permitted_experiment: >
+  If v7 reproduces the band at all 3 thresholds:
+    - Freeze the AF2-D/TWN operating band as confirmed (LRN band =
+      full preregistered range with both seed sets reproducing).
+    - The next experimental axis is the DAMAGE-TYPE axis: P(trained
+      T2 helps | damage_mechanism, layer, task, budget) is the Track B
+      question that follows from this discovery.
+  If v7 refines the band:
+    - Update A-RP-LRN state to REFINE_AT_AF2D_TWN_BAND_<qualifying
+      thresholds>; the band subset is the union of v6 + v7 reproducing
+      thresholds.
+  If v7 invalidates v6:
+    - The v6 finding is seed-set-specific; do NOT promote A-RP-LRN
+      further until the discovery branch is re-run with a different
+      seed set.
+blocking: []
+falsification_targets:
+  - v6 finding (band = full preregistered range {0.6, 0.7, 0.8, 0.9,
+    1.0}) reproducing under fresh seeds at the 3 preregistered
+    confirmation points.
+provenance:
+  git_sha: '75c20d3'
+  driver_sha: '34aa581'
+  model: 'allenai/OLMo-1B-0724-hf'
+  eval_dtype: 'float16'
+  freeze_state: ACTIVE
+  freeze_exception_justification: 'No driver changes required for Stage 2 v7.'
