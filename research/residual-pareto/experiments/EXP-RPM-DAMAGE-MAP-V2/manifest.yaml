@@ -1,0 +1,94 @@
+id: EXP-RPM-DAMAGE-MAP-V2
+title: "Stage 3 v2 — AF2-D damage-mechanism envelope map: TWN vs Gaussian vs MagnitudePrune vs Dropout"
+track: A
+subtrack: Stage 3 v2 (AF2-D four-mechanism damage envelope at matched magnitudes)
+tier: confirmation (with calibration phase)
+status: PROPOSED
+date_proposed: '2026-08-27T00:00:00Z'
+owner: research harness
+claims_addressed:
+  - A-RP-LRN
+  - A-RP-TSP
+  - A-RP-MECHANISM (informal, post v1)
+freeze_exception:
+  scope: examples/af2_storage_tournament.py
+  change: "Add --damage-magnitude-prune, --damage-prune-k, --damage-dropout, --damage-dropout-p CLI flags; add damage_target_module_magnitude_prune() and damage_target_module_dropout() functions; extend damage_mode dispatcher and mutual-exclusion check from 2 flags to 4"
+  justification: >
+    Per OPERATING-PLAN.md §6 v2.3 (rev 2.2, 2026-08-22): freeze exceptions
+    permitted when required to execute a registered experiment. Stage 3 v1
+    finding (T2 is mechanism-specific to TWN damage vs anti-recovery under
+    Gaussian damage at matched magnitude) cannot be extended to the full
+    damage-mechanism envelope without testing other mechanisms.
+    MagnitudePrune and Dropout are the natural next points along the
+    'zero-out' damage subspace orthogonal to TWN's absmean-zero and
+    Gaussian's signed-noise.
+  approved_by: user
+  approved_at: '2026-08-27T00:00:00Z'
+  commit: cac5b1f
+rationale: >
+  Stage 3 v1 (commit 84a4dad) established that trained T2 has OPPOSITE
+  effects under TWN vs Gaussian damage at matched magnitude (LRN z =
+  +49σ at TWN thr=0.7 vs -156σ at Gaussian σ=3.0; BAND-3 magnitude
+  matched). The Track B gating question — P(T2 helps | damage mechanism,
+  layer, task, budget) — is now bounded to the {TWN, Gaussian} pair.
+  This experiment adds two orthogonal damage mechanisms (MagnitudePrune
+  per-row top-k, Dropout per-element mask) to map the full damage-
+  mechanism envelope at AF2-D. The four mechanisms form a 2x2 grid:
+  {TWN, MagnitudePrune} x {structured-by-magnitude, structured-by-group}
+  and {Gaussian, Dropout} x {dense-signed, dense-zero}. Together they
+  let Track B know where T2 helps vs hurts across the entire zero-vs-
+  signed damage space.
+hypothesis: >
+  At AF2-D under matched damage magnitude (~ppl 430 baseline),
+  trained T2 LRN z-score varies systematically across mechanisms in
+  the order TWN > MagnitudePrune > Dropout > Gaussian. Specifically:
+  - TWN: LRN strongly positive (~+50σ)
+  - MagnitudePrune: LRN positive but smaller magnitude (~+10σ),
+    because per-row magnitude-zero is also structured sparsity but
+    not TWN-style
+  - Dropout: LRN near zero (~0σ), because per-element zeroing has
+    no magnitude structure
+  - Gaussian: LRN strongly negative (~-150σ), because signed dense
+    noise is the worst case
+  This order is the "structure-magnitude ranking" hypothesis: T2 helps
+  insofar as the damage preserves a magnitude-asymmetric zero pattern.
+  CONFIRMED structure helps more than no structure; CONFIRMED signed
+  noise is worse than zero noise; UNCONFIRMED the exact magnitudes.
+
+kill_criteria:
+  - If ANY of the four mechanisms produces LRN |z| < 1σ at BAND-3
+    matched magnitude, the hypothesis cannot be ranked and must be
+    reverted to a coarse 2x2 partition.
+  - If MagnitudePrune and Dropout cannot be calibrated to ±20% of
+    BAND-3 magnitude (~ppl 350-515), the experiment fails the
+    calibration gate and only {TWN, Gaussian} data is reported.
+
+thresholds_pass: >
+  At BAND-3 magnitude-matched pair within each mechanism, LRN |z| > 1σ
+  (steered in order TWN > MagPrune > Dropout > Gaussian OR TWN > Gaussian
+  AND Dropout > Gaussian; the order within {MagPrune, Dropout} is the
+  contribution of v2 and may be either way).
+
+thresholds_fail: >
+  LRN sign on any mechanism fails to track with mechanism structure
+  (e.g., Dropout recovers while Gaussian anti-recovers), OR calibration
+  cannot match magnitudes to ±20%, OR TWN's recovered ppl fails to
+  reproduce within ±2σ of v1's 17.74 baseline (the v1 reproducibility gate).
+
+seed_set:
+  trained: [1, 2, 3]
+  random: [1, 2, 3]
+
+freeze: ACTIVE
+supersedes: null
+superseded_by: null
+unlock_rules_affected: ["Track B adaptive precision gating"]
+experiments_blocked:
+  - Track B adaptive precision gating beyond the AF2-D / 4-mechanism envelope
+  - General "T2 helps under damage" framing
+  - Cross-damage-mechanism Track B experiments without first mapping the full damage-mechanism space
+audience: research program
+next_permitted:
+  - Stage 3 v3 (per-mechanism layer sweep, IF v2 confirms structure-magnitude ranking)
+  - EXP-A-011 (layer sensitivity at TWN, IF v2 fails rank order)
+  - Track B gating classifier (IF v2 confirms)
