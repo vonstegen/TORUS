@@ -133,7 +133,7 @@ class T2TernaryAdapter(SiteAdapter):
         packed = ((flat[0::4] & 0x3) | ((flat[1::4] & 0x3) << 2)
                   | ((flat[2::4] & 0x3) << 4) | ((flat[3::4] & 0x3) << 6))
         packed = packed.astype(np.uint8)
-        scale_np = scale.detach().cpu().numpy().astype(np.float16)
+        scale_np = scale.detach().cpu().float().numpy().astype(np.float16)
         np.savez(out_dir / "adapter.npz",
                  packed=packed, scale=scale_np,
                  shape=np.asarray(r.shape, dtype=np.int64))
