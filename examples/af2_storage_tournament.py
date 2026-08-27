@@ -664,7 +664,9 @@ def pre_train_eval_if_damaged(model, tokenizer, args, seed: int) -> dict | None:
     eval summary dict, or None if --damage-ptq is not set.
     """
     if not (getattr(args, "damage_ptq", False)
-            or getattr(args, "damage_gaussian", False)):
+            or getattr(args, "damage_gaussian", False)
+            or getattr(args, "damage_magnitude_prune", False)
+            or getattr(args, "damage_dropout", False)):
         return None
     model.eval()
     results = eval_arm(
