@@ -1,11 +1,5 @@
-"""Faster post-hoc eval: wikitext only (the most informative single task)
-for Stage 3 v1 random arms.
-
-The original eval_random_stage3.py was too slow (~30 min per cell due to
-loading a fresh model each time). This version:
-  1. Only evaluates wikitext word_perplexity (one task, the most informative)
-  2. Loads the model ONCE per cell and reuses it across both random arms
-  3. Skips cells that already have data
+"""Faster post-hoc eval: wikitext only for Stage 3 v1 random arms.
+Cell_id -> mechanism mapping is hardcoded from the calibrated cells.
 """
 from __future__ import annotations
 import argparse, gc, json
@@ -16,6 +10,15 @@ import torch
 
 import examples.af2_storage_tournament as af2  # noqa: E402
 from torus.train.ste import ternary_quantize_with_ste
+
+
+CELL_TO_PARAMS = {
+    "BAND-1-Gaussian": ("gaussian", 1.0),
+    "BAND-3-Gaussian": ("gaussian", 3.0),
+    "BAND-3-TWN": ("twn", 0.7),
+    "BAND-4-Gaussian": ("gaussian", 5.0),
+    "BAND-4-TWN": ("twn", 0.5),
+}
 
 
 def navigate_to_module(model, target_path):
@@ -106,22 +109,20 @@ def patch_random_lora(model, target_module, npz_path):
 
 
 def run_wikitext_ppl(model, tokenizer):
-    """Single-task wikitext word_perplexity, fast."""
     from datasets import load_dataset
-    from torch.nn import CrossEntropyLoss
     text = load_dataset("wikitext", "wikitext-103-raw-v1", split="test",
                          trust_remote_code=False)["text"]
     text = "\n\n".join([t for t in text if len(t) > 0])[:1_000_000]
     enc = tokenizer(text, return_tensors="pt").to(next(model.parameters()).device)
     n_tokens = enc.input_ids.shape[1]
     nlls = []
-    loss_fn = CrossEntropyLoss()
     for i in range(0, n_tokens - 1024, 1024):
         chunk = enc.input_ids[:, i:i+1024]
         with torch.no_grad():
             out = model(chunk, labels=chunk)
         nlls.append(out.loss.item() * 1024)
-    return float(torch.tensor(nlls).sum().exp())
+    import math
+    return float(math.exp(sum(nlls) / n_tokens))
 
 
 def main():
@@ -138,19 +139,16 @@ def main():
     cell_root = runs_root / args.exp_id / args.ts / "stage_b_tournament"
     seeds = [int(s) for s in args.seeds.split(",")]
 
-    cell_ids = sorted([p.name for p in cell_root.iterdir()
-                        if p.is_dir() and not p.name.endswith("-base")])
+    cell_ids = [k for k in CELL_TO_PARAMS.keys()
+                 if (cell_root / k).exists()]
     print(f"[eval-s3-fast] cells={cell_ids} seeds={seeds}", flush=True)
 
     for cell_id in cell_ids:
-        if "TWN" in cell_id:
-            thr = float(cell_id.split("thr-")[1])
-            apply_damage = lambda m, p: apply_damage_twn(m, p, thr)
-        elif "Gaussian" in cell_id:
-            sigma = float(cell_id.split("sigma-")[1])
-            apply_damage = lambda m, p: apply_damage_gaussian(m, p, sigma)
+        mech, param = CELL_TO_PARAMS[cell_id]
+        if mech == "twn":
+            apply_damage = lambda m, p: apply_damage_twn(m, p, param)
         else:
-            continue
+            apply_damage = lambda m, p: apply_damage_gaussian(m, p, param)
 
         for seed in seeds:
             for arm, patch_fn in [("random_t2_ternary", patch_random_t2),
@@ -161,7 +159,6 @@ def main():
                     continue
                 es_path = arm_dir / "eval.summary.json"
                 existing = json.loads(es_path.read_text()) if es_path.exists() else {}
-                # Skip if already has wikitext data
                 tasks = existing.get("tasks", {})
                 if (isinstance(tasks, dict) and "wikitext" in tasks
                         and isinstance(tasks["wikitext"], dict)
@@ -182,7 +179,6 @@ def main():
                 patch_fn(model, args.target_module, npz_path)
                 ppl = run_wikitext_ppl(model, tokenizer)
                 print(f"[eval-s3-fast]   ppl={ppl:.2f}", flush=True)
-                # Write back
                 existing["arm"] = arm
                 existing["seed"] = seed
                 existing["model"] = model_name
