@@ -459,7 +459,7 @@ def damage_target_module_magnitude_prune(target_module, *, k: float,
     """
     import torch
     w_before = target_module.weight.detach().clone()
-    w = w_before.float().cpu()
+    w = w_before.float()
     keep_n = int(round((1.0 - k) * w.shape[1]))
     keep_n = max(1, min(keep_n, w.shape[1]))
     topk_idx = torch.topk(w.abs(), k=keep_n, dim=1,
@@ -498,7 +498,9 @@ def damage_target_module_dropout(target_module, *, p: float,
     gen.manual_seed(int(seed))
     w_before = target_module.weight.detach().clone()
     keep = 1.0 - float(p)
-    mask = torch.bernoulli(torch.full(w_before.shape, keep),
+    device = target_module.weight.device
+    mask = torch.bernoulli(torch.full(w_before.shape, keep,
+                                        device=device),
                            generator=gen).to(w_before.dtype)
     damaged = w_before.float() * mask.float()
     q_tensor = damaged.to(target_module.weight.device,
