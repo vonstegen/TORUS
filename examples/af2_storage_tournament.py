@@ -494,11 +494,17 @@ def damage_target_module_dropout(target_module, *, p: float,
     Gaussian's dense signed noise).
     """
     import torch
-    gen = torch.Generator(device="cpu")
+    device = target_module.weight.device
+    # bernoulli generator must match tensor device; for cuda tensors,
+    # we cannot use a cpu generator. So we draw on whichever device
+    # the target weight lives on.
+    if device.type == "cuda":
+        gen = torch.Generator(device=device)
+    else:
+        gen = torch.Generator(device="cpu")
     gen.manual_seed(int(seed))
     w_before = target_module.weight.detach().clone()
     keep = 1.0 - float(p)
-    device = target_module.weight.device
     mask = torch.bernoulli(torch.full(w_before.shape, keep,
                                         device=device),
                            generator=gen).to(w_before.dtype)
