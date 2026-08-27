@@ -446,6 +446,76 @@ def damage_target_module_gaussian(target_module, *, sigma: float,
     }
 
 
+def damage_target_module_magnitude_prune(target_module, *, k: float,
+                                          seed: int = 0) -> dict:
+    """Per-row top-k by magnitude pruning: W' = mask * W.
+
+    `k` is the FRACTION of weights to zero out (per row). mask=1 for the
+    top-(1-k) largest-|w| entries per row; 0 otherwise. With k=0.5,
+    half the weights in each row are zeroed by magnitude. Deterministic
+    per (k, seed). Frozen (requires_grad_(False)). Stage 3 v2: maps the
+    second axis of the damage-mechanism envelope (per-row magnitude-
+    structured sparsity vs TWN's per-group absmean sparsity).
+    """
+    import torch
+    w_before = target_module.weight.detach().clone()
+    w = w_before.float().cpu()
+    keep_n = int(round((1.0 - k) * w.shape[1]))
+    keep_n = max(1, min(keep_n, w.shape[1]))
+    topk_idx = torch.topk(w.abs(), k=keep_n, dim=1,
+                          largest=True, sorted=False).indices
+    mask = torch.zeros_like(w, dtype=torch.bool)
+    mask.scatter_(1, topk_idx, True)
+    pruned = w * mask.to(w.dtype)
+    q_tensor = pruned.to(target_module.weight.device,
+                         target_module.weight.dtype)
+    target_module.weight.data.copy_(q_tensor)
+    target_module.weight.requires_grad_(False)
+    fro_before = float(torch.linalg.norm(w_before).item())
+    fro_after = float(torch.linalg.norm(target_module.weight).item())
+    return {
+        "k_frac": float(k),
+        "seed": int(seed),
+        "fro_norm_before": fro_before,
+        "fro_norm_after": fro_after,
+        "fro_ratio": (fro_after / fro_before) if fro_before > 0 else None,
+    }
+
+
+def damage_target_module_dropout(target_module, *, p: float,
+                                 seed: int = 0) -> dict:
+    """Per-element independent mask dropout: W' = mask * W.
+
+    Each weight is independently zeroed with probability p. With p=0.5,
+    half the weights are zeroed. Deterministic per (p, seed) via
+    torch.Generator. Frozen (requires_grad_(False)). Stage 3 v2: maps
+    the third axis of the damage-mechanism envelope (unstructured
+    symmetric-zero noise vs TWN's magnitude-asymmetric zero noise vs
+    Gaussian's dense signed noise).
+    """
+    import torch
+    gen = torch.Generator(device="cpu")
+    gen.manual_seed(int(seed))
+    w_before = target_module.weight.detach().clone()
+    keep = 1.0 - float(p)
+    mask = torch.bernoulli(torch.full(w_before.shape, keep),
+                           generator=gen).to(w_before.dtype)
+    damaged = w_before.float() * mask.float()
+    q_tensor = damaged.to(target_module.weight.device,
+                          target_module.weight.dtype)
+    target_module.weight.data.copy_(q_tensor)
+    target_module.weight.requires_grad_(False)
+    fro_before = float(torch.linalg.norm(w_before).item())
+    fro_after = float(torch.linalg.norm(target_module.weight).item())
+    return {
+        "p_drop": float(p),
+        "seed": int(seed),
+        "fro_norm_before": fro_before,
+        "fro_norm_after": fro_after,
+        "fro_ratio": (fro_after / fro_before) if fro_before > 0 else None,
+    }
+
+
 def build_base(model_name: str, *, dtype: str, device: str):
     import torch
     from transformers import AutoModelForCausalLM
@@ -644,6 +714,20 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
         damage_target_module_gaussian(
             target_module,
             sigma=getattr(args, "damage_sigma", 1.0),
+            seed=getattr(args, "damage_seed", 0),
+        )
+    elif getattr(args, "damage_magnitude_prune", False):
+        # Stage 3 v2 magnitude-prune damage. Frozen. Mutually exclusive.
+        damage_target_module_magnitude_prune(
+            target_module,
+            k=getattr(args, "damage_prune_k", 0.5),
+            seed=getattr(args, "damage_seed", 0),
+        )
+    elif getattr(args, "damage_dropout", False):
+        # Stage 3 v2 dropout damage. Frozen. Mutually exclusive.
+        damage_target_module_dropout(
+            target_module,
+            p=getattr(args, "damage_dropout_p", 0.5),
             seed=getattr(args, "damage_seed", 0),
         )
     site_dims = resolve_site_dims(target_module)
@@ -859,6 +943,22 @@ def main(argv: list | None = None) -> None:
     p.add_argument("--damage-seed", type=int, default=0,
                     help="Seed for the torch.Generator used to draw "
                          "noise in --damage-gaussian. Default 0 (deterministic).")
+    p.add_argument("--damage-magnitude-prune", action="store_true",
+                    help="Stage 3 v2: per-row top-k by magnitude pruning. "
+                         "Fraction zeroed per row via --damage-prune-k "
+                         "(default 0.5). Mutually exclusive with the other "
+                         "--damage-* flags.")
+    p.add_argument("--damage-prune-k", type=float, default=0.5,
+                    help="Per-row fraction to zero for --damage-magnitude-prune. "
+                         "Default 0.5 (zero half the row smallest weights).")
+    p.add_argument("--damage-dropout", action="store_true",
+                    help="Stage 3 v2: per-element mask dropout. "
+                         "Each weight zeroed with probability --damage-dropout-p "
+                         "(default 0.5). Mutually exclusive with the other "
+                         "--damage-* flags.")
+    p.add_argument("--damage-dropout-p", type=float, default=0.5,
+                    help="Per-element zero probability for --damage-dropout. "
+                         "Default 0.5.")
     p.add_argument("--pre-train-eval", action="store_true",
                     help="When --damage-ptq is set, capture a pre-train eval "
                          "(BEFORE any adapter training) per seed to verify the "
@@ -867,10 +967,16 @@ def main(argv: list | None = None) -> None:
     p.add_argument("--matched-bytes-tolerance-pct", type=float, default=1.0)
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
-    if getattr(args, "damage_ptq", False) and getattr(args, "damage_gaussian", False):
+    damage_flags = [
+        getattr(args, "damage_ptq", False),
+        getattr(args, "damage_gaussian", False),
+        getattr(args, "damage_magnitude_prune", False),
+        getattr(args, "damage_dropout", False),
+    ]
+    if sum(1 for f in damage_flags if f) > 1:
         raise SystemExit(
-            "Pick one. (Stage 2 v2 uses --damage-gaussian; Stage 1 / 1.5 "
-            "uses --damage-ptq.)"
+            "Pick one --damage-* flag at a time "
+            "(ptq | gaussian | magnitude-prune | dropout)."
         )
     arms = args.arms.split(",")
     seeds = [int(s) for s in args.seeds.split(",")]
@@ -888,6 +994,8 @@ def main(argv: list | None = None) -> None:
     damage_mode = (
         "ptq" if getattr(args, "damage_ptq", False)
         else "gaussian" if getattr(args, "damage_gaussian", False)
+        else "magnitude_prune" if getattr(args, "damage_magnitude_prune", False)
+        else "dropout" if getattr(args, "damage_dropout", False)
         else None
     )
     if damage_mode is not None:
@@ -911,10 +1019,22 @@ def main(argv: list | None = None) -> None:
                     group_size=getattr(args, "damage_group_size", 128),
                     threshold=getattr(args, "damage_threshold", 0.7),
                 )
-            else:  # gaussian
+            elif damage_mode == "gaussian":
                 dmg_meta = damage_target_module_gaussian(
                     target_dmg,
                     sigma=getattr(args, "damage_sigma", 1.0),
+                    seed=getattr(args, "damage_seed", 0),
+                )
+            elif damage_mode == "magnitude_prune":
+                dmg_meta = damage_target_module_magnitude_prune(
+                    target_dmg,
+                    k=getattr(args, "damage_prune_k", 0.5),
+                    seed=getattr(args, "damage_seed", 0),
+                )
+            elif damage_mode == "dropout":
+                dmg_meta = damage_target_module_dropout(
+                    target_dmg,
+                    p=getattr(args, "damage_dropout_p", 0.5),
                     seed=getattr(args, "damage_seed", 0),
                 )
             print(f"[af2] damage meta seed={seed}: {json.dumps(dmg_meta)}",
