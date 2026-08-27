@@ -1368,6 +1368,9 @@ Changed:
 - research/ROADMAP.md (B1 gating updated to depend on A-RP-LRN)
 
 **Stage 2 v7 EXP-RPM-AF2D-CONFIRM-V7 COMPLETE — Boundary confirmation at AF2-D TWN thr {0.6, 0.8, 1.0} with FRESH seeds {4, 5, 6} REPRODUCES v6 finding.** LRN z-scores +67 to +296σ on all 3 capability metrics at all 3 thresholds; TSP z-scores +52 to +279σ same. Trained T2 ppl 17-26 vs random T2 83-681 vs random LoRA 71-534 across thresholds. Scientific status upgraded: "full preregistered range observed" → "reproduced operating band across the full preregistered AF2-D/TWN severity range". A-RP-LRN and A-RP-TSP both supported by two independent seed sets. Manifest at `research/residual-pareto/experiments/EXP-RPM-AF2D-CONFIRM-V7/manifest.yaml`; verdict at `verdict.md`. Analysis script: `analyze_v7.py`.
+**Stage 3 v1 EXP-RPM-DAMAGE-TYPE-001 COMPLETE — Cross-mechanism comparison at AF2-D with magnitude calibration. NARROW INTERPRETATION SUPPORTED: T2 is mechanism-specific.** At matched damage magnitude (BAND-3 base ppl ~430), trained T2 RECOVERS TWN damage (ppl 17.74, +49σ LRN) but ANTI-RECOVERS Gaussian damage (ppl 436.51, -156σ LRN — WORSE than random T2 at 215.42). Pattern holds at BAND-4 catastrophic and BAND-1 near-pristine. The T2 architectural prior is helpful under sparse/sparsifying damage (TWN), neutral-to-harmful under dense noise (Gaussian), and actively detrimental near pristine. The framework's original Pareto-frontier thesis is partially supported: T2 occupies a specific region of {damage mechanism × severity} space, NOT a universal-superiority claim. Manifest at `research/residual-pareto/experiments/EXP-RPM-DAMAGE-TYPE-001/manifest.yaml`; calibration table at `calibration_table.md`; verdict at `verdict.md`. Analysis script: `analyze_s3_v2.py`.
+
+
 
 Tests: 244/244 pass on Legion (no code changes; verification of v7 is by experimental reproduction, not unit tests).
 
