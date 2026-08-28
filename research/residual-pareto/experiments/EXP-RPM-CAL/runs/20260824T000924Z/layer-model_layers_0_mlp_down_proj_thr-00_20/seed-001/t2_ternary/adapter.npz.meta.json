@@ -1,0 +1,7 @@
+{
+  "format": "t2_ternary_2bpw_per_row_fp16_scale",
+  "out_features": 2048,
+  "in_features": 8192,
+  "pack_bytes_per_code": 2,
+  "scale_dtype": "fp16"
+}

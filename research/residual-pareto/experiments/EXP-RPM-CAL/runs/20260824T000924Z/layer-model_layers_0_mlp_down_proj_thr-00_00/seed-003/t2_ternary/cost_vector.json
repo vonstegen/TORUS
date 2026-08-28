@@ -1,0 +1,8 @@
+{
+  "deployed_bytes": 4199318,
+  "training_flops": 64424509440,
+  "inference_ops_per_token": 33554432,
+  "memory_traffic_per_token": 4199318,
+  "latency_per_token_titan_rtx": 0.01422755241394043,
+  "energy_per_token": null
+}

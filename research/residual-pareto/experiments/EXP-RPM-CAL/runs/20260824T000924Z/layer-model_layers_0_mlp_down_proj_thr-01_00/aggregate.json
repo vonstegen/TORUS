@@ -1,0 +1,63 @@
+{
+  "trained_arms": {
+    "t2_ternary": {
+      "n": 3,
+      "matched_bytes": [
+        4199318,
+        4199318,
+        4199318
+      ],
+      "matched_bytes_target": 4194404,
+      "cost_vector_rows": [
+        {
+          "deployed_bytes": 4199318,
+          "training_flops": 64424509440,
+          "inference_ops_per_token": 33554432,
+          "memory_traffic_per_token": 4199318,
+          "latency_per_token_titan_rtx": 0.0142706880569458,
+          "energy_per_token": null
+        },
+        {
+          "deployed_bytes": 4199318,
+          "training_flops": 64424509440,
+          "inference_ops_per_token": 33554432,
+          "memory_traffic_per_token": 4199318,
+          "latency_per_token_titan_rtx": 0.012454303741455078,
+          "energy_per_token": null
+        },
+        {
+          "deployed_bytes": 4199318,
+          "training_flops": 64424509440,
+          "inference_ops_per_token": 33554432,
+          "memory_traffic_per_token": 4199318,
+          "latency_per_token_titan_rtx": 0.014923263549804687,
+          "energy_per_token": null
+        }
+      ],
+      "tasks": {
+        "wikitext": {
+          "n": 3,
+          "mean": 85.40804790384139,
+          "stderr": 2.1042205693795752,
+          "values": [
+            84.31139127139483,
+            89.47507495492157,
+            82.43767748520777
+          ]
+        },
+        "arc_easy": {
+          "n": 3,
+          "mean": 0.49607182940516276,
+          "stderr": 0.0036068911706460143,
+          "values": [
+            0.5029461279461279,
+            0.49452861952861954,
+            0.49074074074074076
+          ]
+        }
+      }
+    }
+  },
+  "untrained_controls": {},
+  "tolerance_violations": []
+}

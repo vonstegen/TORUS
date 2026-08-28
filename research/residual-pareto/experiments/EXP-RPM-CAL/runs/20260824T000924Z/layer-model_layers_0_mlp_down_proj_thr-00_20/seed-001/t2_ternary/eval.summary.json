@@ -1,0 +1,53 @@
+{
+  "arm": "t2_ternary",
+  "seed": 1,
+  "model": "allenai/OLMo-1B-0724-hf",
+  "target_module": "model.layers.0.mlp.down_proj",
+  "n_steps": 1,
+  "batch_size": 4,
+  "seq_len": 128,
+  "lr": 0.001,
+  "limit": null,
+  "tasks": {
+    "arc_easy": {
+      "metric": "acc_norm,none",
+      "value": 0.47769360269360267
+    },
+    "wikitext": {
+      "metric": "word_perplexity,none",
+      "value": 1485.7940962821183
+    }
+  },
+  "matched_bytes_target": 4194404,
+  "matched_bytes_actual": 4199318,
+  "matched_bytes_tolerance_pct": 1.0,
+  "matched_bytes_passed": true,
+  "cost_vector": {
+    "deployed_bytes": 4199318,
+    "training_flops": 64424509440,
+    "inference_ops_per_token": 33554432,
+    "memory_traffic_per_token": 4199318,
+    "latency_per_token_titan_rtx": 0.014876607894897462,
+    "energy_per_token": null
+  },
+  "is_untrained_control": false,
+  "eval_error": "Object of type dtype is not JSON serializable",
+  "damage_meta": {
+    "group_size": 128,
+    "threshold": 0.2,
+    "calibrate_norm": false,
+    "fro_norm_before": 26.3125,
+    "fro_norm_after": 17.375,
+    "fro_ratio": 0.6603325415676959
+  },
+  "pre_train_eval": {
+    "arc_easy": {
+      "metric": "acc_norm,none",
+      "value": 0.4797979797979798
+    },
+    "wikitext": {
+      "metric": "word_perplexity,none",
+      "value": 1524.7975050290058
+    }
+  }
+}
