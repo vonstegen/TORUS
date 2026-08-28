@@ -9,7 +9,7 @@ quantitative_thresholds:
 date_registered: "2026-08-22"
 state: TESTING
 required_evidence: [AF4, AF8]
-supporting_experiments: []
+supporting_experiments: [EXP-AF-004]
 unlock_rules_affected: []
 history:
   - date: "2026-08-22"

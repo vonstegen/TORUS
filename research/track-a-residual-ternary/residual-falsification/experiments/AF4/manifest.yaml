@@ -1,0 +1,225 @@
+# Experiment record — EXP-AF-004 — AF4 sequential-vs-joint training (confirmation tier)
+# Preregistered 2026-08-28 BEFORE any run under this ID. Thresholds frozen.
+id: EXP-AF-004
+track: A
+subtrack: "AF4 sequential-vs-joint curriculum control"
+tier: confirmation
+claims_addressed: [A-RP-003]
+title: "Sequential freeze (T1 -> freeze -> T2) vs matched joint training of
+  both correction-plane latents at equal total budget and equal deployed
+  storage (model.layers.0.mlp.down_proj, OLMo-1B-0724-hf)"
+owner: "research-harness"
+date_proposed: "2026-08-28"
+status: PROPOSED
+decision: null
+grade: null
+
+hypothesis: "At matched total training budget (1000 steps x batch 4 x
+  seq 128 = 512k tokens, identical batches, identical SGD settings,
+  identical next-token CE objective) and matched deployed storage (two
+  ternary planes on model.layers.0.mlp.down_proj), the sequential
+  curriculum (train the primary STE latent 500 steps at n_planes=1,
+  freeze it, then train the residual STE latent 500 steps at
+  n_planes=2) beats the joint curriculum (both latents trainable for
+  1000 steps at n_planes=2 from step 0) by >2 standard errors on at
+  least one capability metric, with no regression beyond 1 standard
+  error on the others. This is A-RP-003's exact test (claim_version 1)."
+
+rationale: "A-RP-003 is the last UNTESTED Track-A claim. The v2.3
+  OPERATING-PLAN (§11) flagged the representation-versus-curriculum
+  distinction as load-bearing: if sequential freezing is not materially
+  superior to matched joint training, the program's T1 -> freeze -> T2
+  recipe (EXP-A-03x; the curriculum default in examples/distill_run.py)
+  is an implementation choice, not a mechanism, and a curriculum failure
+  must not be allowed to invalidate the residual architecture (or vice
+  versa: a recipe that only works under an unexamined curriculum
+  assumption must not be promoted). EXP-A-03x established that the
+  sequential pipeline trains and recovers this site (discovery, grade
+  C, KD objective); EXP-AF-001 established the matched-CE equal-budget
+  control design this experiment reuses. The suite doc (document 10,
+  §7) arms 3 and 4 (T1 -> freeze -> T2 -> freeze -> T3 and T1 ->
+  joint(T2,T3)) are excluded: routine T3/T4 scaling is locked by the
+  unlock rules, the architecture supports at most two planes
+  (TernarySTE), and 'where scientifically appropriate' does not justify
+  a freeze exception for new plane-stacking architecture while cheaper
+  diagnostics are open."
+
+revision: ""              # filled at RUN — commit hash of the code
+run_namespace: "runs/a/EXP-AF-004/<timestamp>/seed-00X/<arm>/"
+environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt in run namespace"
+baseline: "The joint arm IS the preregistered control (matched budget,
+  matched storage; only the curriculum differs). External references:
+  FP16 eval (EXP-A-001: wikitext ppl 13.09, arc_easy 0.6073,
+  lambada_openai 0.6095); untrained PTQ arm on the same layer
+  (EXP-A-011: wikitext ppl 427.71, arc_easy 0.5396 — the init point of
+  every arm); EXP-AF-001 arm B = this site's primary-latent-only
+  training at 500 steps matched CE (wikitext ppl 34.81 ± 2.28,
+  arc_easy 0.6350 ± 0.0022, lambada_openai 0.5647 ± 0.0010 — the
+  t1_only arm's halfway point); EXP-A-03x sequential KD on this site
+  (wikitext ppl 41.44, arc_easy 0.6313 — different objective, not
+  directly comparable)."
+
+controls:
+  - "Arm joint is the preregistered control: identical model, data,
+    order, optimizer settings, total steps, total tokens, deployed
+    storage. Only the curriculum (which latents are trainable in which
+    steps) differs."
+  - "Data order matched by construction: every (arm, seed) pair samples
+    from the same cached token stream with the same sampler seed and
+    consumes exactly 1000 batches (pinned by
+    tests/test_af4_sequential_vs_joint.py via the af1 sampler tests)."
+  - "Freeze invariant: in arm seq the primary latent is bitwise
+    identical before and after stage 2 (driver asserts torch.equal and
+    the run is INVALID on violation; pinned by
+    tests/test_af4_sequential_vs_joint.py)."
+  - "Arm t1_only is the budget control: same total steps/tokens, one
+    plane deployed. Its storage differs by construction (one plane, not
+    two) and it is NOT part of the claim test — it answers the
+    secondary question 'does the second plane add anything at matched
+    budget in this regime?' (A-RP-001's question localized to this
+    site; reported as context, never mixed into the A-RP-003 verdict)."
+
+variants:
+  - "arm seq: stage 1 = primary STE latent trainable, n_planes=1, 500
+    steps; freeze primary; stage 2 = residual STE latent trainable,
+    n_planes=2, 500 steps. Deploys 2 planes."
+  - "arm joint: primary + residual STE latents both trainable,
+    n_planes=2 from step 0, 1000 steps. Deploys 2 planes."
+  - "arm t1_only: primary STE latent trainable, n_planes=1, 1000
+    steps. Deploys 1 plane (budget control; storage differs by
+    construction)."
+
+objective_note: >
+  All arms train with next-token cross-entropy on wikitext-103 train,
+  the matched-CE choice established by EXP-AF-001 for this claim family
+  (KD would inject a second, non-matched training signal; the claim is
+  about the curriculum, so the objective is held fixed). The residual
+  latent is initialized N(0, 0.01) per the repo default
+  (HFStudentAdapter._attach_ste; the ternary dead zone at r=0 makes a
+  zero init untrainable — see AF3 for the init-robustness question).
+  All stages/arms use identical SGD settings (lr 1e-3, momentum 0.9,
+  grad clip 1.0); no per-plane LR scaling (the claim is not about LR
+  schedules).
+
+dataset_and_samples: "wikitext-103 train split, tokenized once and
+  cached (/tmp/wikitext103_train_ids.npy on legion, sha256 recorded in
+  ARTIFACTS.json); random-window sampling, seed per run. Eval: FULL
+  wikitext test, arc_easy, lambada_openai (no --limit; confirmation
+  tier)."
+seeds: [1, 2, 3]   # seed-001/002/003 sub-namespaces per v2 suite layout
+metrics:
+  - "capability: wikitext word_perplexity (lower better), arc_easy acc
+    (higher better), lambada_openai acc (higher better) — full tasks,
+    float16 eval, matching the EXP-A-001 reference ladder"
+  - "cost (reported, not a decision axis for this claim): deployed
+    bytes per arm computed as packed ternary codes (2 bits/weight) +
+    per-group fp16 scales; training steps/tokens matched by
+    construction; FLOPs/ops-per-token/memory-traffic/latency/energy
+    are OUT OF SCOPE (single-site curriculum question; the cost-vector
+    program lives in the RPM experiments)"
+  - "diagnostic-only (NEVER acceptance): per-stage training CE loss
+    curves"
+evidence_categories: [representation, downstream]
+
+# ----- PASS / FAIL / KILL thresholds (frozen at PROPOSE) ------------------
+# Per A-RP-003 quantitative_thresholds (claims/A-RP-003.yaml, v1).
+# Directions: ppl LOWER is better; acc HIGHER is better.
+pass_thresholds:
+  - "Q(seq) exceeds Q(joint) by >2 stderr-of-difference on at least one
+    capability metric: (mean_joint - mean_seq) / se_diff > 2 for
+    wikitext ppl, or (mean_seq - mean_joint) / se_diff > 2 for
+    arc_easy or lambada_openai, where
+    se_diff = sqrt(se_seq^2 + se_joint^2) over n=3 seeds."
+  - "AND no regression beyond 1 stderr-of-difference on the other
+    capability metrics (same formula, opposite direction)."
+
+fail_thresholds:
+  - "No capability metric separates seq from joint by >2
+    stderr-of-difference in either direction (sequential is then
+    retained only if simpler; the mechanism claim is abandoned)."
+  - "OR joint beats seq by >2 stderr-of-difference on any capability
+    metric (recorded as FAIL with direction 'joint superior' — the
+    curriculum default must then be reconsidered as a follow-up, never
+    edited in place)."
+
+kill_criteria:
+  - "Training diverges in any arm at any seed (loss = NaN or inf)."
+  - "Any arm's post-train wikitext ppl is worse than the untrained PTQ
+    reference 427.71 (training collapsed the site; rerun with a lower
+    preregistered LR under a NEW experiment ID, never edited in
+    place)."
+  - "Freeze invariant violation: the primary latent moved during
+    stage 2 of arm seq (run is INVALID)."
+  - "Budget overrun: total wall clock exceeds 8 GPU-hours on legion."
+
+budget: "8 GPU-hours total on legion. 9 train+eval runs (3 arms x 3
+  seeds), estimated ~45-50 min each (1000 steps at ~1s + full 3-task
+  eval at ~3-5 min), ~7 GPU-h total; two GPUs run (arm, seed) pairs in
+  parallel (~4h wall). Confirmation tier cap: 8h."
+
+stop_conditions:
+  - "All 9 arm x seed runs complete with eval summaries and the
+    aggregate.json is written."
+  - "Kill criterion fires: record INVALID and stop."
+
+expected_artifacts:
+  - "per-(seed, arm): history.jsonl (or history_stage1.jsonl +
+    history_stage2.jsonl for arm seq), eval.summary.json,
+    eval.full.json, adapter.npz + meta"
+  - "aggregate.json (per-arm means, stddevs, stderrs; pairwise arm
+    differences in stderr units: seq_vs_joint primary, seq_vs_t1_only
+    and joint_vs_t1_only secondary)"
+  - "provenance.json + env-lock.txt + driver.log + ARTIFACTS.json"
+artifact_paths: []
+artifacts_manifest: "runs/a/EXP-AF-004/<timestamp>/ARTIFACTS.json"
+contamination_risks:
+  - "Shared token cache: /tmp/wikitext103_train_ids.npy is read-only
+    after first write; sha256 recorded. One writer (first run); later
+    runs only read. Cache is shared with EXP-AF-001 by design (same
+    stream, same sampler contract)."
+  - "Each (arm, seed) reloads a fresh model instance; no cross-arm
+    weight leakage. Arm seq's stage transition happens inside one
+    process; the freeze invariant is asserted, not assumed."
+  - "Eval leakage: eval tasks (wikitext test, arc_easy, lambada) are
+    disjoint from wikitext-103 train."
+  - "n_planes leakage: arm t1_only must never see the residual plane
+    (driver sets n_planes=1 before its single stage and never touches
+    it again; eval uses n_planes=1). Arms seq/joint evaluate at
+    n_planes=2 via apply_eval_mode (eval weight = q_primary +
+    q_residual), matching their deployed form."
+
+# ----- freeze exception logged here (OPERATING-PLAN §3, §6) ---------------
+freeze_exception:
+  change: >
+    (a) New examples/af4_sequential_vs_joint.py: three-arm curriculum
+    driver reusing af1_budget_control's token cache, window sampler,
+    CE loss, and shared train_arm loop (imported, not copied — the
+    matched-budget contract stays literally one implementation). Adds
+    the seq two-stage curriculum with the primary-freeze assertion,
+    n_planes staging via HFStudentAdapter._current_n_planes, per-arm
+    eval n_planes (1 for t1_only, 2 for seq/joint), and a generalized
+    pairwise aggregate (seq_vs_joint primary; seq_vs_t1_only,
+    joint_vs_t1_only secondary). (b) New tests
+    (tests/test_af4_sequential_vs_joint.py) pinning: the seq staging
+    freeze invariant and residual-only stage-2 movement on a synthetic
+    STE, the n_planes forward switch semantics, per-arm parameter-set
+    selection, and the pairwise aggregate z-score conventions.
+  justification: >
+    Required to execute this preregistered AF4 experiment: no existing
+    driver can run a two-stage freeze curriculum at matched total
+    budget (af1_budget_control trains one parameter set for one stage;
+    distill_run.py's curriculum trains both planes jointly in stage 2,
+    i.e. it cannot freeze T1). The driver reuses af1's control
+    machinery so the matched-budget property remains a construction
+    property. No trainer/adapter/quantizer changes: the two-plane
+    torch STE and the runtime n_planes switch already exist
+    (eac2c04).
+  approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN §3)"
+
+# ----- decision block (filled at DECIDE) -----------------------------------
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""
+supersedes: null

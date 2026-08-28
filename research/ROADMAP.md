@@ -342,6 +342,15 @@ its way into adaptive-gating experiments.
       {0, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2} × seeds {11, 22, 33}. Aggregate
       mean/std/failure rate/best/worst. Classify ROBUST / MODERATELY
       SENSITIVE / FRAGILE; narrow-window success lowers the robustness grade.
+- [ ] **2.4** `EXP-AF-004` — **AF4 sequential-vs-joint training** (A-RP-003).
+      Arm seq (primary 500 steps @ n_planes=1 → freeze → residual 500
+      steps @ n_planes=2) vs arm joint (both latents, 1000 steps @
+      n_planes=2) at matched total budget (512k tokens), matched CE,
+      matched deployed storage; arm t1_only budget control. n=3 seeds,
+      full 3-task eval. **PREREGISTERED 2026-08-28** (manifest
+      `research/track-a-residual-ternary/residual-falsification/experiments/AF4/manifest.yaml`;
+      thresholds frozen per A-RP-003 v1; suite-doc T3 arms excluded —
+      routine T3/T4 scaling locked by the unlock rules).
 - [x] **2.11** `EXP-AF-002-R` — **AF2-R clean reproduction of AF2.** Required
 - [x] **2.12** `EXP-AF-002-D` — **AF2-D damaged-PTQ-start matched-storage.**
       Required to characterize T2's regime of dominance on the
