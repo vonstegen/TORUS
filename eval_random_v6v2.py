@@ -1,0 +1,197 @@
+"""Post-hoc eval of random arms for EXP-RPM-AF2D-SEVERITY (TWN damage).
+
+Adapts the canonical examples/eval_untrained_arms_v2.py for:
+- TWN damage (apply_damage_twn) instead of Gaussian
+- Threshold-sweep directory structure: runs/r/EXP-RPM-AF2D-SEVERITY/threshold-X.X/<ts>/seed-N/...
+"""
+from __future__ import annotations
+import argparse, gc, json, sys
+from pathlib import Path
+
+import numpy as np
+import torch
+import torch.nn.functional as F
+from examples.af2_storage_tournament import (  # noqa: E402
+    _patch_module_forward,
+)
+from torus.train.ste import ternary_quantize_with_ste  # noqa: E402
+def navigate_to_module(model, target_path):
+    parts = target_path.split(".")
+    node = model
+    for p in parts[:-1]:
+        node = getattr(node, p)
+    leaf = getattr(node, parts[-1])
+    # If leaf is a Module container (e.g., OlmoMLP), find the Linear.
+    if not hasattr(leaf, "weight") and hasattr(leaf, "down_proj"):
+        leaf = leaf.down_proj
+    return leaf
+    node = model
+    for p in parts[:-1]:
+        node = getattr(node, p)
+    return node
+
+
+def load_model(model_name, device):
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name, torch_dtype=torch.float16, low_cpu_mem_usage=True
+    ).to(device)
+    model.eval()
+    return model, tokenizer
+
+
+def apply_damage_twn(model, target_path, threshold, group_size=128):
+    leaf = navigate_to_module(model, target_path)
+    w_before = leaf.weight.detach().clone()
+    w_np = w_before.cpu().numpy().astype(np.float32, copy=False)
+    codes, scale, quantized = ternary_quantize_with_ste(
+        w_np, group_size=group_size, threshold=threshold,
+        calibrate_norm=False, ref_weight=w_np,
+    )
+    q_tensor = torch.from_numpy(quantized).to(
+        leaf.weight.device, leaf.weight.dtype)
+    leaf.weight.data.copy_(q_tensor)
+    leaf.weight.requires_grad_(False)
+
+
+def patch_random_t2(model, target_module, npz_path):
+    d = np.load(npz_path)
+    shape = tuple(int(x) for x in d["shape"])
+    out_features, in_features = shape
+    scale = torch.from_numpy(d["scale"]).to(
+        device=next(model.parameters()).device, dtype=torch.float16)
+    packed = d["packed"]
+    n_total = out_features * in_features
+    flat = np.zeros(n_total, dtype=np.int8)
+    for i in range(4):
+        flat[i::4] = (packed >> (2 * i)) & 0x3
+    flat = flat[:n_total]
+    coded = (flat.astype(np.int8) - 1).astype(np.float32)
+    q_ste = coded.reshape(shape)
+    q_ste = torch.from_numpy(q_ste).to(
+        device=next(model.parameters()).device, dtype=torch.float16)
+    scale_b = scale.expand(out_features, in_features)
+    parent = navigate_to_module(model, target_module)
+    leaf = parent.down_proj if hasattr(parent, "down_proj") else parent
+    def residual(x):
+        out = F.linear(x, q_ste * scale_b)
+        return out * scale.squeeze(1)
+    _patch_module_forward(leaf, residual)
+
+
+def patch_random_lora(model, target_module, npz_path):
+    d = np.load(npz_path)
+    device = next(model.parameters()).device
+    W_up = torch.from_numpy(d["W_up"]).to(device=device, dtype=torch.float16)
+    W_down = torch.from_numpy(d["W_down"]).to(device=device, dtype=torch.float16)
+    parent = navigate_to_module(model, target_module)
+    leaf = parent.down_proj if hasattr(parent, "down_proj") else parent
+    def residual(x):
+        hidden = F.linear(x, W_down)
+        return F.linear(hidden, W_up)
+    _patch_module_forward(leaf, residual)
+
+def run_lm_eval(model, tokenizer, tasks, batch_size):
+    from lm_eval import simple_evaluate
+    from lm_eval.models.huggingface import HFLM
+    lm = HFLM(pretrained=model, tokenizer=tokenizer, batch_size=batch_size)
+    results = simple_evaluate(model=lm, tasks=tasks)
+    summary = {}
+    for task, res in results["results"].items():
+        for metric, val in res.items():
+            if isinstance(val, (int, float)):
+                summary[f"{task}_{metric}"] = float(val)
+    return {"summary": summary, "full": results}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--runs-root", default="/home/andrew-jochl/TORUS/runs/r")
+    ap.add_argument("--exp-id", default="EXP-RPM-AF2D-SEVERITY")
+    ap.add_argument("--arms", default="random_t2_ternary,random_lora")
+    ap.add_argument("--tasks", default="wikitext,arc_easy,lambada_openai")
+    ap.add_argument("--batch-size", type=int, default=16)
+    ap.add_argument("--seeds", default="1,2,3")
+    ap.add_argument("--device", default="cuda")
+    ap.add_argument("--target-module", default="model.layers.0.mlp.down_proj")
+    args = ap.parse_args()
+
+    runs_root = Path(args.runs_root)
+    exp_dir = runs_root / args.exp_id
+    arms = args.arms.split(",")
+    seeds = [int(s) for s in args.seeds.split(",")]
+    tasks = args.tasks.split(",")
+
+    thresholds = sorted([float(p.name.split("-")[1]) for p in exp_dir.iterdir()
+                          if p.name.startswith("threshold-")])
+
+    model_name = None
+    for thr in thresholds:
+        thr_dir = exp_dir / f"threshold-{thr}"
+        ts_dirs = sorted([p for p in thr_dir.iterdir()
+                          if p.is_dir() and p.name.startswith("2026")])
+        if not ts_dirs:
+            continue
+        ts = ts_dirs[0]
+        for seed in seeds:
+            for arm_dir in (ts / f"seed-{seed:03d}").iterdir():
+                if arm_dir.name in arms:
+                    continue
+                es_path = arm_dir / "eval.summary.json"
+                if es_path.exists():
+                    model_name = json.loads(es_path.read_text()).get("model")
+                    break
+            if model_name:
+                break
+        if model_name:
+            break
+
+    print(f"[eval-random-v6] model={model_name} target={args.target_module} thresholds={thresholds}", flush=True)
+
+    for thr in thresholds:
+        thr_dir = exp_dir / f"threshold-{thr}"
+        ts_dirs = sorted([p for p in thr_dir.iterdir()
+                          if p.is_dir() and p.name.startswith("2026")])
+        if not ts_dirs:
+            continue
+        ts = ts_dirs[0]
+        for seed in seeds:
+            for arm in arms:
+                arm_dir = ts / f"seed-{seed:03d}" / arm
+                npz_path = arm_dir / "adapter.npz"
+                if not npz_path.exists():
+                    print(f"[eval-random-v6] {arm_dir}: no adapter.npz", flush=True)
+                    continue
+                es_path = arm_dir / "eval.summary.json"
+                if es_path.exists():
+                    existing = json.loads(es_path.read_text())
+                    if existing.get("tasks"):
+                        continue
+                print(f"[eval-random-v6] thr={thr} seed={seed} arm={arm}", flush=True)
+                model, tokenizer = load_model(model_name, device=args.device)
+                apply_damage_twn(model, args.target_module, threshold=thr)
+                if arm == "random_t2_ternary":
+                    patch_random_t2(model, args.target_module, npz_path)
+                elif arm == "random_lora":
+                    patch_random_lora(model, args.target_module, npz_path)
+                result = run_lm_eval(model, tokenizer, tasks, args.batch_size)
+                if es_path.exists():
+                    existing = json.loads(es_path.read_text())
+                else:
+                    existing = {"arm": arm, "seed": seed, "model": model_name,
+                                "target_module": args.target_module}
+                existing["tasks"] = result["summary"]
+                existing["damage_meta"] = {"threshold": thr}
+                es_path.write_text(json.dumps(existing, indent=2))
+                (arm_dir / "eval.full.json").write_text(
+                    json.dumps(result["full"], indent=2, default=str))
+                print(f"[eval-random-v6] wrote {es_path}", flush=True)
+                del model, tokenizer
+                gc.collect()
+                if args.device.startswith("cuda"):
+                    torch.cuda.empty_cache()
+
+
+if __name__ == "__main__":
+    main()
