@@ -357,13 +357,17 @@ its way into adaptive-gating experiments.
       Required next: §2.18 EXP-AF-004-R before CONFIRMED_FAIL.
 - [ ] **2.18** `EXP-AF-004-R` — **AF4-R clean reproduction** (AF8).
       Required before A-RP-003 → CONFIRMED_FAIL. New experiment/run
-      ID, independent namespace, frozen SHA `f1df165`, fresh process
-      on legion, independently generated eval output, same
-      preregistered thresholds, n=3 seeds (1, 2, 3). Identity of
-      aggregate values is the expected outcome, NOT a violation
-      (EXP-AF-001-R precedent: AF8 tests traceability). On
-      reproduction, A-RP-003 → CONFIRMED_FAIL; on non-reproduction,
-      verdict-INVALIDATED and A-RP-003 reopens to TESTING.
+      ID, independent namespace (detached worktree at frozen SHA
+      `f1df165`), fresh processes on legion, independently generated
+      token cache + eval output, same preregistered thresholds,
+      n=3 seeds (1, 2, 3). **PREREGISTERED 2026-08-28** (manifest
+      `experiments/AF4-R/manifest.yaml`). Reproduction rule (frozen,
+      per user directive): decision replay under the frozen AF4
+      acceptance formulas + every arm × metric mean within ±2
+      combined stderrs; byte-identity is a provenance observation,
+      NOT the acceptance criterion. On reproduction, A-RP-003 →
+      CONFIRMED_FAIL; on non-reproduction, A-RP-003 reopens to
+      TESTING; on uncertain provenance, INVALID.
 - [x] **2.11** `EXP-AF-002-R` — **AF2-R clean reproduction of AF2.** Required
 - [x] **2.12** `EXP-AF-002-D` — **AF2-D damaged-PTQ-start matched-storage.**
       Required to characterize T2's regime of dominance on the

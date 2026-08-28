@@ -1,0 +1,214 @@
+# Experiment record — EXP-AF-004-R — clean reproduction of EXP-AF-004 (confirmation tier)
+# Preregistered 2026-08-28 BEFORE any run under this ID. Thresholds frozen.
+# Required by OPERATING-PLAN §3/§11 and ROADMAP §2.18 to transition
+# A-RP-003 from PROVISIONAL_FAIL to CONFIRMED_FAIL.
+id: EXP-AF-004-R
+track: A
+subtrack: "AF4-R clean reproduction"
+tier: confirmation
+claims_addressed: [A-RP-003]
+title: "Clean reproduction of EXP-AF-004 under AF8 governance (new
+  namespace, frozen SHA, fresh process, independent token cache,
+  independently generated eval output)"
+owner: "research-harness"
+date_proposed: "2026-08-28"
+status: PROPOSED
+decision: null
+grade: null
+
+hypothesis: "The EXP-AF-004 result (run `runs/a/EXP-AF-004/20260828T121414Z`,
+  code SHA `f1df165`) reproduces under AF8 governance: the frozen AF4
+  acceptance formulas, recomputed independently from AF4-R per-seed
+  values, return the same verdict (FAIL clause 2 fires — joint beats
+  seq by >2 stderr-of-difference on at least one capability metric —
+  and the PASS clause fails on all three), AND every arm x capability
+  metric mean sits within ±2 combined stderrs of the AF4 arm means."
+
+rationale: >
+  EXP-AF-004 moved A-RP-003 to PROVISIONAL_FAIL / REPRODUCTION_REQUIRED
+  under the OPERATING-PLAN v2.3 lifecycle; CONFIRMED_FAIL requires this
+  clean reproduction. If the new run reproduces the FAIL, A-RP-003 ->
+  CONFIRMED_FAIL closes the sequential-freeze hypothesis (the mechanism
+  claim is abandoned; sequential retained only if simpler). If it does
+  NOT reproduce, A-RP-003 reopens to TESTING and the AF4 verdict is
+  retained as an unreproduced single result. If provenance is
+  uncertain, the run is INVALID and must be rerun cleanly.
+
+# ----- the reproduction acceptance rule (frozen; read before running) ------
+# Per the user directive of 2026-08-28: the acceptance criterion is
+# reproduction of the AF-004 DECISION under the frozen acceptance
+# criteria, NOT bit-identity of aggregates. EXP-AF-001-R observed
+# byte-identical per-seed values under a deterministic pipeline; if
+# that occurs here it is recorded as a provenance observation
+# (traceability notary) and nothing more.
+reproduction_rule:
+  REPRODUCED_iff_all:
+    - "Run integrity: 9/9 (arm, seed) runs complete with eval
+      summaries; freeze_check true on all 3 seq runs (primary latent
+      bitwise identical across the stage boundary); no NaN/inf in any
+      history record; deployed bytes per arm identical to AF4's
+      recorded values (seq = joint = 8,912,896; t1_only = 4,456,448 —
+      architecture constants, not stochastic)."
+    - "Decision replay: the frozen AF4 acceptance formulas
+      (experiments/AF4/manifest.yaml pass_thresholds /
+      fail_thresholds), recomputed by the audit script from AF4-R
+      per-seed values (NOT read from AF4-R's aggregate.json), return
+      the AF4 verdict: FAIL with direction joint superior."
+    - "Statistical agreement: for every arm x capability metric,
+      |mean_R - mean_AF4| <= 2 * sqrt(se_R^2 + se_AF4^2), with means
+      and stderrs recomputed from per-seed values on both sides."
+  NOT_REPRODUCED_iff:
+    - "Run integrity holds, but decision replay returns a different
+      verdict, OR any arm x metric mean falls outside the ±2
+      combined-stderr band. Effect: A-RP-003 reopens to TESTING; the
+      AF4 verdict is retained as an unreproduced single result."
+  INVALID_iff:
+    - "Provenance uncertain (namespace/preexisting-path violation;
+      independent cache content sha256 differs from AF4's recorded
+      cache sha256 without a documented cause; code drift vs the
+      frozen SHA on any executable path), OR a frozen kill criterion
+      fires (divergence; freeze violation; post-train ppl worse than
+      427.71). Effect: rerun cleanly under a new run ID; no claim
+      state change."
+  byte_identity_note: "Byte-identical per-seed values are neither
+    required nor sufficient. They are recorded as a provenance
+    observation only."
+
+# ----- frozen reference values (AF4, committed record) ---------------------
+# Copied from experiments/AF4/runs/20260828T121414Z/aggregate.json at
+# PROPOSE so the comparison target cannot drift with later edits.
+af4_reference:
+  run: "runs/a/EXP-AF-004/20260828T121414Z/"
+  code_sha: "f1df16515d5e6b6eeb9f126d296d7b682aa82991"
+  verdict: "FAIL (joint superior): wikitext z=+5.20 for joint, lambada
+    z=+21.88 for joint, arc_easy not separated (z=-0.90)"
+  arm_means:
+    seq:     {wikitext: 24.919034993421352, arc_easy: 0.561026936026936,  lambada_openai: 0.44323694934989327}
+    joint:   {wikitext: 21.43710215751005,  arc_easy: 0.5688832772166106, lambada_openai: 0.4684002846238437}
+    t1_only: {wikitext: 19.29754050086778,  arc_easy: 0.6547418630751963, lambada_openai: 0.5927291545378096}
+  deployed_bytes: {seq: 8912896, joint: 8912896, t1_only: 4456448}
+
+revision: "f1df16515d5e6b6eeb9f126d296d7b682aa82991"  # FROZEN — the AF4 run code. No code edits on the execution path.
+run_namespace: "runs/a/EXP-AF-004-R/<timestamp>/seed-00X/<arm>/ (inside the detached worktree ~/TORUS-af4r on legion)"
+environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt regenerated at run start"
+baseline: "A-RP-003 thresholds verbatim from claims/A-RP-003.yaml
+  quantitative_thresholds (v1) via experiments/AF4/manifest.yaml.
+  Preregistered here so thresholds cannot be rewound in light of run
+  output."
+
+# ----- what is new in AF4-R vs AF4 (the AF8 governance checklist) ----------
+new_in_this_run:
+  - "New experiment ID: EXP-AF-004-R (no supersession of EXP-AF-004)."
+  - "New run namespace: runs/a/EXP-AF-004-R/<ts>/ inside a detached
+    git worktree (~/TORUS-af4r) checked out at the frozen SHA — code
+    identity is a construction property, and no reuse of AF4's
+    namespace. One writer per namespace."
+  - "Fresh Python processes on legion (nohup + disown; not forks of
+    the AF4 driver processes)."
+  - "Independently generated wikitext-103 token cache at a NEW path,
+    re-tokenized from the HF parquet shards by the audit script
+    (examples/audit_af4_reproduction.py --prepare), which records
+    shard sha256s, cache sha256, tokenizer id, auditor PID, and UTC.
+    AF4's cache file MUST NOT be read or linked. Content identity
+    with AF4's recorded cache sha256 is the expected outcome
+    (deterministic tokenization) and serves as the provenance
+    notary; a mismatch is INVALID unless a documented cause exists."
+  - "Independently generated eval output (full lm-eval-harness runs
+    on the same three tasks; results are regenerated, not copied)."
+  - "env-lock.txt regenerated from the shared venv at run start."
+
+identical_to_af4_by_design:
+  - "Driver, arguments, thresholds, seeds (1,2,3), arms, stage steps
+    (500+500), batch/seq (4x128), optimizer settings, eval tasks and
+    dtypes: identical, executed from the frozen SHA. NO driver,
+    threshold, or hyperparameter changes."
+  - "Model and datasets: same HF identifiers from the same local
+    caches."
+  - "The t1_only arm is part of the frozen 3-arm design and is
+    re-run for completeness of the matched-budget structure. Its
+    pairwise comparisons are recorded as context ONLY. Per the user
+    directive of 2026-08-28, no new claim is registered from AF4-R;
+    the t1_only dominance pattern may justify its own preregistered
+    experiment afterward."
+
+controls:
+  - "Audit script recomputes arm means/stderrs from per-seed
+    eval.summary.json values on BOTH sides (AF4 committed records and
+    AF4-R fresh runs) — the driver's aggregate.json is never trusted
+    as input to the verdict."
+  - "Freeze invariant is asserted by the driver at runtime (unchanged
+    frozen code) and re-verified by the audit from the recorded
+    freeze_check flags."
+  - "Tests (tests/test_af4_reproduction_audit.py) pin the decision
+    replay and band-check logic against synthetic AF4/AF4-R data:
+    REPRODUCED on identical-verdict data, NOT_REPRODUCED on a flipped
+    verdict or a band violation, INVALID on integrity failures."
+
+variants:
+  - "arm seq / joint / t1_only: identical to AF4 (frozen design)."
+
+objective_note: "Identical to AF4 (matched CE). This experiment changes
+  no training semantics; it re-executes them."
+
+dataset_and_samples: "wikitext-103 train, independently re-tokenized
+  cache (see new_in_this_run); full wikitext test, arc_easy,
+  lambada_openai evals (no --limit)."
+seeds: [1, 2, 3]
+metrics:
+  - "capability: wikitext word_perplexity, arc_easy acc,
+    lambada_openai acc — full tasks, float16 eval (frozen ladder)"
+  - "diagnostic-only: per-stage training CE loss curves"
+evidence_categories: [reproducibility]
+
+kill_criteria:
+  - "Any frozen AF4 kill criterion fires (divergence; freeze
+    violation; post-train ppl worse than the untrained PTQ reference
+    427.71): the run is INVALID."
+  - "Budget overrun: total wall clock exceeds 4 GPU-hours (AF4 used
+    ~0.93; 4h cap)."
+
+budget: "4 GPU-hours cap on legion. Expected ~1 GPU-h (9 runs at AF4's
+  observed rate)."
+
+stop_conditions:
+  - "All 9 runs complete and the audit JSON is written."
+  - "Kill criterion fires: record INVALID and stop."
+
+expected_artifacts:
+  - "per-(seed, arm): history*.jsonl, eval.summary.json, eval.full.json,
+    adapter.npz + meta"
+  - "aggregate.json (driver), audit JSON (independent recomputation +
+    reproduction verdict), cache_provenance.json, provenance.json,
+    env-lock.txt, queue logs, ARTIFACTS.json"
+artifact_paths: []
+artifacts_manifest: "runs/a/EXP-AF-004-R/<timestamp>/ARTIFACTS.json"
+contamination_risks:
+  - "AF4's namespace (runs/a/EXP-AF-004/) and cache file are read-only
+    references for the audit comparison; AF4-R writes only inside its
+    own namespace in the detached worktree."
+  - "Token cache: built once by the audit --prepare step BEFORE the
+    GPU queues start (single writer), then read-only."
+  - "The shared venv is an environment input, recorded via env-lock;
+    it is not a run artifact."
+
+freeze_exception:
+  change: "New audit script examples/audit_af4_reproduction.py
+    (--prepare cache builder + AF8 notary; --audit independent
+    recomputation, decision replay, band check) and
+    tests/test_af4_reproduction_audit.py. The audit code never touches
+    the training/eval execution path (frozen at f1df165); it observes
+    artifacts. No driver/trainer/adapter/quantizer changes."
+  justification: "Required to execute this preregistered AF8
+    reproduction (OPERATING-PLAN §3): an independent recomputation of
+    the decision from raw per-seed artifacts is the reproducibility
+    check; trusting the driver's own aggregate would make the
+    reproduction circular."
+  approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN §3)"
+
+# ----- decision block (filled at DECIDE) -----------------------------------
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""
+supersedes: null
