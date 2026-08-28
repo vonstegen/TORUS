@@ -98,6 +98,7 @@ The A-F falsification suite (roadmap Phase 2) attacks A-RP-001/002/003; the RPM 
 
 
 
+- **2026-08-28 — Track B reassessment: STAYS LOCKED** (`research/reports/TRACK-B-REASSESSMENT-2026-08-28.md`). B1 conditions: (1) A-RP-002 CONFIRMED_PASS MET (robustness annotations added today); (2) A-RP-LRN MET but scoped to the AF2-D TWN band; (3) **AF5 held-out-task value NOT MET** (EXP-RPM-T01: 0/4 tasks ≥ +1σ — blocking); (4) **≥2 layer categories NOT MET** (only AF2-D qualifies — blocking). Today's AF3/AF6b results strengthen site-local validity but move neither blocker. Cheapest unblocks: an AF5 rerun at a regime that actually damages held-out-task capability, and a CAL-first second-site discovery sweep. EXP-B-01x/02x/03x remain locked.
 - **2026-08-28 — EXP-AF-006b DECIDED (general effect)** (run `runs/a/EXP-AF-006b/20260828T162141Z`; corrects EXP-AF-006 INVALID).
   - Q1: window-artifact hypothesis dead — all regimes {16, 128, 256} recover 3/3 at matched tokens; the gradient is optimizer-step budget (4000/500/250 steps → 15.1/19.0/26.7), not window width; seq16 superiority labeled 'recovers, step-confounded' per the frozen rule.
   - Q2: cross-corpus transfer holds both directions (owt→wikitext 14.7; owt own-corpus recovery 0.977; wt→owt ≈0.96 descriptive).

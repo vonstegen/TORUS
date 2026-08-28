@@ -574,6 +574,12 @@ advantage (per RPM proposal §13). The current state:
 ## Phase 4 — Track B: Adaptive Computation and OLMoE (unlock-ruled)
 
 **Unlock rules (enforced, not scheduled):**
+**Reassessment 2026-08-28** (`research/reports/TRACK-B-REASSESSMENT-2026-08-28.md`):
+Track B **stays LOCKED**. B1 conditions (1) A-RP-002 CONFIRMED_PASS
+and (2) A-RP-LRN (scoped to the AF2-D TWN band) are MET; (3) AF5
+held-out-task value (EXP-RPM-T01, 0/4 tasks) and (4) ≥2 layer
+categories (only AF2-D qualifies) are NOT MET and block. Cheapest
+unblocks recorded in the report.
 
 - **B1 oracle gating:** requires A-RP-001 `CONFIRMED_PASS`, **A-RP-LRN**
   at least provisionally supported (REGIME_CONDITIONAL is insufficient —
