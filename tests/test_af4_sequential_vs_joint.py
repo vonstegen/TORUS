@@ -213,3 +213,39 @@ def test_aggregate_pairwise_zscore_conventions() -> None:
     assert "seq_vs_t1_only" in agg["difference"]
     assert "joint_vs_t1_only" in agg["difference"]
     assert agg["arms"]["seq"]["wikitext"]["n"] == 3
+
+def test_aggregate_only_scans_seed_layout(tmp_path, monkeypatch) -> None:
+    """Parallel GPU queues share one run namespace; --aggregate-only
+    must rebuild aggregate.json from the per-(seed, arm) summaries
+    without retraining."""
+    import json as _json
+
+    for seed in (1, 2):
+        for arm, ppl in (("seq", 21.0), ("joint", 31.0)):
+            d = tmp_path / f"seed-{seed:03d}" / arm
+            d.mkdir(parents=True)
+            with open(d / "eval.summary.json", "w") as f:
+                _json.dump(
+                    {
+                        "arm": arm,
+                        "seed": seed,
+                        "tasks": {
+                            "wikitext": {
+                                "metric": "word_perplexity,none",
+                                "value": ppl + seed,
+                            }
+                        },
+                    },
+                    f,
+                )
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["af4", "--out-dir", str(tmp_path), "--aggregate-only"],
+    )
+    af4.main()
+    with open(tmp_path / "aggregate.json") as f:
+        agg = _json.load(f)
+    assert agg["arms"]["seq"]["wikitext"]["n"] == 2
+    assert "seq_vs_joint" in agg["difference"]

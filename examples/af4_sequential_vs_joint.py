@@ -365,11 +365,27 @@ def main() -> None:
     p.add_argument("--ids-cache", type=Path,
                    default=Path("/tmp/wikitext103_train_ids.npy"),
                    help="disk cache for the tokenized wikitext-103 train ids")
+    p.add_argument("--aggregate-only", action="store_true",
+                   help="Skip training; scan --out-dir for "
+                        "seed-*/<arm>/eval.summary.json and write "
+                        "aggregate.json (used when parallel GPU queues "
+                        "share one run namespace)")
     args = p.parse_args()
 
     for arm in args.arms.split(","):
         if arm not in ARMS:
             raise SystemExit(f"unknown arm {arm!r}; choose from {ARMS}")
+
+    if args.aggregate_only:
+        summaries = []
+        for path in sorted(args.out_dir.glob("seed-*/**/eval.summary.json")):
+            with open(path) as f:
+                summaries.append(json.load(f))
+        if not summaries:
+            raise SystemExit(f"no eval.summary.json under {args.out_dir}")
+        agg = aggregate(summaries, args.out_dir)
+        print(json.dumps(agg["difference"], indent=2))
+        return
 
     from transformers import AutoTokenizer
 
