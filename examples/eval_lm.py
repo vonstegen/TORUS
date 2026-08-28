@@ -22,7 +22,19 @@ import sys
 from pathlib import Path
 
 # Triton bypass — same trick as distill_run.py.
-import triton
+# Triton bypass — same intent as distill_run.py: when triton is
+# unavailable (dev box) or stubbed out by a sibling driver
+# (sys.modules["triton"] = None), keep this module loadable and let
+# transformers fall back to eager attention. A bare `import triton`
+# raised ModuleNotFoundError in both situations and made every driver
+# that loads this module unimportable (TESTS-FAILING-CLASSIFICATION
+# Category A/C).
+try:
+    import triton  # noqa: F401
+except ModuleNotFoundError:
+    import sys as _sys
+
+    _sys.modules["triton"] = None
 
 import torch  # noqa: E402
 

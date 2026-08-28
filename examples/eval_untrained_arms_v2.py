@@ -30,7 +30,13 @@ from pathlib import Path
 
 
 import numpy as np
-import triton
+try:
+    import triton  # noqa: F401
+except ModuleNotFoundError:
+    import sys as _sys
+
+    _sys.modules["triton"] = None
+
 import torch
 
 from examples.af2_storage_tournament import (  # noqa: E402

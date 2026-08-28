@@ -12,7 +12,16 @@ from typing import List, Optional
 
 import numpy as np
 
-import triton
+# Triton bypass — see eval_lm.py. A bare `import triton` raised
+# ModuleNotFoundError on the dev box (no triton) and whenever a
+# sibling driver stubbed sys.modules["triton"] = None first
+# (TESTS-FAILING-CLASSIFICATION Category A).
+try:
+    import triton  # noqa: F401
+except ModuleNotFoundError:
+    import sys as _sys
+
+    _sys.modules["triton"] = None
 
 
 def _load_helper(path: Path, name: str):
