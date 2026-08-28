@@ -17,9 +17,9 @@ title: "EXP-AF-006b. Is the T2 recovery a general representation/training effect
   corpus matrix {wikitext-103, openwebtext} on the AF2-D recipe."
 owner: "research-harness"
 date_proposed: "2026-08-28"
-status: PROPOSED
-decision: null
-grade: null
+status: DECIDED
+decision: DECIDED
+grade: A
 
 hypothesis: "The AF2-D T2 recovery (damaged-TWN primary at
   model.layers.0.mlp.down_proj + trained ternary correction, matched
@@ -184,7 +184,12 @@ expected_artifacts:
   - "audit.json (regime aggregates, threshold evaluation,
     interpretation-rule application)"
   - "provenance.json + env-lock.txt + queue logs + ARTIFACTS.json"
-artifact_paths: []
+artifact_paths:
+  - "experiments/AF6b/verdict.md"
+  - "experiments/AF6b/runs/20260828T162141Z/audit.json"
+  - "experiments/AF6b/runs/20260828T162141Z/verification.json"
+  - "experiments/AF6b/runs/20260828T162141Z/<regime>/seed-*/t2_ternary/eval.summary.json"
+  - "runs/a/EXP-AF-006b/20260828T162141Z/ (legion, git-ignored: adapters, histories, full evals, ARTIFACTS.json, env-lock, provenance)"
 artifacts_manifest: "runs/a/EXP-AF-006/<timestamp>/ARTIFACTS.json"
 contamination_risks:
   - "Token caches (wikitext train, owt train/test, wikitext test) are
@@ -214,9 +219,9 @@ freeze_exception:
   approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN §3)"
 
 # ----- decision block (filled at DECIDE) -----------------------------------
-result_summary: ""
-confidence_and_reproduction: ""
-next_permitted_experiment: ""
-experiments_blocked: []
-conclusion: ""
+result_summary: "DECIDED — the AF2-D T2 recovery is a general representation/training effect at the tested regimes. Q1: all window regimes recover 3/3 (seq16 15.08 +/- 0.06, seq128 18.99 +/- 1.61 in the [17.91, 24.01] reference band, seq256 26.70 +/- 1.31); the gradient is monotonic in optimizer steps, not window width (seq16 labeled 'recovers, step-confounded' per the frozen rule, z = 2.43). Q2: cross-corpus transfer holds both directions (owt-trained -> wikitext ladder 14.6-14.7, 3/3; owt own-corpus recovery ratio 0.977; wikitext-trained -> owt 16.9 covariate). Verification gates PASS (FP16 wt 22.15 in [19.9, 24.4]; damage ratio 3.39 > 1.5). 12/12 cells, bytes uniform, no divergence."
+confidence_and_reproduction: "Confirmation tier; independent auditor on frozen thresholds; reference reproduction in band (third independent reproduction of the CONFIRMED_PASS recipe). Robustness annotation (3) added to A-RP-002's entry: context/corpus-robust at the tested regimes."
+next_permitted_experiment: "Track B reassessment per OPERATING-PLAN §5 (user steering 2026-08-28). Optional: step-budget gradient characterization."
+experiments_blocked: ["none — unlock rules unchanged"]
+conclusion: "T2's recovery is not a 128-window or wikitext-corpus artifact; the visible sensitivity axis is optimizer-step budget. Verdict: experiments/AF6b/verdict.md."
 supersedes: null

@@ -1,0 +1,15 @@
+{
+  "fp16_wt_test_ppl": 22.15495054200094,
+  "fp16_owt_test_ppl": 14.016295369068288,
+  "damage_meta": {
+    "group_size": 128,
+    "threshold": 0.7,
+    "calibrate_norm": false,
+    "fro_norm_before": 26.316749572753906,
+    "fro_norm_after": 15.877206802368164,
+    "fro_ratio": 0.60331184740254
+  },
+  "damaged_wt_test_ppl": 75.1292306842715,
+  "damaged_owt_test_ppl": 93.01302317047916,
+  "damage_ratio_wt": 3.391080947883089
+}

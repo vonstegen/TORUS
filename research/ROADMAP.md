@@ -457,25 +457,23 @@ its way into adaptive-gating experiments.
 - [ ] **2.5** `EXP-AF-005` — **AF5 downstream-transfer gate.** Proxy and
       capability metrics on every AF run (classes per 1.4). Task-relevant T2
       value must exceed the preregistered threshold.
-- [ ] **2.6** `EXP-AF-006` — **AF6 dataset/context robustness.** ≥2 context
-      regimes (seq_len ≈16 and ≈128–256) and, where practical, 2 corpora.
-      Determines whether T2's gain is general or a short-window artifact.
-      **PREREGISTERED 2026-08-28** (manifest
-      `research/track-a-residual-ternary/residual-falsification/experiments/AF6/manifest.yaml`):
-      window matrix seq {16×4000, 128×500, 256×250 steps} token-matched
-      at 256k tokens, corpus matrix {wikitext-103, openwebtext}, 12
-      cells, seeds {1,2,3}; reference band [17.91, 24.01]; per-regime
-      ppl ≤ 100 bar; cross-corpus transfer bar + own-corpus recovery
-      ratio ≥ 0.5; new corpus-ppl eval gated by FP16 sanity band
-      [19.9, 24.4] (instrument-anchored) + within-instrument damage
-      anchor (ratio > 1.5). Step-count confound interpretation rule
-      frozen. **EXP-AF-006 DECIDED INVALID 2026-08-28** (sanity-band
-      miscalibration caught pre-cells: lm-eval wikitext is
-      wikitext-2-raw-v1 document-level word ppl, not wikitext-103
-      token-level; measurement finding recorded). Corrected
-      successor **EXP-AF-006b PREREGISTERED 2026-08-28** (identical
-      design, corrected verification bands).
-- [ ] **2.7** `EXP-AF-007` — **AF7 random-capacity control.** T1 + ternary T2
+- [x] **2.6** `EXP-AF-006(b)` — **AF6 dataset/context robustness.**
+      **Done 2026-08-28 (EXP-AF-006b): DECIDED — general effect, not a
+      window/corpus artifact.** EXP-AF-006 DECIDED INVALID
+      (verification-band miscalibration caught pre-cells; lm-eval
+      wikitext = wikitext-2 document-level word ppl). AF6b: 12/12
+      cells; all window regimes recover 3/3 at matched tokens
+      (seq16 15.08 / seq128 18.99 / seq256 26.70 — gradient is
+      optimizer-step budget, not window width; seq16 'recovers,
+      step-confounded' per frozen rule); cross-corpus transfer both
+      directions (owt→wt 14.7, recovery ratio 0.977; wt→owt ≈0.96
+      covariate). Robustness annotation (3) on A-RP-002. Verdict:
+      `experiments/AF6b/verdict.md`. Next: Track B reassessment
+      per §5.
+      ~~Original §2.6 text: ≥2 context regimes (seq_len ≈16 and
+      ≈128–256) and, where practical, 2 corpora. Determines whether
+      T2's gain is general or a short-window artifact.~~
+      - [ ] **2.7** `EXP-AF-007` — **AF7 random-capacity control.** T1 + ternary T2
       vs. T1 + matched low-rank/dense trainable correction. Similar
       improvement → conclusion is only "additive correction helps"; T2 must
       win on quality-per-bit/compute to support ternary specifically.

@@ -1,0 +1,122 @@
+{
+  "experiment_id": "EXP-AF-006b",
+  "run_dir": "runs/a/EXP-AF-006b/20260828T162141Z",
+  "integrity": {
+    "ok": true,
+    "problems": []
+  },
+  "reference_reproduction": {
+    "stats": {
+      "n": 3,
+      "mean": 18.98890186900779,
+      "stderr": 1.6081801819317625,
+      "values": [
+        22.203833478495245,
+        17.464451438822323,
+        17.29842068970581
+      ]
+    },
+    "band": [
+      17.91,
+      24.01
+    ],
+    "reproduced": true
+  },
+  "q1_window_robustness": {
+    "regimes": {
+      "seq16": {
+        "ppl_stats": {
+          "n": 3,
+          "mean": 15.079281365069312,
+          "stderr": 0.05760098207092849,
+          "values": [
+            15.143890841970643,
+            14.964376196671166,
+            15.129577056566125
+          ]
+        },
+        "n_success": 3,
+        "window_robust": true,
+        "window_sensitive": false
+      },
+      "seq128": {
+        "ppl_stats": {
+          "n": 3,
+          "mean": 18.98890186900779,
+          "stderr": 1.6081801819317625,
+          "values": [
+            22.203833478495245,
+            17.464451438822323,
+            17.29842068970581
+          ]
+        },
+        "n_success": 3,
+        "window_robust": true,
+        "window_sensitive": false
+      },
+      "seq256": {
+        "ppl_stats": {
+          "n": 3,
+          "mean": 26.700949428505854,
+          "stderr": 1.3137841467658689,
+          "values": [
+            29.064928259066033,
+            24.525587263761867,
+            26.512332762689663
+          ]
+        },
+        "n_success": 3,
+        "window_robust": true,
+        "window_sensitive": false
+      }
+    },
+    "seq16_vs_seq128_z": 2.4295257124928296,
+    "seq16_label": "recovers, step-confounded"
+  },
+  "q2_corpus_transfer": {
+    "cross_capability": {
+      "ppl_stats": {
+        "n": 3,
+        "mean": 14.64057726583556,
+        "stderr": 0.047125841245410326,
+        "values": [
+          14.711677818807074,
+          14.551444639040941,
+          14.658609339658664
+        ]
+      },
+      "n_success": 3,
+      "transfer_holds": true
+    },
+    "own_corpus_recovery": {
+      "ratios": [
+        0.9774331826499444,
+        0.9764202352287441,
+        0.9780003951935898
+      ],
+      "ratio_stats": {
+        "n": 3,
+        "mean": 0.977284604357426,
+        "stderr": 0.00046216267351840854,
+        "values": [
+          0.9774331826499444,
+          0.9764202352287441,
+          0.9780003951935898
+        ]
+      },
+      "bar": 0.5,
+      "holds": true,
+      "fp16_owt_test_ppl": 14.016295369068288,
+      "damaged_owt_test_ppl": 93.01302317047916
+    },
+    "wt_trained_cross_direction_covariate": {
+      "owt_test_ppl_values": [
+        17.067569731584292,
+        16.707050606165446,
+        16.891554147803344
+      ],
+      "note": "first measurement; no bar (frozen at PROPOSE)"
+    }
+  },
+  "verdict": "DECIDED"
+}
