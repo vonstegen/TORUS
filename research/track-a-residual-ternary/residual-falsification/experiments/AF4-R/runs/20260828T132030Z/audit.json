@@ -1,0 +1,114 @@
+{
+  "experiment_id": "EXP-AF-004-R",
+  "run_dir": "/home/andrew-jochl/TORUS-af4r/runs/a/EXP-AF-004-R/20260828T132030Z",
+  "af4_dir": "/home/andrew-jochl/TORUS/research/track-a-residual-ternary/residual-falsification/experiments/AF4/runs/20260828T121414Z",
+  "integrity": {
+    "ok": true,
+    "problems": []
+  },
+  "decision_replay_af4r": {
+    "zs": {
+      "wikitext": -5.204129808591408,
+      "arc_easy": -0.8966027196094652,
+      "lambada_openai": -21.88295967301122
+    },
+    "pass_clause_fired": false,
+    "fail1_no_separation": false,
+    "fail2_joint_superior": true,
+    "verdict": "FAIL",
+    "direction": "joint superior"
+  },
+  "decision_replay_af4_reference": {
+    "zs": {
+      "wikitext": -5.204129805935046,
+      "arc_easy": -0.8966027196094652,
+      "lambada_openai": -21.88295967301122
+    },
+    "pass_clause_fired": false,
+    "fail1_no_separation": false,
+    "fail2_joint_superior": true,
+    "verdict": "FAIL",
+    "direction": "joint superior"
+  },
+  "band_check": {
+    "within_all": true,
+    "rows": {
+      "seq": {
+        "wikitext": {
+          "mean_ref": 24.919034993421352,
+          "mean_new": 24.919034993421352,
+          "abs_delta": 0.0,
+          "band": 1.8080670989678709,
+          "within": true
+        },
+        "arc_easy": {
+          "mean_ref": 0.561026936026936,
+          "mean_new": 0.561026936026936,
+          "abs_delta": 0.0,
+          "band": 0.010996586948521604,
+          "within": true
+        },
+        "lambada_openai": {
+          "mean_ref": 0.44323694934989327,
+          "mean_new": 0.44323694934989327,
+          "abs_delta": 0.0,
+          "band": 0.002475079432008388,
+          "within": true
+        }
+      },
+      "joint": {
+        "wikitext": {
+          "mean_ref": 21.43710215751005,
+          "mean_new": 21.437102386034585,
+          "abs_delta": 2.2852453440691534e-07,
+          "band": 0.5586968648591384,
+          "within": true
+        },
+        "arc_easy": {
+          "mean_ref": 0.5688832772166106,
+          "mean_new": 0.5688832772166106,
+          "abs_delta": 0.0,
+          "band": 0.022210457269543526,
+          "within": true
+        },
+        "lambada_openai": {
+          "mean_ref": 0.4684002846238437,
+          "mean_new": 0.4684002846238437,
+          "abs_delta": 0.0,
+          "band": 0.0021100338224076766,
+          "within": true
+        }
+      },
+      "t1_only": {
+        "wikitext": {
+          "mean_ref": 19.29754050086778,
+          "mean_new": 19.297540043182927,
+          "abs_delta": 4.576848517956478e-07,
+          "band": 2.764380691328691,
+          "within": true
+        },
+        "arc_easy": {
+          "mean_ref": 0.6547418630751963,
+          "mean_new": 0.6547418630751963,
+          "abs_delta": 0.0,
+          "band": 0.0017296335586332238,
+          "within": true
+        },
+        "lambada_openai": {
+          "mean_ref": 0.5927291545378096,
+          "mean_new": 0.5927291545378096,
+          "abs_delta": 0.0,
+          "band": 0.0032057731272045514,
+          "within": true
+        }
+      }
+    }
+  },
+  "byte_identity_observation": false,
+  "reproduction": {
+    "verdict": "REPRODUCED",
+    "reasons": [
+      "decision replay matches AF4 (FAIL / joint superior); all arm x metric means within the \u00b12 combined-stderr band"
+    ]
+  }
+}

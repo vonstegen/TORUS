@@ -1,0 +1,15 @@
+{
+  "auditor_pid": 3984451,
+  "auditor_utc": "2026-08-28T13:24:27Z",
+  "token_count": 119882322,
+  "wikitext_cache_sha256": "ace286072df48befa95467339e838b908b1df32f54455ee78379c43f2179be50",
+  "wikitext_cache_path": "/home/andrew-jochl/TORUS-af4r/runs/a/EXP-AF-004-R/20260828T132030Z/wikitext103_train_ids.npy",
+  "parquet_shards_sha256": {
+    "/home/andrew-jochl/.cache/huggingface/hub/datasets--wikitext/snapshots/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1/train-00000-of-00002.parquet": "74da360f23826045b3e6ac6375411fdb15f003030aa74f2596ed08b857cb9212",
+    "/home/andrew-jochl/.cache/huggingface/hub/datasets--wikitext/snapshots/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1/train-00001-of-00002.parquet": "ba090ac30dbf5461e8dcbdd1a1b8e6f3cf9c2c756d64f0c1220450acd514f720"
+  },
+  "tokenizer_id": "allenai/OLMo-1B-0724-hf",
+  "eot_policy": "appended per non-empty text (mirrors distill_run)",
+  "af4_reference_sha256": "ace286072df48befa95467339e838b908b1df32f54455ee78379c43f2179be50",
+  "af4_reference_identity": true
+}

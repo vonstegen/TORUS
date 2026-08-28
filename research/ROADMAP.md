@@ -355,19 +355,19 @@ its way into adaptive-gating experiments.
       `runs/a/EXP-AF-004/20260828T121414Z/`, git `f1df165`. Verdict:
       `research/track-a-residual-ternary/residual-falsification/experiments/AF4/verdict.md`.
       Required next: §2.18 EXP-AF-004-R before CONFIRMED_FAIL.
-- [ ] **2.18** `EXP-AF-004-R` — **AF4-R clean reproduction** (AF8).
-      Required before A-RP-003 → CONFIRMED_FAIL. New experiment/run
-      ID, independent namespace (detached worktree at frozen SHA
-      `f1df165`), fresh processes on legion, independently generated
-      token cache + eval output, same preregistered thresholds,
-      n=3 seeds (1, 2, 3). **PREREGISTERED 2026-08-28** (manifest
-      `experiments/AF4-R/manifest.yaml`). Reproduction rule (frozen,
-      per user directive): decision replay under the frozen AF4
-      acceptance formulas + every arm × metric mean within ±2
-      combined stderrs; byte-identity is a provenance observation,
-      NOT the acceptance criterion. On reproduction, A-RP-003 →
-      CONFIRMED_FAIL; on non-reproduction, A-RP-003 reopens to
-      TESTING; on uncertain provenance, INVALID.
+- [x] **2.18** `EXP-AF-004-R` — **AF4-R clean reproduction** (AF8).
+      **Done 2026-08-28: DECIDED REPRODUCED; A-RP-003 →
+      CONFIRMED_FAIL.** Decision replay (independent recomputation)
+      matches AF4's FAIL / joint superior (z = −5.2041 wikitext,
+      −0.8966 arc_easy, −21.8830 lambada); every arm × metric mean
+      within ±2 combined stderrs; run integrity PASS; byte-identity
+      false and correctly treated as a provenance observation, not
+      the acceptance criterion. Run `runs/a/EXP-AF-004-R/20260828T132030Z/`
+      (worktree `~/TORUS-af4r` at frozen SHA `f1df165`). Verdict:
+      `experiments/AF4-R/verdict-R.md`. The sequential-freeze
+      hypothesis is closed; A-RP-001/002/003 are all decided. Next
+      per user steering (2026-08-28): §2.3 EXP-AF-003 (AF3), then
+      §2.6 EXP-AF-006 (AF6), then Track B reassessment per §5.
 - [x] **2.11** `EXP-AF-002-R` — **AF2-R clean reproduction of AF2.** Required
 - [x] **2.12** `EXP-AF-002-D` — **AF2-D damaged-PTQ-start matched-storage.**
       Required to characterize T2's regime of dominance on the

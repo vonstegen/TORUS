@@ -12,9 +12,9 @@ title: "Clean reproduction of EXP-AF-004 under AF8 governance (new
   independently generated eval output)"
 owner: "research-harness"
 date_proposed: "2026-08-28"
-status: PROPOSED
-decision: null
-grade: null
+status: DECIDED
+decision: REPRODUCED
+grade: A
 
 hypothesis: "The EXP-AF-004 result (run `runs/a/EXP-AF-004/20260828T121414Z`,
   code SHA `f1df165`) reproduces under AF8 governance: the frozen AF4
@@ -180,7 +180,12 @@ expected_artifacts:
   - "aggregate.json (driver), audit JSON (independent recomputation +
     reproduction verdict), cache_provenance.json, provenance.json,
     env-lock.txt, queue logs, ARTIFACTS.json"
-artifact_paths: []
+artifact_paths:
+  - "experiments/AF4-R/verdict-R.md"
+  - "experiments/AF4-R/runs/20260828T132030Z/aggregate.json"
+  - "experiments/AF4-R/runs/20260828T132030Z/audit.json"
+  - "experiments/AF4-R/runs/20260828T132030Z/seed-*/<arm>/eval.summary.json"
+  - "runs/a/EXP-AF-004-R/20260828T132030Z/ (legion worktree ~/TORUS-af4r, git-ignored: adapters, histories, full evals, ARTIFACTS.json, env-lock, provenance, cache_provenance)"
 artifacts_manifest: "runs/a/EXP-AF-004-R/<timestamp>/ARTIFACTS.json"
 contamination_risks:
   - "AF4's namespace (runs/a/EXP-AF-004/) and cache file are read-only
@@ -206,9 +211,9 @@ freeze_exception:
   approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN §3)"
 
 # ----- decision block (filled at DECIDE) -----------------------------------
-result_summary: ""
-confidence_and_reproduction: ""
-next_permitted_experiment: ""
-experiments_blocked: []
-conclusion: ""
+result_summary: "REPRODUCED. Run integrity PASS (9/9 runs, freeze_check true on all seq runs, no NaN/inf, deployed bytes identical per arm). Decision replay MATCH: FAIL / joint superior recomputed independently from raw per-seed values on both sides (z = -5.2041 wikitext, -0.8966 arc_easy, -21.8830 lambada; AF4's z-scores to ~9 significant digits). Statistical agreement PASS: every arm x metric mean within +/-2 combined stderrs. Byte-identity observation: false (deterministic to ~9 significant digits, not the last bit) — recorded as provenance observation only, per the frozen rule. Cache provenance notary: af4_reference_identity true. A-RP-003 -> CONFIRMED_FAIL."
+confidence_and_reproduction: "CONFIRMED. Two independent namespaces, processes, token caches, and eval outputs; identical conclusion at confirmation-tier n=3 both times. Audit: runs/a/EXP-AF-004-R/20260828T132030Z/audit.json."
+next_permitted_experiment: "EXP-AF-003 (AF3 initialization robustness) per user steering 2026-08-28; then EXP-AF-006 (AF6 context robustness); Track B reassessment after AF3/AF6 per §5."
+experiments_blocked: ["routine T3/T4 sequential stacking premised on the freeze-curriculum mechanism"]
+conclusion: "EXP-AF-004's FAIL (joint superior) reproduces under AF8 governance. A-RP-003 -> CONFIRMED_FAIL: sequential freezing of T1 before learning T2 is materially inferior to matched joint training at the AF site under matched budget/storage/objective. The sequential-freeze hypothesis is closed; the curriculum may be retained only where simpler, never as a mechanism claim. Verdict: experiments/AF4-R/verdict-R.md."
 supersedes: null

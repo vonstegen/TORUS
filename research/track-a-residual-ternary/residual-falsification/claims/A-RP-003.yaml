@@ -7,7 +7,7 @@ quantitative_thresholds:
   - "PASS: the sequential arm beats the best matched joint arm by >2 standard errors on at least one capability metric at equal budget and storage, with no regression beyond 1 standard error on the others."
   - "FAIL: no capability metric separates sequential from the best joint arm by >2 standard errors (sequential is then retained only if simpler; the mechanism claim is abandoned)."
 date_registered: "2026-08-22"
-state: TESTING
+state: CONFIRMED_FAIL
 required_evidence: [AF4, AF8]
 supporting_experiments: [EXP-AF-004]
 unlock_rules_affected: []
@@ -18,4 +18,10 @@ history:
   - date: "2026-08-22"
     transition: "UNTESTED -> TESTING"
     cause: "EXP-A-03x PASS (CP1.2): T1->T2 gain observed with clean provenance, both metric classes reported (wikitext ppl 427.71->41.44, arc_easy 0.5396->0.6313 on model.layers.0.mlp.down_proj; KL 1.51->0.07). Discovery tier only - does not test the claim's equal-budget criterion (AF1)."
-conclusion: "PROVISIONAL_FAIL (2026-08-28, EXP-AF-004): sequential freezing is materially INFERIOR to matched joint training at model.layers.0.mlp.down_proj under matched budget/storage/CE (wikitext +5.20σ, lambada +21.88σ for joint). Mechanism claim abandoned pending EXP-AF-004-R reproduction; sequential retained only if simpler."
+  - date: "2026-08-28"
+    transition: "TESTING -> PROVISIONAL_FAIL"
+    cause: "EXP-AF-004 DECIDED FAIL (direction joint superior): joint beats seq by >2 stderr-of-difference on wikitext ppl (+5.20) and lambada_openai (+21.88); arc_easy not separated (-0.90). 9/9 runs, n=3 seeds, matched 512k-token budget, matched deployed bytes (seq = joint = 8,912,896), freeze invariant machine-checked on every seq run. REPRODUCTION_REQUIRED: EXP-AF-004-R before CONFIRMED_FAIL. (The state field lagged at TESTING through the AF4 commit; corrected at the AF4-R transition.) Verdict: experiments/AF4/verdict.md."
+  - date: "2026-08-28"
+    transition: "PROVISIONAL_FAIL -> CONFIRMED_FAIL"
+    cause: "EXP-AF-004-R DECIDED REPRODUCED under AF8 governance: independent recomputation from raw per-seed values replays AF4's FAIL / joint superior (z = -5.2041 wikitext, -0.8966 arc_easy, -21.8830 lambada); every arm x metric mean within +/-2 combined stderrs; run integrity PASS (9/9 runs, freeze flags, deployed bytes, no NaN/inf); byte-identity false and treated as a provenance observation only per the frozen reproduction rule (user directive 2026-08-28). Verdict: experiments/AF4-R/verdict-R.md."
+conclusion: "CONFIRMED_FAIL (2026-08-28, EXP-AF-004 + EXP-AF-004-R): sequential freezing of T1 before learning T2 is materially INFERIOR to matched joint training at model.layers.0.mlp.down_proj under matched budget/storage/CE (wikitext +5.20σ, lambada +21.88σ for joint, reproduced under AF8 governance). The sequential-freeze hypothesis is closed; the curriculum may be retained only where simpler, never as a mechanism claim."
