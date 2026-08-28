@@ -97,8 +97,7 @@ def main() -> None:
     owt_files = sorted(
         f for f in list_repo_files("Skylion007/openwebtext",
                                    repo_type="dataset")
-        if f.startswith("plaintext/") and f.endswith(".parquet")
-        and "train" in f
+        if f.endswith(".parquet") and "train" in f
     )
     if not owt_files:
         raise SystemExit("no openwebtext plaintext train parquets found")
