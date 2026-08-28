@@ -1,6 +1,9 @@
-# Experiment record — EXP-AF-006 — AF6 dataset/context robustness (confirmation tier)
+# Experiment record — EXP-AF-006b — AF6 dataset/context robustness, corrected verification (confirmation tier)
 # Preregistered 2026-08-28 BEFORE any run under this ID. Thresholds frozen.
-id: EXP-AF-006
+# Corrects EXP-AF-006 (INVALID — verification-gate miscalibration;
+# see experiments/AF6/verdict-INVALID.md). Only the verification-band
+# design changes; every other element is identical to EXP-AF-006.
+id: EXP-AF-006b
 track: A
 subtrack: "AF6 dataset/context robustness"
 tier: confirmation
@@ -8,14 +11,14 @@ claims_addressed: []   # robustness characterization; no live claim.
                        # Target recipe: AF2-D damaged-PTQ T2 (A-RP-002
                        # CONFIRMED_PASS recipe), already init-robust
                        # (EXP-AF-003 ROBUST).
-title: "Is the T2 recovery a general representation/training effect or
+title: "EXP-AF-006b. Is the T2 recovery a general representation/training effect or
   an artifact of the 128-token training window and the wikitext-103
   corpus? Context matrix seq_len {16, 128, 256} (token-matched) x
   corpus matrix {wikitext-103, openwebtext} on the AF2-D recipe."
 owner: "research-harness"
 date_proposed: "2026-08-28"
-status: INVALID
-decision: INVALID
+status: PROPOSED
+decision: null
 grade: null
 
 hypothesis: "The AF2-D T2 recovery (damaged-TWN primary at
@@ -27,7 +30,16 @@ hypothesis: "The AF2-D T2 recovery (damaged-TWN primary at
   the recovery is an artifact of the 128-token window and/or the
   wikitext corpus every prior experiment trained on."
 
-rationale: "Suite doc 10 §9 (AF6): test at least two context regimes
+rationale: "EXP-AF-006b rationale: EXP-AF-006's sanity gate fired pre-cells and
+  was diagnosed as an instrument mismatch (lm-eval wikitext =
+  wikitext-2-raw-v1 document-level word ppl; corpus_ppl =
+  wikitext-103 test token-level, 64 windows x 256 tokens — verified
+  against the installed task config; both instruments sound, not
+  interchangeable). The corrected verification below anchors the
+  corpus_ppl sanity band to the instrument's OWN measured scale and
+  adds a within-instrument damage anchor; the measurement finding is
+  recorded for the whole program (every ladder 'wikitext ppl' is
+  wikitext-2 document-level word ppl). Suite doc 10 §9 (AF6): test at least two context regimes
   and, where practical, two corpora, to determine whether T2's gain is
   general or a narrow-window artifact. Every preceding cell in the
   program trained at seq_len=128 on wikitext-103 — both are candidate
@@ -40,7 +52,10 @@ rationale: "Suite doc 10 §9 (AF6): test at least two context regimes
   recorded as the declared second axis."
 
 revision: ""              # filled at RUN — commit hash of the code
-run_namespace: "runs/a/EXP-AF-006/<timestamp>/<regime>/seed-00X/t2_ternary/"
+supersedes_design_note: "EXP-AF-006 (INVALID) is retained unchanged;
+  this manifest is the corrected successor under a new ID per
+  OPERATING-PLAN §6."
+run_namespace: "runs/a/EXP-AF-006b/<timestamp>/<regime>/seed-00X/t2_ternary/"
 environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt in run namespace"
 baseline: "AF2-D t2_ternary reference (EXP-AF-002-D + EXP-RPM-000 +
   EXP-AF-003 at seq=128/wikitext: trained wikitext ppl band [17.91,
@@ -104,12 +119,20 @@ evidence_categories: [representation, downstream]
 # ----- thresholds (frozen at PROPOSE) --------------------------------------
 verification_bands:
   measurement_sanity: "FP16 base corpus_ppl(wikitext-103 test) in
-    [12, 15] — else INVALID (new eval path untrustworthy)."
+    [19.9, 24.4] — the EXP-AF-006 verification measurement (22.155)
+    +/- 10%, frozen here BEFORE any EXP-AF-006b cell runs. Catches
+    wrong-cache / broken-eval-path failures at the instrument's own
+    scale. A miss is INVALID."
+  damage_anchor: "within-instrument damage check: damaged
+    corpus_ppl(wt test) / FP16 corpus_ppl(wt test) > 1.5 (EXP-AF-006
+    measured 3.39). A miss is INVALID (damage recipe broken at this
+    instrument)."
   damage_band: "pre-train damaged-base wikitext ppl in [400, 460]
-    (lm-eval, on the seq=128/wikitext invocation) — else INVALID
-    (damage recipe drift)."
-  recorded_covariates: "FP16 + damaged corpus_ppl on openwebtest test
-    (first measurements; define the Q2(b) recovery-ratio denominator)."
+    (lm-eval ladder instrument, on the seq=128/wikitext invocation)
+    — else INVALID (damage recipe drift at the ladder instrument)."
+  recorded_covariates: "FP16 + damaged corpus_ppl on openwebtext test
+    (EXP-AF-006 measured 14.016 / 93.013; re-measured and recorded;
+    define the Q2(b) recovery-ratio denominator)."
 reference_reproduction: "seq=128/wikitext cells: mean trained wikitext
   ppl over seeds {1,2,3} in [17.91, 24.01] (RPM-000 ±2σ reference
   band). A miss is INVALID (recipe drift), diagnosed before rerun."

@@ -467,7 +467,14 @@ its way into adaptive-gating experiments.
       cells, seeds {1,2,3}; reference band [17.91, 24.01]; per-regime
       ppl ≤ 100 bar; cross-corpus transfer bar + own-corpus recovery
       ratio ≥ 0.5; new corpus-ppl eval gated by FP16 sanity band
-      [12, 15]. Step-count confound interpretation rule frozen.
+      [19.9, 24.4] (instrument-anchored) + within-instrument damage
+      anchor (ratio > 1.5). Step-count confound interpretation rule
+      frozen. **EXP-AF-006 DECIDED INVALID 2026-08-28** (sanity-band
+      miscalibration caught pre-cells: lm-eval wikitext is
+      wikitext-2-raw-v1 document-level word ppl, not wikitext-103
+      token-level; measurement finding recorded). Corrected
+      successor **EXP-AF-006b PREREGISTERED 2026-08-28** (identical
+      design, corrected verification bands).
 - [ ] **2.7** `EXP-AF-007` — **AF7 random-capacity control.** T1 + ternary T2
       vs. T1 + matched low-rank/dense trainable correction. Similar
       improvement → conclusion is only "additive correction helps"; T2 must
