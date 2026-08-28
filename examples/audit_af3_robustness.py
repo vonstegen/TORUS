@@ -44,7 +44,7 @@ MIN_LEVELS_MODERATE = 3
 TASKS = ("wikitext", "arc_easy", "lambada_openai")
 # AF2-D damaged-base reference (EXP-AF-002-D pre-train, seed-mean):
 DAMAGED_BASE = {"wikitext": 425.76, "arc_easy": 0.4891,
-                "lambada_openai": 0.0260}
+                "lambada_openai": 0.2418}
 
 
 def sigma_dir_name(sigma: float) -> str:

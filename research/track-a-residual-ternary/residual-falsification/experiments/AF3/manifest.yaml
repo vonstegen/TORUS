@@ -46,7 +46,10 @@ run_namespace: "runs/a/EXP-AF-003/<timestamp>/sigma-<sigma>/seed-0XX/t2_ternary/
 environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt in run namespace"
 baseline: "AF2-D t2_ternary at sigma=0.01 (EXP-AF-002-D, seeds 1-3:
   wikitext ppl 17.32-24.01 across runs, arc_easy ~0.60, lambada ~0.55;
-  damaged-base pre-train ppl 425.76, arc_easy 0.4891, lambada ~0.026).
+  damaged-base pre-train ppl 425.76, arc_easy 0.4891, lambada 0.2418 —
+  measured on the AF3 smoke cell 2026-08-28; supersedes the '~0.026'
+  estimate written at PROPOSE from earlier fully-quantized-arm
+  numbers).
   AF3 repeats the sigma=0.01 condition at NEW seeds {11,22,33} — it is
   both a matrix level and a seed-robustness spot-check of the
   CONFIRMED_PASS recipe."
@@ -105,7 +108,7 @@ zero_control: "sigma=0 is reported separately and excluded from the
   the near-dead-start model is falsified and that is recorded as a
   finding."
 capability_crosscheck: "if a level succeeds on ppl while arc_easy or
-  lambada means do not exceed the damaged base (0.4891 / ~0.026), the
+  lambada means do not exceed the damaged base (0.4891 / 0.2418), the
   level is flagged PROXY IMPROVEMENT / CAPABILITY NOT VALIDATED and
   the flag is reported alongside the classification."
 escalation_rule: "The classification annotates the A-RP-002
