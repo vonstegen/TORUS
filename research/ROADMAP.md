@@ -342,15 +342,28 @@ its way into adaptive-gating experiments.
       {0, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2} × seeds {11, 22, 33}. Aggregate
       mean/std/failure rate/best/worst. Classify ROBUST / MODERATELY
       SENSITIVE / FRAGILE; narrow-window success lowers the robustness grade.
-- [ ] **2.4** `EXP-AF-004` — **AF4 sequential-vs-joint training** (A-RP-003).
-      Arm seq (primary 500 steps @ n_planes=1 → freeze → residual 500
-      steps @ n_planes=2) vs arm joint (both latents, 1000 steps @
-      n_planes=2) at matched total budget (512k tokens), matched CE,
-      matched deployed storage; arm t1_only budget control. n=3 seeds,
-      full 3-task eval. **PREREGISTERED 2026-08-28** (manifest
-      `research/track-a-residual-ternary/residual-falsification/experiments/AF4/manifest.yaml`;
-      thresholds frozen per A-RP-003 v1; suite-doc T3 arms excluded —
-      routine T3/T4 scaling locked by the unlock rules).
+- [x] **2.4** `EXP-AF-004` — **AF4 sequential-vs-joint training** (A-RP-003).
+      **Done 2026-08-28: DECIDED FAIL (joint superior); A-RP-003 →
+      PROVISIONAL_FAIL.** Joint beats seq on wikitext ppl (+5.20σ;
+      21.44 ± 0.20 vs 24.92 ± 0.64) and lambada_openai (+21.88σ;
+      0.4684 vs 0.4432); arc_easy not separated (−0.90σ). 9/9 runs,
+      freeze invariant machine-checked on every seq run, matched
+      deployed bytes (seq = joint = 8,912,896 B), ~0.93 GPU-h of 8
+      GPU-h budget. Secondary context (not claim-bearing): t1_only
+      dominates both two-plane arms on every metric (single-site
+      analogue of A-RP-001's CONFIRMED_FAIL). Run
+      `runs/a/EXP-AF-004/20260828T121414Z/`, git `f1df165`. Verdict:
+      `research/track-a-residual-ternary/residual-falsification/experiments/AF4/verdict.md`.
+      Required next: §2.18 EXP-AF-004-R before CONFIRMED_FAIL.
+- [ ] **2.18** `EXP-AF-004-R` — **AF4-R clean reproduction** (AF8).
+      Required before A-RP-003 → CONFIRMED_FAIL. New experiment/run
+      ID, independent namespace, frozen SHA `f1df165`, fresh process
+      on legion, independently generated eval output, same
+      preregistered thresholds, n=3 seeds (1, 2, 3). Identity of
+      aggregate values is the expected outcome, NOT a violation
+      (EXP-AF-001-R precedent: AF8 tests traceability). On
+      reproduction, A-RP-003 → CONFIRMED_FAIL; on non-reproduction,
+      verdict-INVALIDATED and A-RP-003 reopens to TESTING.
 - [x] **2.11** `EXP-AF-002-R` — **AF2-R clean reproduction of AF2.** Required
 - [x] **2.12** `EXP-AF-002-D` — **AF2-D damaged-PTQ-start matched-storage.**
       Required to characterize T2's regime of dominance on the

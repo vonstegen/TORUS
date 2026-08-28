@@ -1,0 +1,30 @@
+{
+  "arm": "seq",
+  "seed": 3,
+  "model": "allenai/OLMo-1B-0724-hf",
+  "target_module": "model.layers.0.mlp.down_proj",
+  "no_calibrate": false,
+  "stage_steps": 500,
+  "total_steps": 1000,
+  "batch_size": 4,
+  "seq_len": 128,
+  "lr": 0.001,
+  "limit": null,
+  "eval_n_planes": 2,
+  "deployed_bytes": 8912896,
+  "freeze_check": true,
+  "tasks": {
+    "lambada_openai": {
+      "metric": "acc,none",
+      "value": 0.4414903939452746
+    },
+    "arc_easy": {
+      "metric": "acc,none",
+      "value": 0.5677609427609428
+    },
+    "wikitext": {
+      "metric": "word_perplexity,none",
+      "value": 23.994422685864176
+    }
+  }
+}

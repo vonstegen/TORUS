@@ -10,9 +10,9 @@ title: "Sequential freeze (T1 -> freeze -> T2) vs matched joint training of
   storage (model.layers.0.mlp.down_proj, OLMo-1B-0724-hf)"
 owner: "research-harness"
 date_proposed: "2026-08-28"
-status: PROPOSED
-decision: null
-grade: null
+status: DECIDED
+decision: FAIL
+grade: A-
 
 hypothesis: "At matched total training budget (1000 steps x batch 4 x
   seq 128 = 512k tokens, identical batches, identical SGD settings,
@@ -44,7 +44,7 @@ rationale: "A-RP-003 is the last UNTESTED Track-A claim. The v2.3
   a freeze exception for new plane-stacking architecture while cheaper
   diagnostics are open."
 
-revision: ""              # filled at RUN — commit hash of the code
+revision: "f1df16515d5e6b6eeb9f126d296d7b682aa82991"  # run code SHA (provenance.json)
 run_namespace: "runs/a/EXP-AF-004/<timestamp>/seed-00X/<arm>/"
 environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt in run namespace"
 baseline: "The joint arm IS the preregistered control (matched budget,
@@ -170,7 +170,11 @@ expected_artifacts:
     differences in stderr units: seq_vs_joint primary, seq_vs_t1_only
     and joint_vs_t1_only secondary)"
   - "provenance.json + env-lock.txt + driver.log + ARTIFACTS.json"
-artifact_paths: []
+artifact_paths:
+  - "experiments/AF4/verdict.md"
+  - "experiments/AF4/runs/20260828T121414Z/aggregate.json"
+  - "experiments/AF4/runs/20260828T121414Z/seed-*/<arm>/eval.summary.json"
+  - "runs/a/EXP-AF-004/20260828T121414Z/ (legion, git-ignored: adapters, histories, full evals, ARTIFACTS.json, env-lock, provenance)"
 artifacts_manifest: "runs/a/EXP-AF-004/<timestamp>/ARTIFACTS.json"
 contamination_risks:
   - "Shared token cache: /tmp/wikitext103_train_ids.npy is read-only
@@ -217,9 +221,9 @@ freeze_exception:
   approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN §3)"
 
 # ----- decision block (filled at DECIDE) -----------------------------------
-result_summary: ""
-confidence_and_reproduction: ""
-next_permitted_experiment: ""
-experiments_blocked: []
-conclusion: ""
+result_summary: "9/9 runs complete (3 arms x 3 seeds); freeze invariant held on every seq run; no divergence; matched deployed bytes (seq = joint = 8,912,896). Claim test: joint beats seq on wikitext ppl (+5.20 stderr-of-difference; joint 21.44 +/- 0.20 vs seq 24.92 +/- 0.64) and lambada_openai (+21.88; joint 0.4684 vs seq 0.4432); arc_easy not separated (-0.90). FAIL clause 2 fires: A-RP-003 -> PROVISIONAL_FAIL, direction joint superior. Secondary context (not claim-bearing): t1_only dominates both two-plane arms on every metric (lambada +91.63/+104.40 stderrs vs joint/seq)."
+confidence_and_reproduction: "Confirmation tier (n=3 seeds, preregistered thresholds, matched controls, machine-checked freeze invariant). High confidence within the tested regime (single site, single 1000-step budget, matched CE). REPRODUCTION_REQUIRED: EXP-AF-004-R (AF8-style clean reproduction of frozen SHA f1df165) before A-RP-003 -> CONFIRMED_FAIL."
+next_permitted_experiment: "EXP-AF-004-R (clean reproduction, required); EXP-AF-003 (AF3 init robustness) and EXP-AF-006 (AF6 context robustness) remain open and unblocked."
+experiments_blocked: ["none new — Track B stays locked by its existing §5 conditions; this verdict does not change A-RP-002/A-RP-LRN/A-RP-TSP"]
+conclusion: "The sequential T1 -> freeze -> T2 curriculum is materially INFERIOR to matched joint training at this site under matched budget/storage/CE. A-RP-003 PROVISIONAL_FAIL; the mechanism claim (sequential freezing necessary or materially superior) is abandoned pending reproduction; sequential may be retained only if simpler. Verdict: experiments/AF4/verdict.md."
 supersedes: null
