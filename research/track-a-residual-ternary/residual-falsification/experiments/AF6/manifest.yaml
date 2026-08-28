@@ -1,0 +1,199 @@
+# Experiment record — EXP-AF-006 — AF6 dataset/context robustness (confirmation tier)
+# Preregistered 2026-08-28 BEFORE any run under this ID. Thresholds frozen.
+id: EXP-AF-006
+track: A
+subtrack: "AF6 dataset/context robustness"
+tier: confirmation
+claims_addressed: []   # robustness characterization; no live claim.
+                       # Target recipe: AF2-D damaged-PTQ T2 (A-RP-002
+                       # CONFIRMED_PASS recipe), already init-robust
+                       # (EXP-AF-003 ROBUST).
+title: "Is the T2 recovery a general representation/training effect or
+  an artifact of the 128-token training window and the wikitext-103
+  corpus? Context matrix seq_len {16, 128, 256} (token-matched) x
+  corpus matrix {wikitext-103, openwebtext} on the AF2-D recipe."
+owner: "research-harness"
+date_proposed: "2026-08-28"
+status: PROPOSED
+decision: null
+grade: null
+
+hypothesis: "The AF2-D T2 recovery (damaged-TWN primary at
+  model.layers.0.mlp.down_proj + trained ternary correction, matched
+  CE) is a general representation/training effect: it reproduces when
+  the training context window is shrunk to 16 tokens or stretched to
+  256 tokens (token-matched), and when the training corpus is switched
+  from wikitext-103 to openwebtext. The alternative (suite doc §9):
+  the recovery is an artifact of the 128-token window and/or the
+  wikitext corpus every prior experiment trained on."
+
+rationale: "Suite doc 10 §9 (AF6): test at least two context regimes
+  and, where practical, two corpora, to determine whether T2's gain is
+  general or a narrow-window artifact. Every preceding cell in the
+  program trained at seq_len=128 on wikitext-103 — both are candidate
+  confounds. User steering (2026-08-28): AF3 (ROBUST) before AF6; the
+  recipe is not init-fragile, so context/corpus robustness is now the
+  most informative remaining robustness axis before the Track B
+  reassessment. The window axis is isolated by TOKEN-MATCHING
+  (4x16x4000 = 4x128x500 = 4x256x250 = 256k tokens per cell);
+  optimizer-step counts {4000, 500, 250} vary inversely and are
+  recorded as the declared second axis."
+
+revision: ""              # filled at RUN — commit hash of the code
+run_namespace: "runs/a/EXP-AF-006/<timestamp>/<regime>/seed-00X/t2_ternary/"
+environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt in run namespace"
+baseline: "AF2-D t2_ternary reference (EXP-AF-002-D + EXP-RPM-000 +
+  EXP-AF-003 at seq=128/wikitext: trained wikitext ppl band [17.91,
+  24.01] per the RPM-000 ±2σ reference band; damaged base ppl 425.76,
+  arc 0.4891, lambada 0.2418). FP16 ladder: wikitext ppl 13.09,
+  arc 0.6073, lambada 0.6095 (EXP-A-001)."
+
+controls:
+  - "Token-matching: every cell consumes 256k training tokens
+    (4x16x4000, 4x128x500, 4x256x250); the window width is the only
+    intended axis. Optimizer-step counts {4000, 500, 250} differ by
+    construction and are recorded."
+  - "Reference cell: seq=128/wikitext seeds {1,2,3} replicates the
+    AF2-D condition exactly (same seeds, same steps) — a built-in
+    recipe-drift check against the [17.91, 24.01] band."
+  - "Data order matched per seed (same sampler contract as every
+    prior experiment). OWT cells sample from the independently built
+    openwebtext train cache (sha256 recorded; built by
+    examples/af6_data_prep.py from Skylion007/openwebtext shard 0
+    with a held-out 1% tail as owt_test)."
+  - "New corpus-ppl eval path is gated by a measurement sanity band:
+    FP16 base corpus_ppl(wikitext-103 test) must land in [12, 15]
+    (lm-eval ladder value 13.09; methodology delta expected small). A
+    miss invalidates the run (new eval path untrustworthy) BEFORE any
+    cell data is read."
+  - "Deployed bytes are regime-invariant by construction (shape-only
+    packing); the audit verifies uniformity."
+
+variants:
+  - "Q1 window matrix (wikitext-103 train): seq=16 x 4000 steps,
+    seq=128 x 500 steps (reference), seq=256 x 250 steps; seeds
+    {1,2,3} each = 9 cells."
+  - "Q2 corpus matrix (seq=128, 500 steps): openwebtext train x seeds
+    {1,2,3} = 3 cells. The seq=128/wikitext reference cells double as
+    the wikitext side of Q2."
+  - "Cross-corpus ppl: every seq=128 cell (both corpora) additionally
+    records corpus_ppl(openwebtext test) (64 deterministic windows of
+    256 tokens); owt-trained cells use it as the own-corpus recovery
+    metric, wikitext-trained cells as the train-wikitext cross
+    direction (recorded covariate, first measurement)."
+
+objective_note: "Identical to AF2-D (matched CE, frozen TWN-damaged
+  primary, trained t2_ternary, lr 1e-3, momentum 0.9, clip 1.0). The
+  only varied parameters are seq_len/steps (Q1) and the training
+  token stream (Q2). Eval: full lm-eval wikitext/arc_easy/
+  lambada_openai (frozen ladder) plus the corpus_ppl additions above."
+
+dataset_and_samples: "wikitext-103 train (cached stream, sha
+  recorded); openwebtext shard-0 train/test caches (built
+  2026-08-28, shas recorded); full lm-eval tasks; corpus-ppl evals on
+  wikitext-103 test and openwebtext test caches."
+seeds: [1, 2, 3]   # reference cell replicates AF2-D exactly
+metrics:
+  - "capability (frozen ladder): wikitext ppl, arc_easy, lambada_openai"
+  - "corpus ppl (new path, sanity-gated): corpus_ppl on owt test
+    (both directions at seq=128) and wikitext-103 test (verification
+    pass only)"
+  - "diagnostic-only: per-step training CE loss curves"
+evidence_categories: [representation, downstream]
+
+# ----- thresholds (frozen at PROPOSE) --------------------------------------
+verification_bands:
+  measurement_sanity: "FP16 base corpus_ppl(wikitext-103 test) in
+    [12, 15] — else INVALID (new eval path untrustworthy)."
+  damage_band: "pre-train damaged-base wikitext ppl in [400, 460]
+    (lm-eval, on the seq=128/wikitext invocation) — else INVALID
+    (damage recipe drift)."
+  recorded_covariates: "FP16 + damaged corpus_ppl on openwebtest test
+    (first measurements; define the Q2(b) recovery-ratio denominator)."
+reference_reproduction: "seq=128/wikitext cells: mean trained wikitext
+  ppl over seeds {1,2,3} in [17.91, 24.01] (RPM-000 ±2σ reference
+  band). A miss is INVALID (recipe drift), diagnosed before rerun."
+q1_window_robustness: "each seq regime {16, 128, 256} reaches
+  wikitext ppl <= 100 at all 3 seeds -> 'T2 recovery is not a
+  128-window artifact at the tested regimes'. Any regime failing at
+  >= 2 of 3 seeds -> 'window-sensitive' (regime recorded)."
+q2_corpus_transfer:
+  cross_capability: "owt-trained cells reach wikitext ppl <= 100 at
+    all 3 seeds (cross-corpus capability transfer onto the frozen
+    ladder)."
+  own_corpus_recovery: "owt-trained cells: mean recovery ratio
+    (damaged_owt - trained_owt) / (damaged_owt - fp16_owt) >= 0.5 on
+    owt test."
+  cross_direction_covariate: "wikitext-trained cells' owt-test ppl is
+    recorded without a bar (first measurement)."
+interpretation_rule: "seq=16 runs 8x the optimizer steps at matched
+  tokens. A seq=16 FAILURE under token-matching is strong evidence of
+  window sensitivity. A seq=16 SUCCESS leaves 'more optimizer steps
+  helped' as an alternative reading; that ambiguity is resolved in
+  favor of window-robustness ONLY if seq=16 does not materially
+  outperform seq=128 (ppl within +/-2 combined stderrs) — if seq=16
+  wins materially, the step-count confound is recorded as unresolved
+  and the regime is labeled 'recovers, step-confounded'."
+
+kill_criteria:
+  - "Training diverges in any cell (NaN/inf): cell INVALID; recurrence
+    at a second seed in the same regime -> run INVALID."
+  - "Reference band miss or verification band miss: INVALID."
+  - "Deployed bytes differ across any two cells: INVALID (driver
+    defect)."
+  - "Budget overrun: total wall clock exceeds 4 GPU-hours."
+
+budget: "4 GPU-hours cap on legion. 12 cells (seq16 ~14 min, seq128
+  ~9 min, seq256 ~6 min each incl. evals) + verification pass ~10
+  min; ~2.2 GPU-h total; two queues (~1.2h wall)."
+
+stop_conditions:
+  - "All 12 cells complete with eval summaries and the audit JSON is
+    written."
+  - "Kill criterion fires: record INVALID and stop."
+
+expected_artifacts:
+  - "per-cell: eval.summary.json (incl. cross_corpus_ppl where
+    applicable), eval.full.json, history.jsonl, adapter.npz + meta,
+    cost_vector.json"
+  - "verification: FP16/damaged corpus_ppl measurements +
+    pre_train_eval.json + data-prep manifest (cache shas)"
+  - "audit.json (regime aggregates, threshold evaluation,
+    interpretation-rule application)"
+  - "provenance.json + env-lock.txt + queue logs + ARTIFACTS.json"
+artifact_paths: []
+artifacts_manifest: "runs/a/EXP-AF-006/<timestamp>/ARTIFACTS.json"
+contamination_risks:
+  - "Token caches (wikitext train, owt train/test, wikitext test) are
+    read-only after the prep step; shas recorded. The prep script
+    refuses to overwrite."
+  - "Each cell rebuilds a fresh model instance; regime namespaces are
+    disjoint; the audit is the only cross-cell reader."
+  - "owt train/test split is a single contiguous 99/1 split of shard
+    0: train windows and test windows can never overlap by
+    construction (the split point is a hard boundary)."
+
+freeze_exception:
+  change: "(a) examples/af6_data_prep.py: builds the openwebtext
+    train/test and wikitext-103 test token caches (direct parquet
+    download; sha-recorded; refuses to overwrite). (b) AF2 driver:
+    corpus_perplexity() helper + --cross-eval-ppl-cache flag (records
+    cache path/sha/windows + value in each cell's summary). No change
+    to training, damage, adapter, packing, or the lm-eval ladder
+    path. (c) New tests (tests/test_af6_context_robustness.py)
+    pinning determinism, shift semantics (perfect model = 1.0,
+    uniform model = vocab), the window contract, and the summary
+    wiring."
+  justification: "Required to execute this preregistered AF6
+    experiment: no second corpus cache exists, and cross-corpus ppl
+    has no lm-eval task. The new measurement is sanity-banded against
+    the frozen ladder before any cell data is read."
+  approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN §3)"
+
+# ----- decision block (filled at DECIDE) -----------------------------------
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""
+supersedes: null

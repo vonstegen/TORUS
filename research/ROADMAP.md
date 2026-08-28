@@ -460,6 +460,14 @@ its way into adaptive-gating experiments.
 - [ ] **2.6** `EXP-AF-006` — **AF6 dataset/context robustness.** ≥2 context
       regimes (seq_len ≈16 and ≈128–256) and, where practical, 2 corpora.
       Determines whether T2's gain is general or a short-window artifact.
+      **PREREGISTERED 2026-08-28** (manifest
+      `research/track-a-residual-ternary/residual-falsification/experiments/AF6/manifest.yaml`):
+      window matrix seq {16×4000, 128×500, 256×250 steps} token-matched
+      at 256k tokens, corpus matrix {wikitext-103, openwebtext}, 12
+      cells, seeds {1,2,3}; reference band [17.91, 24.01]; per-regime
+      ppl ≤ 100 bar; cross-corpus transfer bar + own-corpus recovery
+      ratio ≥ 0.5; new corpus-ppl eval gated by FP16 sanity band
+      [12, 15]. Step-count confound interpretation rule frozen.
 - [ ] **2.7** `EXP-AF-007` — **AF7 random-capacity control.** T1 + ternary T2
       vs. T1 + matched low-rank/dense trainable correction. Similar
       improvement → conclusion is only "additive correction helps"; T2 must

@@ -636,6 +636,48 @@ def eval_arm(model, tokenizer, *, tasks: List[str], limit=None,
         batch_size=batch_size, limit=limit,
     )
 
+def corpus_perplexity(model, ids: np.ndarray, *, seq_len: int = 256,
+                      n_windows: int = 64, batch_size: int = 4,
+                      device: str = "cuda:0") -> float:
+    """Teacher-forced perplexity over the first `n_windows`
+    non-overlapping seq_len windows of a token stream (deterministic
+    subset: same windows every call). Used by EXP-AF-006 for
+    cross-corpus ppl where no lm-eval task exists. New eval path —
+    pinned by tests/test_af6_context_robustness.py and by the
+    manifest's FP16 sanity band against the lm-eval wikitext ladder.
+    """
+    import math as _math
+    import torch
+    import torch.nn.functional as F
+
+    model.eval()
+    usable = (len(ids) - 1) // seq_len
+    wins = min(n_windows, usable)
+    if wins <= 0:
+        raise ValueError(
+            f"corpus too small: {len(ids)} ids < seq_len {seq_len}"
+        )
+    losses: list[float] = []
+    with torch.no_grad():
+        for bstart in range(0, wins, batch_size):
+            chunk = range(bstart, min(bstart + batch_size, wins))
+            xs, ys = [], []
+            for w in chunk:
+                s = w * seq_len
+                xs.append(ids[s: s + seq_len])
+                ys.append(ids[s + 1: s + seq_len + 1])
+            x = torch.as_tensor(np.asarray(xs), dtype=torch.long,
+                                device=device)
+            y = torch.as_tensor(np.asarray(ys), dtype=torch.long,
+                                device=device)
+            logits = model(input_ids=x).logits
+            loss = F.cross_entropy(
+                logits.reshape(-1, logits.size(-1)), y.reshape(-1),
+                reduction="none",
+            )
+            losses.extend(float(v) for v in loss)
+    return _math.exp(sum(losses) / len(losses))
+
 
 def analytic_training_flops(n_steps, b, s, h, i):
     return 6 * n_steps * b * s * (h * i + h * h)
@@ -808,9 +850,25 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
         "matched_bytes_actual": cv.deployed_bytes,
         "matched_bytes_tolerance_pct": args.matched_bytes_tolerance_pct,
         "matched_bytes_passed": cv_matched,
-        "cost_vector": cv.as_dict(),
+                    "cost_vector": cv.as_dict(),
         "is_untrained_control": bool(adapter.is_untrained),
-    }
+        }
+    cross_cache = getattr(args, "cross_eval_ppl_cache", None)
+    if cross_cache is not None and adapter.trainable_parameters():
+        import hashlib as _hashlib
+        cross_ids = np.load(cross_cache)
+        with open(cross_cache, "rb") as _fh:
+            cross_sha = _hashlib.sha256(_fh.read()).hexdigest()
+        eval_summary_dict["cross_corpus_ppl"] = {
+            "cache": str(cross_cache),
+            "sha256": cross_sha,
+            "seq_len": 256,
+            "n_windows": 64,
+            "value": corpus_perplexity(
+                model, cross_ids, seq_len=256, n_windows=64,
+                batch_size=args.batch_size, device=args.device,
+            ),
+        }
     if not adapter.is_untrained:
         try:
             model.eval()
@@ -999,6 +1057,11 @@ def main(argv: list | None = None) -> None:
                          "untrained structure controls stay at 0.01. Does "
                          "NOT change deployed bytes (packing depends on "
                          "shape only).")
+    p.add_argument("--cross-eval-ppl-cache", type=Path, default=None,
+                    help="EXP-AF-006: after the standard eval, also compute "
+                         "teacher-forced corpus perplexity on this token "
+                         "cache (deterministic 64-window subset) and record "
+                         "it as cross_corpus_ppl in eval.summary.json.")
     p.add_argument("--matched-bytes-tolerance-pct", type=float, default=1.0)
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
