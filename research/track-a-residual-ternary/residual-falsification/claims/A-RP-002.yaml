@@ -27,6 +27,9 @@ supporting_experiments:
     effect: "AF8 clean reproduction of EXP-AF-002 (commit c036718, run 20260823T062845Z, n=3 seeds, matched deployed-bytes ~4.2 MB on model.layers.0.mlp.down_proj). 21 runs total; all inside +/-1% bytes tolerance. The PASS bar reproduces: t2 within +/-1.1 sigma of dense on every metric (mean wikitext (B-A)/se_diff = -1.125 sigma; arc_easy = -0.547 sigma; lambada = -0.551 sigma). Per-seed values reproduce within +/-2 sigma. Cost-vector byte counts byte-identical to AF2. Architecture-vs-training diagnostic unchanged: trained T2 ~ random T2 at N=500 on a calibrated FP16 base. [INTERPRETATION NOTE: this evidence supports the TSP axis at the calibrated base — T2 ties with non-ternary control, structurally competitive.]"
 unlock_rules_affected: ["Track B oracle gating (B1) — REPLACED by A-RP-LRN as the gate dependency for learned adaptive precision"]
 history:
+  - date: "2026-08-28"
+    transition: "annotation (no state change)"
+    cause: "EXP-AF-003 DECIDED ROBUST: the CONFIRMED_PASS recipe (AF2-D damaged-PTQ T2) is init-robust (5/5 non-zero sigma levels x 3 seeds, spread ratio 1.06) and seed-robust (fresh seeds {11,22,33} reproduce seeds 1-3) at the AF2-D site. sigma=0 also succeeded (near-dead-start model falsified for the driver's per-row absmax adapter). Scope: AF2-D site/budget/recipe. Verdict: experiments/AF3/verdict.md."
   - date: "2026-08-22"
     transition: "-> UNTESTED"
     cause: "registered per 10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2"

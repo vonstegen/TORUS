@@ -13,9 +13,9 @@ title: "Residual-init sigma matrix {0, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2} x
   classification ROBUST / MODERATELY SENSITIVE / FRAGILE"
 owner: "research-harness"
 date_proposed: "2026-08-28"
-status: PROPOSED
-decision: null
-grade: null
+status: DECIDED
+decision: ROBUST
+grade: A
 
 hypothesis: "The AF2-D T2 correction recipe (A-RP-002 CONFIRMED_PASS
   recipe: TWN-damaged frozen primary at model.layers.0.mlp.down_proj +
@@ -41,7 +41,7 @@ rationale: "Suite doc 10 §6 (AF3) and OPERATING-PLAN §7: a method that
   magnitude below useful magnitude — expected to fail, and its failure
   mode (slow-start vs hard-dead) is itself informative."
 
-revision: ""              # filled at RUN — commit hash of the code
+revision: "3cc3503 (recorded in runs/a/EXP-AF-003/20260828T142354Z/provenance.json)"
 run_namespace: "runs/a/EXP-AF-003/<timestamp>/sigma-<sigma>/seed-0XX/t2_ternary/"
 environment: "legion; x86_64; 2x TITAN RTX; env-lock.txt in run namespace"
 baseline: "AF2-D t2_ternary at sigma=0.01 (EXP-AF-002-D, seeds 1-3:
@@ -150,7 +150,12 @@ expected_artifacts:
   - "audit.json (per-level statistics, classification, capability
     cross-check, integrity checks)"
   - "provenance.json + env-lock.txt + queue logs + ARTIFACTS.json"
-artifact_paths: []
+artifact_paths:
+  - "experiments/AF3/verdict.md"
+  - "experiments/AF3/runs/20260828T142354Z/audit.json"
+  - "experiments/AF3/runs/20260828T142354Z/sigma-*/seed-*/t2_ternary/eval.summary.json"
+  - "experiments/AF3/runs/20260828T142354Z/sigma-1e-2/seed-*/pre_train_eval.json"
+  - "runs/a/EXP-AF-003/20260828T142354Z/ (legion, git-ignored: adapters, histories, full evals, ARTIFACTS.json, env-lock, provenance)"
 artifacts_manifest: "runs/a/EXP-AF-003/<timestamp>/ARTIFACTS.json"
 contamination_risks:
   - "Shared token cache: /tmp/wikitext103_train_ids.npy is read-only;
@@ -182,9 +187,9 @@ freeze_exception:
   approved_by: "harness rule: feature work permitted when required to execute a registered experiment (OPERATING-PLAN §3)"
 
 # ----- decision block (filled at DECIDE) -----------------------------------
-result_summary: ""
-confidence_and_reproduction: ""
-next_permitted_experiment: ""
-experiments_blocked: []
-conclusion: ""
+result_summary: "ROBUST. 18/18 cells; all 5 non-zero sigma levels succeed at all 3 seeds (ppl 18.95-20.54 vs the <=100 bar); spread ratio 1.06 (<= 2); no capability-divergent levels. sigma=0 SUCCEEDED (ppl 18.95, best level mean) — the near-dead-start model is falsified at this site/budget for the driver's per-row absmax adapter (the torus-ste mean-based quantizer's dead-zone analysis is unaffected and bounded to its own path). sigma=1e-2 at fresh seeds {11,22,33} (19.47/0.5999/0.5485) reproduces AF2-D seeds 1-3: seed robustness of the CONFIRMED_PASS recipe confirmed. Pre-train damage verification in band (ppl 425.76). ~1.4 GPU-h of 4 GPU-h budget."
+confidence_and_reproduction: "Confirmation tier, 18/18 cells, frozen classification rules, integrity checks (byte uniformity, damage band, sigma consistency) all passed. ROBUST is scoped to this site/budget/recipe (verdict finding 4)."
+next_permitted_experiment: "EXP-AF-006 (AF6 dataset/context robustness) per user steering 2026-08-28."
+experiments_blocked: ["none — no unlock rules reference AF3"]
+conclusion: "The AF2-D T2 recipe (A-RP-002 CONFIRMED_PASS recipe) is initialization-robust (ROBUST) and seed-robust at the AF2-D site. The classification annotates the A-RP-002 registry entry per the frozen escalation rule; no claim state changes. Verdict: experiments/AF3/verdict.md."
 supersedes: null

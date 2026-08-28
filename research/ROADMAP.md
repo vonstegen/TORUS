@@ -338,18 +338,19 @@ its way into adaptive-gating experiments.
       also within +/-2 sigma of dense_adapter on every metric. int4/int8
       column-masked variants fail at N=500. PENDING §2.11 EXP-AF-002-R
       (clean AF8 reproduction) before CONFIRMED_PASS.
-- [ ] **2.3** `EXP-AF-003` — **AF3 initialization robustness.** Init matrix
-      {0, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2} × seeds {11, 22, 33}. Aggregate
-      mean/std/failure rate/best/worst. Classify ROBUST / MODERATELY
-      SENSITIVE / FRAGILE; narrow-window success lowers the robustness grade.
-      **PREREGISTERED 2026-08-28** (manifest
-      `research/track-a-residual-ternary/residual-falsification/experiments/AF3/manifest.yaml`):
-      18 cells on the AF2-D damaged-PTQ T2 recipe (the A-RP-002
-      CONFIRMED_PASS recipe), cell success = post-train wikitext ppl
-      ≤ 100 (AF2-D's frozen bar), σ=0 structural control, capability
-      cross-check on arc_easy/lambada. Classification annotates the
-      A-RP-002 INDEX entry (no state change). Driver change:
-      `--t2-init-sigma` knob (default = frozen 0.01).
+- [x] **2.3** `EXP-AF-003` — **AF3 initialization robustness.**
+      **Done 2026-08-28: DECIDED ROBUST.** Init matrix {0, 1e-4, 3e-4,
+      1e-3, 3e-3, 1e-2} × seeds {11, 22, 33} = 18 cells on the AF2-D
+      recipe; all 5 non-zero σ levels succeed at all 3 seeds (ppl
+      18.95–20.54 vs the ≤100 bar); spread ratio 1.06; no capability
+      divergence. σ=0 SUCCEEDED (18.95, best level mean) — near-dead
+      -start model falsified for the driver's per-row absmax adapter
+      at this site/budget. σ=1e-2 at fresh seeds reproduces AF2-D →
+      seed robustness confirmed. Classification annotates A-RP-002's
+      CONFIRMED_PASS (no state change). Run
+      `runs/a/EXP-AF-003/20260828T142354Z/`. Verdict:
+      `experiments/AF3/verdict.md`. Next per user steering: §2.6
+      EXP-AF-006 (AF6), then Track B reassessment per §5.
 - [x] **2.4** `EXP-AF-004` — **AF4 sequential-vs-joint training** (A-RP-003).
       **Done 2026-08-28: DECIDED FAIL (joint superior); A-RP-003 →
       PROVISIONAL_FAIL.** Joint beats seq on wikitext ppl (+5.20σ;
