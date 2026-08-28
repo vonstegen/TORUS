@@ -101,7 +101,7 @@ def test_corpus_perplexity_window_contract() -> None:
     rng = np.random.default_rng(1)
     ids_a = rng.integers(0, 8, size=600, dtype=np.int64)
     ids_b = ids_a.copy()
-    ids_b[4 * 32:] = rng.integers(0, 8, size=600 - 4 * 32)
+    ids_b[4 * 32 + 1:] = rng.integers(0, 8, size=600 - 4 * 32 - 1)
     model = _FixedLM(rng.normal(size=(8, 8)).astype(np.float32))
     pa = af2.corpus_perplexity(model, ids_a, seq_len=32, n_windows=4,
                                batch_size=2, device="cpu")
