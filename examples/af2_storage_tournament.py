@@ -97,13 +97,15 @@ class T2TernaryAdapter(SiteAdapter):
 
     def __init__(self, *, in_features: int, out_features: int,
                  device: str = "cpu", dtype=None,
-                 train: bool = True, init_seed: Optional[int] = None):
+                 train: bool = True, init_seed: Optional[int] = None,
+                 init_sigma: float = 0.01):
         import torch
         torch.manual_seed(init_seed if init_seed is not None
                           else torch.seed() % (2**31))
+        self.init_sigma = float(init_sigma)
         self.latent = torch.nn.Parameter(
-            0.01 * torch.randn(out_features, in_features,
-                               device=device, dtype=dtype))
+            self.init_sigma * torch.randn(out_features, in_features,
+                                          device=device, dtype=dtype))
         if not train:
             self.latent.requires_grad_(False)
         self._train = train
@@ -540,13 +542,17 @@ def build_base(model_name: str, *, dtype: str, device: str):
         model_name, torch_dtype=getattr(torch, dtype), low_cpu_mem_usage=True,
     ).to(device)
     return model
-def build_site_adapter(arm_id: str, *, target_module, site_dims: tuple):
+def build_site_adapter(arm_id: str, *, target_module, site_dims: tuple,
+                       t2_init_sigma: float = 0.01):
     """Build a SiteAdapter at the given target_module.
 
     `site_dims` is (in_features, out_features). For MLP down_proj sites
     this is (intermediate_size, hidden_size). For attention q_proj /
     v_proj sites this is (hidden_size, hidden_size). Dims come from
     `resolve_site_dims(target_module)`, not hardcoded config attrs.
+    `t2_init_sigma` scales the t2_ternary latent's N(0, sigma) init
+    (EXP-AF-003 robustness matrix; default 0.01 preserves every
+    pre-AF3 caller). Untrained structure-control arms ignore it.
     """
     import torch
     in_features, out_features = site_dims
@@ -555,7 +561,8 @@ def build_site_adapter(arm_id: str, *, target_module, site_dims: tuple):
     if arm_id == "t2_ternary":
         ad = T2TernaryAdapter(in_features=in_features,
                               out_features=out_features,
-                              device=device, dtype=dtype, train=True)
+                              device=device, dtype=dtype, train=True,
+                              init_sigma=t2_init_sigma)
         ad.patch(target_module)
         return ad
     if arm_id == "int4_residual":
@@ -753,6 +760,7 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
     site_in_features, site_out_features = site_dims
     adapter = build_site_adapter(
         arm, target_module=target_module, site_dims=site_dims,
+        t2_init_sigma=getattr(args, "t2_init_sigma", 0.01),
     )
     def forward_fn(ids):
         return model(input_ids=ids).logits
@@ -796,6 +804,7 @@ def run_one_seed(*, arm: str, seed: int, args, out_dir: Path,
         "n_steps": args.n_steps, "batch_size": args.batch_size,
         "seq_len": args.seq_len, "lr": args.lr, "limit": None,
         "tasks": {}, "matched_bytes_target": target_bytes,
+        "t2_init_sigma": getattr(args, "t2_init_sigma", 0.01),
         "matched_bytes_actual": cv.deployed_bytes,
         "matched_bytes_tolerance_pct": args.matched_bytes_tolerance_pct,
         "matched_bytes_passed": cv_matched,
@@ -983,6 +992,13 @@ def main(argv: list | None = None) -> None:
                          "(BEFORE any adapter training) per seed to verify the "
                          "damage mode reproduces EXP-A-011 within +/-2 sigma. "
                          "Saved to seed-XXX/pre_train_eval.json.")
+    p.add_argument("--t2-init-sigma", type=float, default=0.01,
+                    help="EXP-AF-003: N(0, sigma) init scale for the trained "
+                         "t2_ternary latent. Default 0.01 (the frozen AF2-D "
+                         "value). Affects only the trained t2_ternary arm; "
+                         "untrained structure controls stay at 0.01. Does "
+                         "NOT change deployed bytes (packing depends on "
+                         "shape only).")
     p.add_argument("--matched-bytes-tolerance-pct", type=float, default=1.0)
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)

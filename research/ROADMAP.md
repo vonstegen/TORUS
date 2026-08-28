@@ -342,6 +342,14 @@ its way into adaptive-gating experiments.
       {0, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2} × seeds {11, 22, 33}. Aggregate
       mean/std/failure rate/best/worst. Classify ROBUST / MODERATELY
       SENSITIVE / FRAGILE; narrow-window success lowers the robustness grade.
+      **PREREGISTERED 2026-08-28** (manifest
+      `research/track-a-residual-ternary/residual-falsification/experiments/AF3/manifest.yaml`):
+      18 cells on the AF2-D damaged-PTQ T2 recipe (the A-RP-002
+      CONFIRMED_PASS recipe), cell success = post-train wikitext ppl
+      ≤ 100 (AF2-D's frozen bar), σ=0 structural control, capability
+      cross-check on arc_easy/lambada. Classification annotates the
+      A-RP-002 INDEX entry (no state change). Driver change:
+      `--t2-init-sigma` knob (default = frozen 0.01).
 - [x] **2.4** `EXP-AF-004` — **AF4 sequential-vs-joint training** (A-RP-003).
       **Done 2026-08-28: DECIDED FAIL (joint superior); A-RP-003 →
       PROVISIONAL_FAIL.** Joint beats seq on wikitext ppl (+5.20σ;
