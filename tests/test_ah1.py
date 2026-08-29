@@ -75,7 +75,9 @@ def test_rotate_blocks_rejects_bad_dim() -> None:
 def test_materialize_w_eff_full_rotation() -> None:
     h = ah1.sylvester_hadamard(4)
     q = torch.tensor([[1.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 1.0],
-                      [0.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 0.0]])
+                      [0.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 0.0],
+                      [1.0, 1.0, 0.0, 0.0, -1.0, 0.0, 1.0, -1.0],
+                      [0.0, 0.0, 1.0, -1.0, 0.0, 1.0, -1.0, 0.0]])
     w = ah1.materialize_w_eff(q, 0.5, h, True, True)
     expected = torch.block_diag(h) @ (q * 0.5) @ torch.block_diag(h, h)
     assert torch.allclose(w, expected, atol=1e-5)
