@@ -102,15 +102,19 @@ def rotate_blocks(x: torch.Tensor, h: torch.Tensor) -> torch.Tensor:
     n = d // block
     return (x.reshape(*x.shape[:-1], n, block) @ h).reshape_as(x)
 
-
 def materialize_w_eff(q: torch.Tensor, scale: float, h: torch.Tensor,
                       rotate_in: bool, rotate_out: bool) -> torch.Tensor:
     """W_eff = R_out Q R_in (H symmetric, so R = blockdiag(H))."""
+    block = h.shape[0]
+    if rotate_in and q.shape[1] % block:
+        raise ValueError("in dim not divisible by rotation block")
+    if rotate_out and q.shape[0] % block:
+        raise ValueError("out dim not divisible by rotation block")
     w = q * scale
     if rotate_in:
-        w = w @ torch.block_diag(*([h] * (w.shape[1] // h.shape[0])))
+        w = w @ torch.block_diag(*([h] * (w.shape[1] // block)))
     if rotate_out:
-        w = torch.block_diag(*([h] * (w.shape[0] // h.shape[0]))) @ w
+        w = torch.block_diag(*([h] * (w.shape[0] // block))) @ w
     return w
 
 

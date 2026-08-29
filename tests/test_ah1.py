@@ -55,6 +55,13 @@ def test_hadamard_requires_power_of_two() -> None:
 def test_rotate_blocks_matches_blockdiag() -> None:
     h = ah1.sylvester_hadamard(4)
     x = torch.arange(8, dtype=torch.float32).reshape(2, 4)
+    expected = x @ torch.block_diag(h)
+    assert torch.allclose(ah1.rotate_blocks(x, h), expected, atol=1e-5)
+
+
+def test_rotate_blocks_multi_block() -> None:
+    h = ah1.sylvester_hadamard(4)
+    x = torch.arange(16, dtype=torch.float32).reshape(2, 8)
     expected = x @ torch.block_diag(h, h)
     assert torch.allclose(ah1.rotate_blocks(x, h), expected, atol=1e-5)
 
@@ -67,9 +74,10 @@ def test_rotate_blocks_rejects_bad_dim() -> None:
 
 def test_materialize_w_eff_full_rotation() -> None:
     h = ah1.sylvester_hadamard(4)
-    q = torch.tensor([[1.0, 0.0, -1.0, 0.0], [0.0, -1.0, 0.0, 1.0]])
+    q = torch.tensor([[1.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 1.0],
+                      [0.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 0.0]])
     w = ah1.materialize_w_eff(q, 0.5, h, True, True)
-    expected = torch.block_diag(h) @ (q * 0.5) @ torch.block_diag(h)
+    expected = torch.block_diag(h) @ (q * 0.5) @ torch.block_diag(h, h)
     assert torch.allclose(w, expected, atol=1e-5)
 
 
@@ -79,6 +87,12 @@ def test_materialize_w_eff_no_output_rotation() -> None:
     w = ah1.materialize_w_eff(q, 1.0, h, True, False)
     expected = q @ torch.block_diag(h)
     assert torch.allclose(w, expected, atol=1e-5)
+
+
+def test_materialize_w_eff_rejects_bad_dims() -> None:
+    h = ah1.sylvester_hadamard(4)
+    with pytest.raises(ValueError):
+        ah1.materialize_w_eff(torch.ones(2, 4), 1.0, h, True, True)
 
 
 # ---- ternary quantize -------------------------------------------------------
@@ -91,10 +105,11 @@ def test_ternary_quantize_codes_and_scale() -> None:
 
 
 def test_ternary_quantize_threshold_semantics() -> None:
-    # |w|/scale < 0.5 -> 0 ; > 0.5 -> +-1
-    w = torch.tensor([[0.9, 1.6, -0.7, -1.9, 0.0]])
+    # |w|/scale < 0.5 -> 0 ; > 0.5 -> +-1 (values chosen clear of
+    # round-half ties)
+    w = torch.tensor([[0.2, 0.8, -0.2, -0.8]])
     q, _ = ah1.ternary_quantize(w)
-    assert q.tolist()[0] == [0.0, 1.0, 0.0, -1.0, 0.0]
+    assert q.tolist()[0] == [0.0, 1.0, 0.0, -1.0]
 
 
 # ---- rotated linear init contract -------------------------------------------
