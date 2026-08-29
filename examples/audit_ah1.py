@@ -29,6 +29,7 @@ def load_arm(run_dir: Path, arm: str) -> dict:
     rec: dict = {"arm": arm}
     sdir = run_dir / arm
     rec["summary"] = json.loads((sdir / "summary.json").read_text())
+    rec["eval"] = json.loads((sdir / "eval.summary.json").read_text())
     p = sdir / f"parity_{arm}.json"
     rec["parity"] = json.loads(p.read_text()) if p.exists() else None
     ab = sdir / "abort.json"
