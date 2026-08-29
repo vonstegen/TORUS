@@ -226,6 +226,7 @@ def build_arm(arm: str, device: str) -> tuple:
     # control arm's, so the paired design holds. Embeddings stay fp16
     # (fp32 params) and train in BOTH arms identically.
     model.to(device)
+    model.gradient_checkpointing_enable()
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     return model, h, linear_modules, tokenizer
 
