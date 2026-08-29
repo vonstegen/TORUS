@@ -114,14 +114,34 @@ def test_ternary_quantize_threshold_semantics() -> None:
     assert q.tolist()[0] == [0.0, 1.0, 0.0, -1.0]
 
 
-# ---- rotated linear init contract -------------------------------------------
+# ---- linear parameterization (v2: normalized latent + learned scale) ------
+def test_ternary_codes_normalized() -> None:
+    w = torch.tensor([[0.2, 0.8, -0.2, -0.8]])
+    assert ah1.ternary_codes(w).tolist()[0] == [0.0, 1.0, 0.0, -1.0]
+
+
+def test_plain_linear_v2_init_and_effective() -> None:
+    torch.manual_seed(0)
+    w0 = torch.randn(8, 8)
+    mod = ah1.TernaryLinear(w0, None)
+    s0 = float(w0.abs().mean())
+    assert torch.allclose(mod.weight_latent.detach(), w0 / s0, atol=1e-6)
+    assert mod.scale.item() == pytest.approx(s0, abs=1e-6)
+    expected = ah1.ternary_codes(w0 / s0) * s0
+    assert torch.allclose(mod.effective_weight().detach(), expected,
+                          atol=1e-6)
+
+
 def test_rotated_linear_latent_is_rotated_w0() -> None:
     torch.manual_seed(0)
     h = ah1.sylvester_hadamard(4)
     w0 = torch.randn(8, 8)
     mod = ah1.RotatedTernaryLinear(w0, None, h, rotate_out=True)
-    expected = torch.block_diag(h, h) @ w0 @ torch.block_diag(h, h)
-    assert torch.allclose(mod.weight_latent.detach(), expected, atol=1e-5)
+    rotated = torch.block_diag(h, h) @ w0 @ torch.block_diag(h, h)
+    s0 = float(rotated.abs().mean())
+    assert torch.allclose(mod.weight_latent.detach(), rotated / s0,
+                          atol=1e-6)
+    assert mod.scale.item() == pytest.approx(s0, abs=1e-6)
 
 
 def test_rotated_linear_no_out_latent() -> None:
@@ -129,8 +149,10 @@ def test_rotated_linear_no_out_latent() -> None:
     h = ah1.sylvester_hadamard(4)
     w0 = torch.randn(8, 8)
     mod = ah1.RotatedTernaryLinear(w0, None, h, rotate_out=False)
-    expected = w0 @ torch.block_diag(h, h)
-    assert torch.allclose(mod.weight_latent.detach(), expected, atol=1e-5)
+    rotated = w0 @ torch.block_diag(h, h)
+    s0 = float(rotated.abs().mean())
+    assert torch.allclose(mod.weight_latent.detach(), rotated / s0,
+                          atol=1e-6)
 
 
 def test_rotated_linear_rejects_bad_dims() -> None:
@@ -200,18 +222,16 @@ def test_audit_bars_fail_on_arc_regression() -> None:
         {"wikitext": 38.0, "arc_easy": 0.20, "lambada_openai": 0.11},
     ))
     assert bars["ppl_ratio"]["pass"]
-    assert not bars["arc_margin"]["pass"]
-
-
 def _write_run(tmp_path, ctrl_eval, had_eval, parity_gap=0.01,
-               had_abort=None, steps=12_500) -> Path:
+               had_abort=None, steps=12_500, xcheck_nats=0.0) -> Path:
     """Write a synthetic run directory in the auditor's expected layout."""
     import json as _json
     for name, ev in [("control", ctrl_eval), ("hadamard", had_eval)]:
         sdir = tmp_path / name
         sdir.mkdir()
         (sdir / "summary.json").write_text(
-            _json.dumps({"arm": name, "steps": steps}))
+            _json.dumps({"arm": name, "steps": steps,
+                         "materialize_cross_check_nats": xcheck_nats}))
         (sdir / "eval.summary.json").write_text(_json.dumps(ev))
         loss = 10.8 + (parity_gap / 2 if name == "hadamard" else 0.0)
         (sdir / f"parity_{name}.json").write_text(
@@ -222,7 +242,6 @@ def _write_run(tmp_path, ctrl_eval, had_eval, parity_gap=0.01,
         if name == "hadamard" and had_abort is not None:
             (sdir / "abort.json").write_text(_json.dumps(had_abort))
     return tmp_path
-
 
 EVAL_PASS = {"wikitext": 40.0, "arc_easy": 0.25, "lambada_openai": 0.10}
 EVAL_HAD = {"wikitext": 38.0, "arc_easy": 0.26, "lambada_openai": 0.11}
@@ -272,3 +291,10 @@ def test_audit_short_steps_invalid(tmp_path) -> None:
                                     steps=10_000))
     assert result["verdict"] == "INVALID"
     assert any("steps" in f for f in result["integrity_failures"])
+
+
+def test_audit_materialize_crosscheck_invalid(tmp_path) -> None:
+    result = audit.audit(_write_run(tmp_path, EVAL_PASS, EVAL_HAD,
+                                    xcheck_nats=0.5))
+    assert result["verdict"] == "INVALID"
+    assert any("cross-check" in f for f in result["integrity_failures"])

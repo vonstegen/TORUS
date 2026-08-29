@@ -3,7 +3,9 @@
 Applies the preregistered bars (manifest, frozen 2026-08-29):
 
   integrity:  both arms' summaries + histories present and finite;
-              steps >= budget; parity |step-0 loss diff| <= 0.1 nats.
+              steps >= budget; parity |step-0 loss diff| <= 0.1 nats;
+              materialize cross-check (runtime CE vs materialized CE
+              on the same held-out window) <= 0.01 nats.
   thresholds: hadamard wikitext ppl <= 0.97 x control AND
               arc_easy >= control - 0.03 AND
               lambada_openai >= control - 0.02 -> PASS, else FAIL.
@@ -23,6 +25,7 @@ ARC_MARGIN = 0.03
 LAMBADA_MARGIN = 0.02
 BUDGET_STEPS = 12_500            # 200M tokens (amended pre-run)
 PARITY_TOLERANCE = 0.1
+XCHECK_TOLERANCE = 0.01          # nats: runtime CE vs materialized CE
 
 
 def load_arm(run_dir: Path, arm: str) -> dict:
@@ -83,6 +86,10 @@ def audit(run_dir: Path) -> dict:
                              f"< {BUDGET_STEPS}")
         if rec["parity"] is None:
             integrity.append(f"{a}: parity missing")
+        xc = rec["summary"].get("materialize_cross_check_nats")
+        if xc is None or xc > XCHECK_TOLERANCE:
+            integrity.append(f"{a}: materialize cross-check "
+                             f"{xc} nats > {XCHECK_TOLERANCE}")
     pc = arms["control"]["parity"]["step0_loss"]
     ph = arms["hadamard"]["parity"]["step0_loss"]
     parity_gap = abs(pc - ph)
@@ -99,6 +106,7 @@ def audit(run_dir: Path) -> dict:
     for rec in arms.values():
         if rec["abort"]:
             kills.append(rec["abort"])
+    out["kills"] = kills
 
     out["bars"] = evaluate_thresholds(arms)
 
