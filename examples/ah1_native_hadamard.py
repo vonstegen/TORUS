@@ -112,6 +112,7 @@ def materialize_w_eff(q: torch.Tensor, scale: float, h: torch.Tensor,
     if rotate_out and q.shape[0] % block:
         raise ValueError("out dim not divisible by rotation block")
     w = q * scale
+    h = h.to(w.dtype)
     if rotate_in:
         w = w @ torch.block_diag(*([h] * (w.shape[1] // block)))
     if rotate_out:
