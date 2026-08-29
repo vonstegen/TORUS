@@ -54,8 +54,7 @@ import torch.nn.functional as F
 # ---- frozen constants (manifest) -------------------------------------------
 MODEL_ID = "facebook/opt-125m"
 OWT_DATASET = "Skylion007/openwebtext"
-OWT_SHARDS = ["train_shard_0000.parquet", "train_shard_0001.parquet",
-              "train_shard_0002.parquet", "train_shard_0003.parquet"]
+OWT_N_SHARDS = 4                # ~50M tokens each (GPT-2 tokenizer)
 TEST_FRACTION = 0.01
 SEED = 7
 SEQ_LEN = 512
@@ -280,17 +279,21 @@ def lr_at(step: int) -> float:
 
 # ---- data prep --------------------------------------------------------------
 def prep_data(out_manifest: str = PREP_MANIFEST) -> None:
-    from huggingface_hub import hf_hub_download
+    from huggingface_hub import hf_hub_download, list_repo_files
     from transformers import AutoTokenizer
-
     if Path(CACHE_TRAIN).exists() or Path(CACHE_TEST).exists():
         raise SystemExit(f"[ah1-prep] caches exist; refusing to overwrite "
                          f"({CACHE_TRAIN}, {CACHE_TEST})")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     eot = tokenizer.eos_token_id
     record = {"shards": [], "total_train_tokens": 0, "test_tokens": 0}
+    shard_names = sorted(
+        f for f in list_repo_files(OWT_DATASET, repo_type="dataset")
+        if f.endswith(".parquet") and "train" in f)
+    if len(shard_names) < OWT_N_SHARDS:
+        raise SystemExit(f"[ah1-prep] only {len(shard_names)} train shards")
     parts = []
-    for name in OWT_SHARDS:
+    for name in shard_names[:OWT_N_SHARDS]:
         path = hf_hub_download(OWT_DATASET, name, repo_type="dataset")
         record["shards"].append({"name": name, "sha256": _sha256_file(path)})
         import pyarrow.parquet as pq
