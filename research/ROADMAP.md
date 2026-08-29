@@ -473,7 +473,7 @@ its way into adaptive-gating experiments.
       ~~Original §2.6 text: ≥2 context regimes (seq_len ≈16 and
       ≈128–256) and, where practical, 2 corpora. Determines whether
       T2's gain is general or a short-window artifact.~~
-      - [ ] **2.7** `EXP-AF-007` — **AF7 random-capacity control.** T1 + ternary T2
+- [ ] **2.7** `EXP-AF-007` — **AF7 random-capacity control.** T1 + ternary T2
       vs. T1 + matched low-rank/dense trainable correction. Similar
       improvement → conclusion is only "additive correction helps"; T2 must
       win on quality-per-bit/compute to support ternary specifically.
@@ -542,6 +542,7 @@ advantage (per RPM proposal §13). The current state:
       (so v2 has a known calibration); freeze metric keys in the
       manifest; specify the ppl sign convention for monotonicity
       tests; document values before any post-hoc corrections.
+- [ ] **3.2** `EXP-A-H1` — **Native Hadamard controlled training (discovery
       (discovery → confirmation).** Small model (100M–500M),
       matched arms: standard ternary vs. native rotated ternary
       parameterization, identical architecture/data/optimizer/
@@ -551,6 +552,22 @@ advantage (per RPM proposal §13). The current state:
       metadata, joules/token where trustworthy. **Kill criteria
       preregistered.** H-POST remains NO-SHIP. Large-model
       earns `CONFIRMED_PASS`.
+      **PREREGISTERED 2026-08-29** (claim `A-RP-HAD` v1
+      UNTESTED→TESTING; manifest
+      `research/track-a5-hadamard/EXP-A-H1/manifest.yaml`): OPT-125M
+      from random init, paired arms (same W0 seed 7, same token
+      stream), 500M tokens/arm on openwebtext, block-64 Sylvester
+      rotations on all linear in/out axes (lm_head output
+      unrotated), per-tensor absmean scales. Frozen bars: hadamard
+      wikitext ppl ≤ 0.97 × control AND arc_easy ≥ control − 0.03
+      AND lambada ≥ control − 0.02; parity gate |step-0 loss Δ| ≤
+      0.1; live 15% loss-gap abort; 8 GPU-h cap. Diagnostics: loss,
+      gradient conditioning proxy, code-flip rate, throughput,
+      deployed bytes. Driver `examples/ah1_native_hadamard.py`,
+      auditor `examples/audit_ah1.py`, tests `tests/test_ah1.py`.
+      Discovery tier (paired single seed); DISCOVERY PASS escalates
+      to ≥3 seeds + clean reproduction before CONFIRMED_PASS
+      (CP3.2).
 - [ ] **3.3** `EXP-A-05x` — **Pareto report.** Full baseline ladder
       (FP16 → INT8 → strong 4-bit → T1 → T1+T2 → heterogeneous
       map) on quality vs. physical bytes/weight (packing +

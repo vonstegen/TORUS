@@ -1,0 +1,45 @@
+# Claim record — A-RP-HAD — native Hadamard ternary training (Track A, subtrack A5)
+id: A-RP-HAD
+claim_version: 1
+track: A
+title: "Native Hadamard ternary training beats standard ternary training"
+statement: "Building Hadamard-rotation geometry into ternary training from
+  initialization (native rotated ternary parameterization) produces a
+  preregistered downstream advantage over standard ternary training at
+  matched architecture, data, optimizer, schedule, and budget on a
+  small model."
+quantitative_thresholds:
+  - "At matched budget on a small model (100M-500M params), paired arms
+    from the same random init: the rotated arm's wikitext ppl
+    (lm-eval ladder instrument) must be <= 0.97 x the control arm's,
+    AND arc_easy >= control - 0.03 AND lambada_openai >= control - 0.02
+    (absolute). Any miss = FAIL."
+  - "Parity gate (integrity): |step-0 loss difference| <= 0.1 nats and
+    both finite; else INVALID."
+  - "No kill criterion fired (divergence, live 15% loss-gap abort,
+    budget overrun, environment drift)."
+date_registered: "2026-08-29"
+state: TESTING
+required_evidence:
+  - "EXP-A-H1 (discovery, paired single seed) -> DISCOVERY PASS must
+    escalate to confirmation: >=3 seeds + one clean reproduction
+    before CONFIRMED_PASS (OPERATING-PLAN §3, CP3.2)."
+supporting_experiments: []
+unlock_rules_affected:
+  - "CP3.2 (Hadamard verdict): preregistered advantage without
+    breaching kill criteria -> CONFIRMED_PASS after reproduction; else
+    FAIL, the Hadamard line closes with H-POST."
+  - "Large-model Hadamard runs stay locked until a small-model
+    CONFIRMED_PASS (suite doc 10: 'Keep large-model Hadamard
+    experiments locked until a small controlled native-Hadamard
+    experiment earns a CONFIRMED_PASS')."
+history:
+  - date: "2026-08-29"
+    transition: "UNTESTED -> TESTING"
+    cause: "EXP-A-H1 preregistered (manifest
+      research/track-a5-hadamard/EXP-A-H1/manifest.yaml, PROPOSE
+      commit). Motivation chain: EXP-A-020 (H-POST FAIL),
+      EXP-A-021 (H-NATIVE motivation CONTINUE), user steering
+      2026-08-28 ordering native Hadamard as the primary next
+      experiment after the A-F suite."
+conclusion: ""

@@ -1,0 +1,183 @@
+# Experiment record — EXP-A-H1 — small-model native Hadamard ternary training
+# Preregistered 2026-08-29 BEFORE any run under this ID. Thresholds frozen.
+id: EXP-A-H1
+track: A
+subtrack: "A5 hadamard"
+tier: discovery
+claims_addressed: ["A-RP-HAD"]
+title: "EXP-A-H1. From-random-init training of a 125M model with
+  matched arms: standard ternary vs native rotated (Hadamard) ternary
+  parameterization. Identical architecture/data/optimizer/schedule/
+  budget; the rotation is the only axis."
+owner: "research-harness"
+date_proposed: "2026-08-29"
+status: PROPOSED
+decision: null
+grade: null
+
+hypothesis: "A native Hadamard-rotated ternary parameterization (fixed
+  Sylvester block rotations applied to each linear's input and output
+  axes, ternary codes trained in the rotated domain) trains better
+  than standard ternary training from the same random initialization
+  at matched budget: the rotated arm ends at least 3% lower wikitext
+  ppl without material regression on arc_easy/lambada_openai, with
+  the optimization-behavior diagnostics (loss trajectory, gradient
+  conditioning, code-flip rate) recorded."
+
+rationale: "Track A2 v2 (docs/TORUS-feedback/04) splits H-POST
+  (post-hoc rotation+recovery: NO-SHIP at tested budget, EXP-A-020)
+  from H-NATIVE (rotation geometry built into training from
+  initialization). EXP-A-021 (retro-registered CONTINUE) observed
+  better optimization behavior/conditioning for a rotated arm in
+  controlled rotated-vs-unrotated training — the surviving
+  hypothesis. A-H1 is the cheapest experiment capable of falsifying
+  it: a paired single-seed discovery run (both arms from the SAME
+  random init and data order — the rotation is the only difference),
+  small model (OPT-125M, in the 100M-500M spec range), short budget.
+  A failure closes the Hadamard line with H-POST per CP3.2; a
+  discovery pass escalates to confirmation (>=3 seeds + clean
+  reproduction) before any large-model Hadamard spend (suite doc 10).
+
+  Model choice: OPT-125M — nn.Linear throughout (the STE machinery
+  attaches to linears), no RoPE (rotations stay within-head/within-
+  block; no rotation-vs-positional-encoding interactions), learned
+  position embeddings, 125M params, lm-eval compatible, GPT-2-style
+  tokenizer. Random re-init: the experiment is about training
+  behavior, not PTQ recovery.
+
+  Rotation design: block-diagonal Sylvester H64 (2^6) on each
+  linear's input (768 = 12x64; ffn 3072 = 48x64) and output axes;
+  W = R_out^T Q R_in with ternary Q trained in the rotated domain.
+  lm_head: input rotated, output (vocab, 50272) unrotated.
+  Embeddings: fp16 in BOTH arms, unrotated. Per-tensor absmean
+  scale, both arms. Rotations are fixed constants derived from the
+  dims (zero per-weight storage); both arms deploy identical
+  physical bytes (packed ternary codes + per-linear fp16 scales)."
+
+revision: ""
+run_namespace: "runs/a/EXP-A-H1/<timestamp>/{control,hadamard}/"
+environment: "legion; x86_64; 2x TITAN RTX 24GB (Turing, fp16 only);
+  venv torch 2.13.0+cu130, transformers 4.57.6, lm-eval (AF6b
+  working set); env-lock.txt recorded in the run namespace."
+baseline: "Paired control arm: standard ternary STE training of the
+  same OPT-125M random init with identical optimizer/schedule/data/
+  budget. (Absolute references: none exist for from-scratch OPT-125M
+  on this corpus at this budget; the comparison is strictly
+  arm-vs-arm.)"
+controls:
+  - "Paired design: both arms initialize from the SAME random W0
+    (same torch seed), consume the SAME token stream in the same
+    order, run identical AdamW/cosine schedule, micro-batch, seq
+    length, dtype (fp16 autocast, fp32 latent), grad clip, dropout."
+  - "Parity gate (integrity, pre-read): |step-0 loss difference|
+    <= 0.1 nats and both finite. The arms start from the same random
+    function up to ternary-quantization noise in two bases; a miss
+    is INVALID."
+  - "Control arm uses the plain ternary STE path; the hadamard arm
+    differs ONLY by the rotation matrices and the domain of the
+    ternary codes."
+  - "Both arms materialize W_eff into the stock HF checkpoint for
+    the eval ladder (eval_lm.py --mode baseline on a saved local
+    path) — the runtime-rotated state dicts are also saved; the
+    materialized form is fp16-dense for eval only, and deployed-bytes
+    accounting uses the runtime (ternary Q + scales) form."
+
+variants:
+  - "control: standard ternary STE training."
+  - "hadamard: native rotated ternary STE training (block-64
+    Sylvester rotations on all linear input/output axes except the
+    lm_head output)."
+
+dataset_and_samples: "openwebtext (Skylion007) parquet shards 0-3,
+  GPT-2/OPT tokenizer, concatenated token stream with a held-out 1%
+  tail (test). Shard names + sha256 + token counts recorded in the
+  data-prep manifest; caches refuse to overwrite. Both arms consume
+  the identical stream from byte 0."
+seeds: [7]   # discovery tier, paired arms; escalation requires >=3
+metrics:
+  - "capability (frozen ladder, eval_lm.py): wikitext ppl,
+    arc_easy, lambada_openai — materialized-W_eff checkpoints"
+  - "training diagnostics (reported, never decision): per-step CE
+    loss, gradient conditioning proxy per linear
+    (||g||_2 / ||g||_1 of the latent-weight gradient, sampled at
+    steps 1000/5000/15000/25000/31250), ternary code-flip rate
+    (500-step windows), throughput (tokens/s), peak VRAM"
+  - "systems (reported): deployed bytes per arm (packed ternary +
+    scales formula), training FLOPs (6 x N x tokens, both arms)"
+evidence_categories: [software, representation, downstream, systems]
+
+# ----- thresholds (frozen at PROPOSE) --------------------------------------
+pass_thresholds:
+  - "hadamard wikitext ppl <= 0.97 x control wikitext ppl"
+  - "hadamard arc_easy >= control arc_easy - 0.03 (absolute)"
+  - "hadamard lambada_openai >= control lambada_openai - 0.02
+    (absolute)"
+fail_thresholds:
+  - "any pass bar missed -> FAIL; per CP3.2 the Hadamard line closes
+    with H-POST (A-RP-HAD -> PROVISIONAL_FAIL path; H-NATIVE verdict
+    recorded)."
+kill_criteria:
+  - "NaN/inf loss in either arm -> arm aborts (INVALID arm);
+    rerun."
+  - "Live loss-gap abort: hadamard mean train loss over the last
+    2000 completed steps (step-aligned) exceeds 1.15 x the control
+    arm's over the same window -> hadamard aborts -> FAIL."
+  - "Budget overrun: >8 GPU-hours total or >10h wall -> stop;
+    record CONTINUE/INVALID per OPERATING-PLAN §4, never silent
+    extension."
+  - "Environment drift mid-run (GPU reallocation, cache
+    modification, library change) -> INVALID."
+budget: "500M tokens per arm (31,250 steps x 16,384 tokens); 8
+  GPU-hours cap; ~2.3-3.5h per arm expected on TITAN RTX; both arms
+  run in parallel on cuda:0/cuda:1."
+stop_conditions:
+  - "Both arms complete 31,250 steps, materialize checkpoints, and
+    write eval summaries."
+  - "Any kill criterion fires."
+expected_artifacts:
+  - "per arm: history.jsonl (step, loss, code-flip, throughput),
+    conditioning.json, summary.json, materialized checkpoint
+    (save_pretrained), runtime state dict + Q codes, cost_vector.json"
+  - "verification: parity-gate measurement + data-prep manifest
+    (cache shas)"
+  - "audit.json (threshold evaluation) + ARTIFACTS.json +
+    provenance.json + env-lock.txt"
+artifact_paths:
+  - "EXP-A-H1/verdict.md (at DECIDE)"
+  - "runs/a/EXP-A-H1/<timestamp>/ (legion, git-ignored: checkpoints,
+    histories, eval outputs, ARTIFACTS.json, env-lock, provenance)"
+artifacts_manifest: "runs/a/EXP-A-H1/<timestamp>/ARTIFACTS.json"
+contamination_risks:
+  - "New token caches (/tmp/ah1_owt_*.npy) are GPT-2-tokenized and
+    disjoint from every AF cache; prep refuses to overwrite; shas
+    recorded."
+  - "Each arm writes only its own namespace; the launcher is the
+    only cross-arm reader (parity gate + live loss-gap check)."
+  - "Materialized checkpoints are fresh HF dirs under the run
+    namespace; the eval reads them via eval_lm.py --mode baseline."
+
+freeze_exception:
+  change: "(a) examples/ah1_native_hadamard.py — new driver:
+    data prep (OWT shards 0-3, GPT-2 tokenizer caches), matched
+    from-scratch OPT-125M ternary STE training for both arms
+    (--arm control|hadamard), rotation module (block-64 Sylvester
+    H), live loss-gap self-check, checkpoint materialization.
+    (b) examples/audit_ah1.py — threshold evaluator. (c)
+    tests/test_ah1.py — rotation orthogonality/equivalence, ternary
+    quantize, flip-rate, parity gate, threshold evaluation. No
+    change to torus/ core, the AF machinery, or eval_lm.py."
+  justification: "Required to execute the registered EXP-A-H1
+    (roadmap §3.2, user steering 2026-08-28); no existing driver
+    trains a model from scratch or implements rotated ternary
+    parameterization (OPERATING-PLAN §1: feature work permitted when
+    required to execute a registered experiment)."
+  approved_by: "harness rule (OPERATING-PLAN §1) + user steering
+    2026-08-28 ordering native Hadamard first"
+
+# ----- decision block (filled at DECIDE) -----------------------------------
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+experiments_blocked: []
+conclusion: ""
+supersedes: null
