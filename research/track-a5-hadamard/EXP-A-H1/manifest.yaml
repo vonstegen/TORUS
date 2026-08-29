@@ -3,8 +3,25 @@
 id: EXP-A-H1
 track: A
 subtrack: "A5 hadamard"
-tier: discovery
-claims_addressed: ["A-RP-HAD"]
+id: EXP-A-H1
+prior_runs:
+  - run: "runs/a/EXP-A-H1/20260829T201327Z (legion)"
+    status: "INVALID — driver/recipe defects caught pre-audit"
+    reason: "(1) driver: train() never saved its weights; the separate
+      materialize process rebuilt a fresh random model and
+      materialized that (ladder measured a random model, ppl ~205k
+      both arms). (2) recipe: per-tensor scale recomputed from the
+      latent each forward (s = mean|w|) made dL/dw = s * g_eff a
+      positive feedback into |w| growth — both arms diverged from
+      loss 8.8 (step 2000) back to 10.4 (step 12500) with code-flip
+      rate ~0. Both defects fixed in commit d28d2d3 (v2 recipe:
+      normalized latent + independently learned per-linear scale,
+      scales excluded from weight decay, LR 6e-4; in-process state
+      save + materialize; 0.01-nat materialize cross-check added to
+      the auditor). Frozen bars, parity gate, and kill criteria are
+      unchanged; the rerun uses the same experiment ID with a fresh
+      timestamp (the design was never invalidated, its first
+      execution was)."
 title: "EXP-A-H1. From-random-init training of a 125M model with
   matched arms: standard ternary vs native rotated (Hadamard) ternary
   parameterization. Identical architecture/data/optimizer/schedule/
@@ -14,6 +31,7 @@ date_proposed: "2026-08-29"
 status: PROPOSED
 decision: null
 grade: null
+
 
 hypothesis: "A native Hadamard-rotated ternary parameterization (fixed
   Sylvester block rotations applied to each linear's input and output

@@ -42,4 +42,17 @@ history:
       EXP-A-021 (H-NATIVE motivation CONTINUE), user steering
       2026-08-28 ordering native Hadamard as the primary next
       experiment after the A-F suite."
+  - date: "2026-08-29"
+    transition: "TESTING (run 1 INVALID, no state change)"
+    cause: "EXP-A-H1 run 1 (runs/a/EXP-A-H1/20260829T201327Z)
+      INVALID — driver/recipe defects caught pre-audit: (1) train()
+      never saved its weights; the materialize process evaluated a
+      fresh random model; (2) scale = mean|latent| per forward
+      created a positive feedback that diverged both arms (8.8 ->
+      10.4 loss). Fixed in the v2 recipe commit (learned per-linear
+      scale, in-process materialize, 0.01-nat cross-check); frozen
+      thresholds unchanged. Rerun under the same experiment ID,
+      fresh timestamp."
 conclusion: ""
+
+
