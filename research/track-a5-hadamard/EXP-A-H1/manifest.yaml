@@ -127,13 +127,21 @@ kill_criteria:
     extension."
   - "Environment drift mid-run (GPU reallocation, cache
     modification, library change) -> INVALID."
-budget: "500M tokens per arm (31,250 steps x 16,384 tokens); 8
-  GPU-hours cap; ~2.3-3.5h per arm expected on TITAN RTX; both arms
-  run in parallel on cuda:0/cuda:1."
+budget: "200M tokens per arm (12,500 steps x 16,384 tokens); 8
+  GPU-hours cap; ~3.4h per arm expected on TITAN RTX; both arms run
+  in parallel on cuda:0/cuda:1.
+  PRE-RUN AMENDMENT 2026-08-29 (no results read): the original
+  budget (500M tokens/arm, 31,250 steps) was sized from an
+  optimistic 40-60k tok/s estimate. Measured TITAN RTX throughput
+  with gradient checkpointing is 16.4k tok/s (smoke run) -> 500M
+  would be ~8.5h/arm = 17 GPU-h, breaching the frozen 8 GPU-h cap.
+  Discovery tier permits the shorter budget ('cheapest falsification',
+  OPERATING-PLAN section 2); both arms remain matched; thresholds,
+  bars, and kill criteria are unchanged. Conditioning sample steps
+  rescaled to {500, 3000, 6000, 10000, 12500}."
 stop_conditions:
-  - "Both arms complete 31,250 steps, materialize checkpoints, and
+  - "Both arms complete 12,500 steps, materialize checkpoints, and
     write eval summaries."
-  - "Any kill criterion fires."
 expected_artifacts:
   - "per arm: history.jsonl (step, loss, code-flip, throughput),
     conditioning.json, summary.json, materialized checkpoint

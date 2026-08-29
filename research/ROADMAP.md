@@ -556,7 +556,10 @@ advantage (per RPM proposal §13). The current state:
       UNTESTED→TESTING; manifest
       `research/track-a5-hadamard/EXP-A-H1/manifest.yaml`): OPT-125M
       from random init, paired arms (same W0 seed 7, same token
-      stream), 500M tokens/arm on openwebtext, block-64 Sylvester
+      stream), 200M tokens/arm on openwebtext (pre-run amendment from
+      500M: measured TITAN RTX throughput 16.4k tok/s incl. gradient
+      checkpointing; 500M = 17 GPU-h > the frozen 8 GPU-h cap),
+      block-64 Sylvester
       rotations on all linear in/out axes (lm_head output
       unrotated), per-tensor absmean scales. Frozen bars: hadamard
       wikitext ppl ≤ 0.97 × control AND arc_easy ≥ control − 0.03

@@ -162,7 +162,7 @@ def test_token_window_iter_wrap_deterministic(tmp_path) -> None:
 
 
 # ---- auditor thresholds -----------------------------------------------------
-def _arms(ctrl_eval, had_eval, parity_gap=0.01, aborts=(), steps=31_250):
+def _arms(ctrl_eval, had_eval, parity_gap=0.01, aborts=(), steps=12_500):
     arms = {}
     for name, ev in [("control", ctrl_eval), ("hadamard", had_eval)]:
         arms[name] = {
@@ -204,7 +204,7 @@ def test_audit_bars_fail_on_arc_regression() -> None:
 
 
 def _write_run(tmp_path, ctrl_eval, had_eval, parity_gap=0.01,
-               had_abort=None, steps=31_250) -> Path:
+               had_abort=None, steps=12_500) -> Path:
     """Write a synthetic run directory in the auditor's expected layout."""
     import json as _json
     for name, ev in [("control", ctrl_eval), ("hadamard", had_eval)]:

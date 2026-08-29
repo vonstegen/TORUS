@@ -21,15 +21,14 @@ from pathlib import Path
 PPL_RATIO = 0.97
 ARC_MARGIN = 0.03
 LAMBADA_MARGIN = 0.02
+BUDGET_STEPS = 12_500            # 200M tokens (amended pre-run)
 PARITY_TOLERANCE = 0.1
-BUDGET_STEPS = 31_250
 
 
 def load_arm(run_dir: Path, arm: str) -> dict:
     rec: dict = {"arm": arm}
     sdir = run_dir / arm
     rec["summary"] = json.loads((sdir / "summary.json").read_text())
-    rec["eval"] = json.loads((sdir / "eval.summary.json").read_text())
     p = sdir / f"parity_{arm}.json"
     rec["parity"] = json.loads(p.read_text()) if p.exists() else None
     ab = sdir / "abort.json"

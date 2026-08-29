@@ -59,19 +59,21 @@ TEST_FRACTION = 0.01
 SEED = 7
 SEQ_LEN = 512
 BATCH = 32                      # 16,384 tokens / step
-TOTAL_STEPS = 31_250            # 500M tokens
+TOTAL_STEPS = 12_500            # 200M tokens (amended pre-run: measured
+                                # TITAN RTX throughput 16.4k tok/s incl.
+                                # checkpointing; 500M would be 17 GPU-h >
+                                # frozen 8 GPU-h cap)
 LR = 2e-3
 WARMUP_STEPS = 2_000
 MIN_LR_RATIO = 0.1
 WEIGHT_DECAY = 0.01
 GRAD_CLIP = 1.0
 BLOCK = 64                      # Sylvester H block size (2^6)
-COND_SAMPLE_STEPS = [1_000, 5_000, 15_000, 25_000, TOTAL_STEPS]
+COND_SAMPLE_STEPS = [500, 3_000, 6_000, 10_000, TOTAL_STEPS]
 FLIP_WINDOW = 500
 LIVE_GAP_RATIO = 1.15
 LIVE_GAP_WINDOW = 2_000
 PARITY_TOLERANCE = 0.1          # nats
-LINEAR_NAMES = ["q_proj", "k_proj", "v_proj", "out_proj", "fc1", "fc2"]
 
 CACHE_TRAIN = "/tmp/ah1_owt_train_ids.npy"
 CACHE_TEST = "/tmp/ah1_owt_test_ids.npy"
