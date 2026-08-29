@@ -159,7 +159,7 @@ class RotatedTernaryLinear(torch.nn.Module):
         d_out, d_in = weight0.shape
         if d_in % block or (rotate_out and d_out % block):
             raise ValueError("dims not divisible by rotation block")
-        self.register_buffer("h", h)
+        self.register_buffer("h", h.half())
         self.rotate_out = rotate_out
         latent0 = weight0.detach().clone().float()
         # R_out W0 R_in  (R_in over d_in, R_out over d_out; H symmetric)
