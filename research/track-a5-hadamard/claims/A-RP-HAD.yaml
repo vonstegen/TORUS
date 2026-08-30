@@ -53,6 +53,17 @@ history:
       scale, in-process materialize, 0.01-nat cross-check); frozen
       thresholds unchanged. Rerun under the same experiment ID,
       fresh timestamp."
+  - date: "2026-08-29"
+    transition: "TESTING (run 2 INVALID, no state change)"
+    cause: "EXP-A-H1 run 2 (runs/a/EXP-A-H1/20260829T224005Z)
+      INVALID — the STE passed ZERO gradient: ternary_codes used
+      plain round().clamp() (zero derivative), so the ternary
+      weights never trained; the loss drop came from scales +
+      embeddings + biases, the code-flip rate was weight-decay
+      noise, and the ladder measured a frozen-codes model. Caught
+      by the conditioning proxy reading 0.0 + grad probe. Fixed in
+      commit 4101ca0 (detach-trick STE + zero-gradient abort gate
+      + identity-backward unit test); frozen thresholds unchanged.
+      Also explains run 1's divergence."
 conclusion: ""
-
 
