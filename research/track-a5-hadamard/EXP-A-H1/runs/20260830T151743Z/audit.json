@@ -1,0 +1,114 @@
+{
+  "run": "runs/a/EXP-A-H1/20260830T151743Z",
+  "arms": {
+    "control": {
+      "arm": "control",
+      "summary": {
+        "arm": "control",
+        "steps": 1000,
+        "tokens": 512000,
+        "final_loss_window": 7.2799181604385375,
+        "throughput_tok_s": 8785.6,
+        "wall_s": 58.3,
+        "peak_vram_mb": 3792,
+        "training_flops": 503341645824000,
+        "conditioning": {
+          "step_100": {
+            "g2_over_g1_mean": 0.0025099764118762047
+          },
+          "step_500": {
+            "g2_over_g1_mean": 0.002388174923085799
+          },
+          "step_1000": {
+            "g2_over_g1_mean": 0.002339531415563128
+          }
+        },
+        "last_flip_rate": 8.094311550958158e-09,
+        "runtime_ce_heldout": 7.878656387329102,
+        "materialized_ce_heldout": 7.878748416900635,
+        "materialize_cross_check_nats": 9.202957153320312e-05
+      },
+      "eval": {
+        "arm": "control",
+        "wikitext": 5491.92404255077,
+        "arc_easy": 0.281986531986532,
+        "lambada_openai": 0.0
+      },
+      "parity": {
+        "arm": "control",
+        "step0_loss": 8.262356758117676
+      },
+      "abort": null,
+      "history_finite": true
+    },
+    "hadamard": {
+      "arm": "hadamard",
+      "summary": {
+        "arm": "hadamard",
+        "steps": 1000,
+        "tokens": 512000,
+        "final_loss_window": 7.23134669303894,
+        "throughput_tok_s": 7229.7,
+        "wall_s": 70.8,
+        "peak_vram_mb": 3806,
+        "training_flops": 503341645824000,
+        "conditioning": {
+          "step_100": {
+            "g2_over_g1_mean": 0.0018464491841357763
+          },
+          "step_500": {
+            "g2_over_g1_mean": 0.0018224328164687406
+          },
+          "step_1000": {
+            "g2_over_g1_mean": 0.0017780516398687885
+          }
+        },
+        "last_flip_rate": 0.0,
+        "runtime_ce_heldout": 7.528804779052734,
+        "materialized_ce_heldout": 7.528976917266846,
+        "materialize_cross_check_nats": 0.00017213821411132812
+      },
+      "eval": {
+        "arm": "hadamard",
+        "wikitext": 5738.975846702791,
+        "arc_easy": 0.29924242424242425,
+        "lambada_openai": 0.0
+      },
+      "parity": {
+        "arm": "hadamard",
+        "step0_loss": 8.754091262817383
+      },
+      "abort": null,
+      "history_finite": true
+    }
+  },
+  "parity": {
+    "control": 8.262356758117676,
+    "hadamard": 8.754091262817383,
+    "gap": 0.49173450469970703,
+    "pass": true
+  },
+  "integrity_ok": true,
+  "integrity_failures": [],
+  "kills": [],
+  "bars": {
+    "ppl_ratio": {
+      "value": 1.0449845631945915,
+      "bar": 0.97,
+      "pass": false
+    },
+    "arc_margin": {
+      "value": 0.017255892255892247,
+      "bar": -0.03,
+      "pass": true
+    },
+    "lambada_margin": {
+      "value": 0.0,
+      "bar": -0.02,
+      "pass": true
+    }
+  },
+  "verdict": "DECIDED",
+  "decision": "FAIL",
+  "decision_reason": "frozen bar(s) missed"
+}

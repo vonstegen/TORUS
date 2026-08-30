@@ -1,0 +1,25 @@
+{
+  "arm": "hadamard",
+  "steps": 1000,
+  "tokens": 512000,
+  "final_loss_window": 7.23134669303894,
+  "throughput_tok_s": 7229.7,
+  "wall_s": 70.8,
+  "peak_vram_mb": 3806,
+  "training_flops": 503341645824000,
+  "conditioning": {
+    "step_100": {
+      "g2_over_g1_mean": 0.0018464491841357763
+    },
+    "step_500": {
+      "g2_over_g1_mean": 0.0018224328164687406
+    },
+    "step_1000": {
+      "g2_over_g1_mean": 0.0017780516398687885
+    }
+  },
+  "last_flip_rate": 0.0,
+  "runtime_ce_heldout": 7.528804779052734,
+  "materialized_ce_heldout": 7.528976917266846,
+  "materialize_cross_check_nats": 0.00017213821411132812
+}

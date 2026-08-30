@@ -62,9 +62,12 @@ title: "EXP-A-H1. Ternary STE training of OPT-125M from its PRETRAINED
   (Hadamard) ternary parameterization. Identical architecture/data/
   optimizer/schedule/budget; the rotation is the only axis."
 owner: "research-harness"
-status: PROPOSED
-decision: null
-grade: null
+status: DECIDED
+decision: FAIL
+
+grade: B
+
+
 
 hypothesis: "A native Hadamard-rotated ternary parameterization (fixed
   Sylvester block rotations applied to each linear's input and output
@@ -236,10 +239,25 @@ freeze_exception:
   approved_by: "harness rule (OPERATING-PLAN §1) + user steering
     2026-08-28 ordering native Hadamard first"
 
-# ----- decision block (filled at DECIDE) -----------------------------------
-result_summary: ""
-confidence_and_reproduction: ""
-next_permitted_experiment: ""
-experiments_blocked: []
-conclusion: ""
+result_summary: "DECIDED FAIL — the first valid measurement falsifies
+  H-NATIVE at this site/budget/recipe. Hadamard trained better
+  in-domain (train loss 7.231 vs 7.280; runtime CE 7.529 vs 7.879,
+  closing its 0.49-nat step-0 PTQ deficit) and won arc_easy
+  (+0.0172), but the frozen PRIMARY bar missed: wikitext ppl 5,739.0
+  vs control 5,491.9 (ratio 1.045 > 0.97). Integrity clean: parity
+  gate 0.492 (amended 0.6), cross-check 0.0001 nats, 1000/1000
+  steps, no kills."
+confidence_and_reproduction: "Discovery tier, paired single seed;
+  decisive on the frozen bars; the train/downstream disagreement is
+  recorded without rescue (OPERATING-PLAN section 6). Prior runs
+  1-3 INVALID (see prior_runs)."
+next_permitted_experiment: "Per user steering order: CAL-first
+  second-site discovery -> capability-damaging AF5 rerun ->
+  dedicated T1-only test."
+experiments_blocked: ["large-model Hadamard runs (suite doc 10 lock
+  now permanent without a new preregistered line)", "H-POST revival
+  at the tested budget"]
+conclusion: "Hadamard line closes with H-POST (CP3.2 FAIL branch);
+  A-RP-HAD -> PROVISIONAL_FAIL. Verdict:
+  research/track-a5-hadamard/EXP-A-H1/verdict.md."
 supersedes: null

@@ -1,0 +1,25 @@
+{
+  "arm": "control",
+  "steps": 1000,
+  "tokens": 512000,
+  "final_loss_window": 7.2799181604385375,
+  "throughput_tok_s": 8785.6,
+  "wall_s": 58.3,
+  "peak_vram_mb": 3792,
+  "training_flops": 503341645824000,
+  "conditioning": {
+    "step_100": {
+      "g2_over_g1_mean": 0.0025099764118762047
+    },
+    "step_500": {
+      "g2_over_g1_mean": 0.002388174923085799
+    },
+    "step_1000": {
+      "g2_over_g1_mean": 0.002339531415563128
+    }
+  },
+  "last_flip_rate": 8.094311550958158e-09,
+  "runtime_ce_heldout": 7.878656387329102,
+  "materialized_ce_heldout": 7.878748416900635,
+  "materialize_cross_check_nats": 9.202957153320312e-05
+}

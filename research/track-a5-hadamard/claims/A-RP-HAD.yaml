@@ -14,17 +14,24 @@ quantitative_thresholds:
     (lm-eval ladder instrument) must be <= 0.97 x the control arm's,
     AND arc_easy >= control - 0.03 AND lambada_openai >= control - 0.02
     (absolute). Any miss = FAIL."
-  - "Parity gate (integrity): |step-0 loss difference| <= 0.1 nats and
-    both finite; else INVALID."
-  - "No kill criterion fired (divergence, live 15% loss-gap abort,
-    budget overrun, environment drift)."
+state: PROVISIONAL_FAIL
+supporting_experiments:
+  - id: "EXP-A-H1"
+    decision: "FAIL (discovery, 2026-08-30)"
+    effect: "H-NATIVE falsified at the tested site/budget/recipe:
+      hadamard ppl ratio 1.045 (> 0.97 bar) despite better train
+      loss (7.231 vs 7.280) and arc_easy (+0.017). Train/downstream
+      disagreement recorded without rescue."
+  - id: "EXP-A-H1 parity amendment"
+    decision: "pre-run amendment (2026-08-30)"
+    effect: "parity gate 0.1 -> 0.6 nats; pretrained PTQ base-gap
+      0.492 measured pre-run and recorded as a covariate."
 date_registered: "2026-08-29"
-state: TESTING
 required_evidence:
   - "EXP-A-H1 (discovery, paired single seed) -> DISCOVERY PASS must
     escalate to confirmation: >=3 seeds + one clean reproduction
-    before CONFIRMED_PASS (OPERATING-PLAN §3, CP3.2)."
-supporting_experiments: []
+    before CONFIRMED_PASS (OPERATING-PLAN §3, CP3.2). A FAIL closes
+    the Hadamard line with H-POST per CP3.2."
 unlock_rules_affected:
   - "CP3.2 (Hadamard verdict): preregistered advantage without
     breaching kill criteria -> CONFIRMED_PASS after reproduction; else
@@ -65,5 +72,19 @@ history:
       commit 4101ca0 (detach-trick STE + zero-gradient abort gate
       + identity-backward unit test); frozen thresholds unchanged.
       Also explains run 1's divergence."
-conclusion: ""
-
+  - date: "2026-08-30"
+    transition: "TESTING -> PROVISIONAL_FAIL"
+    cause: "EXP-A-H1 run 4 DECIDED FAIL (the first valid
+      measurement; runs/a/EXP-A-H1/20260830T151743Z). The frozen
+      primary bar missed: hadamard wikitext ppl 5,739.0 vs control
+      5,491.9 (ratio 1.045 > 0.97) despite better train loss
+      (7.231 vs 7.280; closed the 0.49-nat step-0 PTQ deficit) and
+      better arc_easy (+0.017). Train/downstream disagreement
+      recorded without rescue. Per CP3.2 the Hadamard line closes
+      with H-POST. Verdict:
+      research/track-a5-hadamard/EXP-A-H1/verdict.md."
+conclusion: "H-NATIVE falsified at the tested site/budget/recipe
+  (OPT-125M pretrained PTQ start, 512k tokens, AF recipe); the
+  Hadamard line closes with H-POST per CP3.2. Reopening requires a
+  NEW experiment ID with a preregistered account of the
+  train/downstream disagreement."

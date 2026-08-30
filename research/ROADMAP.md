@@ -541,9 +541,8 @@ advantage (per RPM proposal §13). The current state:
       the new damage recipe's threshold->ppl mapping on AF2-D first
       (so v2 has a known calibration); freeze metric keys in the
       manifest; specify the ppl sign convention for monotonicity
-      tests; document values before any post-hoc corrections.
-- [ ] **3.2** `EXP-A-H1` — **Native Hadamard controlled training (discovery
-      (discovery → confirmation).** Small model (100M–500M),
+- [x] **3.2** `EXP-A-H1` — **Native Hadamard controlled training (discovery
+      → confirmation).** Small model (100M–500M),
       matched arms: standard ternary vs. native rotated ternary
       parameterization, identical architecture/data/optimizer/
       schedule/budget. Measure loss convergence, KL, downstream
@@ -552,6 +551,17 @@ advantage (per RPM proposal §13). The current state:
       metadata, joules/token where trustworthy. **Kill criteria
       preregistered.** H-POST remains NO-SHIP. Large-model
       earns `CONFIRMED_PASS`.
+      **DONE 2026-08-30: DECIDED FAIL — the Hadamard line closes with
+      H-POST (CP3.2).** Run 4 (first valid measurement; runs 1-3
+      INVALID, see the manifest `prior_runs`): pretrained-start
+      paired arms, frozen bars applied by the auditor. Hadamard
+      trained better in-domain (7.231 vs 7.280; closed the 0.49-nat
+      step-0 PTQ deficit) and won arc_easy (+0.017), but the primary
+      ppl bar missed (5,739.0 vs 5,491.9, ratio 1.045 > 0.97).
+      Train/downstream disagreement recorded without rescue (§6).
+      A-RP-HAD -> PROVISIONAL_FAIL; large-model Hadamard stays
+      locked. Verdict:
+      `research/track-a5-hadamard/EXP-A-H1/verdict.md`.
       **PREREGISTERED 2026-08-29** (claim `A-RP-HAD` v1
       UNTESTED→TESTING; manifest
       `research/track-a5-hadamard/EXP-A-H1/manifest.yaml`): OPT-125M
