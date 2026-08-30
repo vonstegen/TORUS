@@ -129,9 +129,13 @@ controls:
     grad clip 1.0, seq 128, batch 4, 1000 steps, fp16 autocast,
     fp32 latent."
   - "Parity gate (integrity, pre-read): |step-0 loss difference|
-    <= 0.1 nats and both finite. The arms start from the same
-    pretrained function up to ternary-quantization noise in two
-    bases; a miss is INVALID."
+    <= 0.6 nats and both finite. PRE-RUN AMENDMENT 2026-08-30: the
+    original 0.1 was calibrated on random-init W0 (measured 0.044);
+    the pretrained PTQ gap measures 0.492 (the H-POST admission
+    penalty at step 0 — recorded as a covariate; the hadamard arm
+    must close this deficit to pass the bars). The gate's purpose
+    (catch pairing/instrument defects, the multi-nat class) is
+    unchanged; a miss is INVALID."
   - "Control arm uses the plain ternary STE path; the hadamard arm
     differs ONLY by the rotation matrices and the domain of the
     ternary codes."

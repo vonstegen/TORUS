@@ -24,7 +24,7 @@ PPL_RATIO = 0.97
 ARC_MARGIN = 0.03
 LAMBADA_MARGIN = 0.02
 BUDGET_STEPS = 1000               # 512k tokens (amended 2026-08-30)
-PARITY_TOLERANCE = 0.1
+PARITY_TOLERANCE = 0.6
 XCHECK_TOLERANCE = 0.1           # nats; catches materialize breakage (the
                                  # 25.6-nat class), not fp16 checkpoint
                                  # rounding noise (~0.01-0.05 nats)

@@ -60,6 +60,13 @@ BATCH = 4                       # 512 tokens / step
 TOTAL_STEPS = 1000              # 512k tokens/arm (amended 2026-08-30)
 LR = 1e-3                       # AF recipe
 MOMENTUM = 0.9                  # AF recipe
+PARITY_TOLERANCE = 0.6           # nats; pre-run amendment 2026-08-30:
+                                 # measured pretrained PTQ gap 0.492 (the
+                                 # H-POST admission penalty at step 0);
+                                 # the 0.1 value was calibrated on
+                                 # random-init W0 (0.044). Gate purpose:
+                                 # catch pairing/instrument defects
+                                 # (multi-nat class).
 GRAD_CLIP = 1.0
 GROUP_SIZE = 128                # AF per-group absmean
 ZERO_THRESHOLD = 0.7            # AF zero band
@@ -68,8 +75,11 @@ COND_SAMPLE_STEPS = [100, 500, TOTAL_STEPS]
 FLIP_WINDOW = 100
 LIVE_GAP_RATIO = 1.15
 LIVE_GAP_WINDOW = 200
-PARITY_TOLERANCE = 0.1          # nats
-
+PARITY_TOLERANCE = 0.6           # nats; pre-run amendment 2026-08-30:
+                                 # measured pretrained PTQ gap 0.492 (the
+                                 # H-POST admission penalty at step 0);
+                                 # the 0.1 value was calibrated on
+                                 # random-init W0 (0.044).
 CACHE_TRAIN = "/tmp/ah1_owt_train_ids.npy"
 CACHE_TEST = "/tmp/ah1_owt_test_ids.npy"
 PREP_MANIFEST = "/tmp/ah1_data_prep.json"

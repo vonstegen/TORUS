@@ -97,23 +97,22 @@ def test_materialize_w_eff_rejects_bad_dims() -> None:
         ah1.materialize_w_eff(torch.ones(2, 4), 1.0, h, True, True)
 
 
-# ---- arm modules ------------------------------------------------------------
 def test_plain_linear_latent_is_w0() -> None:
     torch.manual_seed(0)
-    w0 = torch.randn(16, 8) * 0.02
+    w0 = torch.randn(16, 256) * 0.02
     mod = ah1.TernaryLinear(w0, None)
     assert torch.allclose(mod.weight_latent.detach(), w0, atol=1e-6)
 
 
 def test_plain_linear_uses_group_quantize() -> None:
     torch.manual_seed(0)
-    w0 = torch.randn(4, 16) * 0.02
+    w0 = torch.randn(4, 256) * 0.02
     mod = ah1.TernaryLinear(w0, None)
     eff = mod.effective_weight().detach()
-    # per-group absmean: group 0 scale = mean|w0[:, :8]|
     from torus.train.ste import ternary_quantize_ste_torch
     expected = ternary_quantize_ste_torch(
-        w0, group_size=8, threshold=0.7, calibrate_norm=False).detach()
+        w0, group_size=ah1.GROUP_SIZE, threshold=0.7,
+        calibrate_norm=False).detach()
     assert torch.allclose(eff, expected, atol=1e-6)
 
 
@@ -127,18 +126,19 @@ def test_plain_linear_rejects_group_mismatch() -> None:
 def test_rotated_linear_latent_is_rotated_w0() -> None:
     torch.manual_seed(0)
     h = ah1.sylvester_hadamard(4)
-    w0 = torch.randn(8, 8) * 0.02
+    w0 = torch.randn(8, 256) * 0.02
     mod = ah1.RotatedTernaryLinear(w0, None, h, rotate_out=True)
-    expected = torch.block_diag(h, h) @ w0 @ torch.block_diag(h, h)
+    expected = torch.block_diag(*([h] * 64)) @ w0 @ torch.block_diag(
+        *([h] * 64))
     assert torch.allclose(mod.weight_latent.detach(), expected, atol=1e-6)
 
 
 def test_rotated_linear_no_out_latent() -> None:
     torch.manual_seed(0)
     h = ah1.sylvester_hadamard(4)
-    w0 = torch.randn(8, 8) * 0.02
+    w0 = torch.randn(8, 256) * 0.02
     mod = ah1.RotatedTernaryLinear(w0, None, h, rotate_out=False)
-    expected = w0 @ torch.block_diag(h, h)
+    expected = w0 @ torch.block_diag(*([h] * 64))
     assert torch.allclose(mod.weight_latent.detach(), expected, atol=1e-6)
 
 
@@ -256,8 +256,6 @@ def _write_run(tmp_path, ctrl_eval, had_eval, parity_gap=0.01,
 
 EVAL_PASS = {"wikitext": 40.0, "arc_easy": 0.25, "lambada_openai": 0.10}
 EVAL_HAD = {"wikitext": 38.0, "arc_easy": 0.26, "lambada_openai": 0.11}
-
-
 def test_audit_full_pass(tmp_path) -> None:
     result = audit.audit(_write_run(tmp_path, EVAL_PASS, EVAL_HAD))
     assert result["integrity_ok"] is True
@@ -275,7 +273,7 @@ def test_audit_full_fail_on_ppl_bar(tmp_path) -> None:
 
 def test_audit_parity_gap_invalid(tmp_path) -> None:
     result = audit.audit(_write_run(tmp_path, EVAL_PASS, EVAL_HAD,
-                                    parity_gap=0.3))
+                                    parity_gap=0.8))
     assert result["verdict"] == "INVALID"
     assert result["parity"]["pass"] is False
 
