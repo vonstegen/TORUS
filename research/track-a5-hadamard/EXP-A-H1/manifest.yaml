@@ -37,22 +37,40 @@ prior_runs:
       abort gate + identity-backward unit test). The materialize
       repairs from this run (untie + suffix-match fixes) are kept.
       Frozen bars unchanged; rerun under a fresh timestamp."
-title: "EXP-A-H1. From-random-init training of a 125M model with
-  matched arms: standard ternary vs native rotated (Hadamard) ternary
-  parameterization. Identical architecture/data/optimizer/schedule/
-  budget; the rotation is the only axis."
+  - run: "runs/a/EXP-A-H1/20260830T125059Z (legion)"
+    status: "INVALID — from-scratch recipe diverged under the active
+      STE (final loss 17.35/17.61 vs init 10.86; ladder ppl 8.4e9/inf)"
+    reason: "The detach-trick STE restored gradients (conditioning
+      proxy nonzero, flip rate 3.4e-4) but the from-scratch ternary
+      recipe diverged anyway: with latents moving, per-linear scales
+      (wd-exempt) drifted and logits exploded (CE 6.5 nats ABOVE the
+      random-init level). Three executions, three distinct
+      from-scratch-recipe failures — the recipe is now the
+      experiment's subject instead of its substrate. DESIGN REVISION
+      (pre-run, no threshold changes): pivot from-scratch to
+      PRETRAINED-START per the Track A2 doc's own wording
+      ('from initialization or sufficiently early training'):
+      OPT-125M pretrained weights, PTQ ternary init in both bases,
+      trained with the AF-proven recipe (per-group absmean scales,
+      threshold 0.7, STE via ternary_quantize_ste_torch, SGD
+      momentum 0.9, lr 1e-3, clip 1.0, seq 128, batch 4, 1000
+      steps, openwebtext cache). The rotation is still the only
+      axis; bars, parity gate, kill criteria unchanged. Budget
+      amendment: 2 GPU-h cap (~30 min/arm)."
+title: "EXP-A-H1. Ternary STE training of OPT-125M from its PRETRAINED
+  weights with matched arms: standard ternary vs native rotated
+  (Hadamard) ternary parameterization. Identical architecture/data/
+  optimizer/schedule/budget; the rotation is the only axis."
 owner: "research-harness"
-date_proposed: "2026-08-29"
 status: PROPOSED
 decision: null
 grade: null
 
-
 hypothesis: "A native Hadamard-rotated ternary parameterization (fixed
   Sylvester block rotations applied to each linear's input and output
   axes, ternary codes trained in the rotated domain) trains better
-  than standard ternary training from the same random initialization
-  at matched budget: the rotated arm ends at least 3% lower wikitext
+  than standard ternary training from the same PRETRAINED weights at
+  matched budget: the rotated arm ends at least 3% lower wikitext
   ppl without material regression on arc_easy/lambada_openai, with
   the optimization-behavior diagnostics (loss trajectory, gradient
   conditioning, code-flip rate) recorded."
@@ -60,52 +78,60 @@ hypothesis: "A native Hadamard-rotated ternary parameterization (fixed
 rationale: "Track A2 v2 (docs/TORUS-feedback/04) splits H-POST
   (post-hoc rotation+recovery: NO-SHIP at tested budget, EXP-A-020)
   from H-NATIVE (rotation geometry built into training from
-  initialization). EXP-A-021 (retro-registered CONTINUE) observed
-  better optimization behavior/conditioning for a rotated arm in
-  controlled rotated-vs-unrotated training — the surviving
-  hypothesis. A-H1 is the cheapest experiment capable of falsifying
-  it: a paired single-seed discovery run (both arms from the SAME
-  random init and data order — the rotation is the only difference),
-  small model (OPT-125M, in the 100M-500M spec range), short budget.
-  A failure closes the Hadamard line with H-POST per CP3.2; a
-  discovery pass escalates to confirmation (>=3 seeds + clean
-  reproduction) before any large-model Hadamard spend (suite doc 10).
+  initialization OR SUFFICIENTLY EARLY TRAINING). EXP-A-021
+  (retro-registered CONTINUE) observed better optimization
+  behavior/conditioning for a rotated arm in controlled
+  rotated-vs-unrotated training — the surviving hypothesis. A-H1 is
+  the cheapest experiment capable of falsifying it: a paired
+  single-seed discovery run (both arms from the same pretrained W0
+  and data order — the rotation is the only difference), small model
+  (OPT-125M, in the 100M-500M spec range), short budget. A failure
+  closes the Hadamard line with H-POST per CP3.2; a discovery pass
+  escalates to confirmation (>=3 seeds + clean reproduction) before
+  any large-model Hadamard spend (suite doc 10).
+
+  DESIGN REVISION (2026-08-30, pre-run): the from-scratch recipe was
+  abandoned after three INVALID executions (see prior_runs) — the
+  recipe became the experiment's subject instead of its substrate.
+  The pretrained-start design below uses the AF-proven training
+  recipe verbatim (the only stable ternary STE recipe established
+  in this repo) so the rotation is isolated with a substrate that
+  trains.
 
   Model choice: OPT-125M — nn.Linear throughout (the STE machinery
   attaches to linears), no RoPE (rotations stay within-head/within-
   block; no rotation-vs-positional-encoding interactions), learned
   position embeddings, 125M params, lm-eval compatible, GPT-2-style
-  tokenizer. Random re-init: the experiment is about training
-  behavior, not PTQ recovery.
+  tokenizer. Pretrained weights: the experiment compares training
+  GEOMETRY, not initialization quality.
 
   Rotation design: block-diagonal Sylvester H64 (2^6) on each
   linear's input (768 = 12x64; ffn 3072 = 48x64) and output axes;
   W = R_out^T Q R_in with ternary Q trained in the rotated domain.
   lm_head: input rotated, output (vocab, 50272) unrotated.
-  Embeddings: fp16 in BOTH arms, unrotated. Per-tensor absmean
-  scale, both arms. Rotations are fixed constants derived from the
-  dims (zero per-weight storage); both arms deploy identical
-  physical bytes (packed ternary codes + per-linear fp16 scales)."
+  Embeddings: fp16 in BOTH arms, unrotated. AF-proven quantization
+  (torus.train.ste.ternary_quantize_ste_torch): per-group absmean
+  scales (group 128), zero threshold 0.7, STE via the detach trick
+  — both arms. Rotations are fixed constants derived from the dims
+  (zero per-weight storage); both arms deploy identical physical
+  bytes (packed ternary codes + per-group fp16 scales)."
 
 revision: ""
-run_namespace: "runs/a/EXP-A-H1/<timestamp>/{control,hadamard}/"
-environment: "legion; x86_64; 2x TITAN RTX 24GB (Turing, fp16 only);
-  venv torch 2.13.0+cu130, transformers 4.57.6, lm-eval (AF6b
-  working set); env-lock.txt recorded in the run namespace."
 baseline: "Paired control arm: standard ternary STE training of the
-  same OPT-125M random init with identical optimizer/schedule/data/
-  budget. (Absolute references: none exist for from-scratch OPT-125M
-  on this corpus at this budget; the comparison is strictly
-  arm-vs-arm.)"
+  same PRETRAINED OPT-125M weights with identical optimizer/schedule/
+  data/budget. (Absolute references: OPT-125M FP16 ladder measured
+  at run time as a covariate; the comparison is strictly arm-vs-arm.)"
 controls:
-  - "Paired design: both arms initialize from the SAME random W0
-    (same torch seed), consume the SAME token stream in the same
-    order, run identical AdamW/cosine schedule, micro-batch, seq
-    length, dtype (fp16 autocast, fp32 latent), grad clip, dropout."
+  - "Paired design: both arms initialize from the SAME pretrained W0
+    (control: W0 in the plain domain; hadamard: R_out W0 R_in in the
+    rotated domain), consume the SAME token stream in the same
+    order, run the identical AF recipe: SGD momentum 0.9, lr 1e-3,
+    grad clip 1.0, seq 128, batch 4, 1000 steps, fp16 autocast,
+    fp32 latent."
   - "Parity gate (integrity, pre-read): |step-0 loss difference|
-    <= 0.1 nats and both finite. The arms start from the same random
-    function up to ternary-quantization noise in two bases; a miss
-    is INVALID."
+    <= 0.1 nats and both finite. The arms start from the same
+    pretrained function up to ternary-quantization noise in two
+    bases; a miss is INVALID."
   - "Control arm uses the plain ternary STE path; the hadamard arm
     differs ONLY by the rotation matrices and the domain of the
     ternary codes."
@@ -114,13 +140,6 @@ controls:
     path) — the runtime-rotated state dicts are also saved; the
     materialized form is fp16-dense for eval only, and deployed-bytes
     accounting uses the runtime (ternary Q + scales) form."
-
-variants:
-  - "control: standard ternary STE training."
-  - "hadamard: native rotated ternary STE training (block-64
-    Sylvester rotations on all linear input/output axes except the
-    lm_head output)."
-
 dataset_and_samples: "openwebtext (Skylion007) parquet shards 0-3,
   GPT-2/OPT tokenizer, concatenated token stream with a held-out 1%
   tail (test). Shard names + sha256 + token counts recorded in the
@@ -133,8 +152,8 @@ metrics:
   - "training diagnostics (reported, never decision): per-step CE
     loss, gradient conditioning proxy per linear
     (||g||_2 / ||g||_1 of the latent-weight gradient, sampled at
-    steps 1000/5000/15000/25000/31250), ternary code-flip rate
-    (500-step windows), throughput (tokens/s), peak VRAM"
+    steps 100/500/1000), ternary code-flip rate (100-step windows),
+    throughput (tokens/s), peak VRAM"
   - "systems (reported): deployed bytes per arm (packed ternary +
     scales formula), training FLOPs (6 x N x tokens, both arms)"
 evidence_categories: [software, representation, downstream, systems]
@@ -152,28 +171,26 @@ fail_thresholds:
 kill_criteria:
   - "NaN/inf loss in either arm -> arm aborts (INVALID arm);
     rerun."
+  - "Zero-gradient abort: conditioning proxy == 0 at the first
+    sample -> INVALID (STE defect class)."
   - "Live loss-gap abort: hadamard mean train loss over the last
-    2000 completed steps (step-aligned) exceeds 1.15 x the control
+    200 completed steps (step-aligned) exceeds 1.15 x the control
     arm's over the same window -> hadamard aborts -> FAIL."
-  - "Budget overrun: >8 GPU-hours total or >10h wall -> stop;
-    record CONTINUE/INVALID per OPERATING-PLAN §4, never silent
-    extension."
+  - "Budget overrun: >2 GPU-hours total -> stop; record
+    CONTINUE/INVALID per OPERATING-PLAN §4, never silent extension."
   - "Environment drift mid-run (GPU reallocation, cache
     modification, library change) -> INVALID."
-budget: "200M tokens per arm (12,500 steps x 16,384 tokens); 8
-  GPU-hours cap; ~3.4h per arm expected on TITAN RTX; both arms run
-  in parallel on cuda:0/cuda:1.
-  PRE-RUN AMENDMENT 2026-08-29 (no results read): the original
-  budget (500M tokens/arm, 31,250 steps) was sized from an
-  optimistic 40-60k tok/s estimate. Measured TITAN RTX throughput
-  with gradient checkpointing is 16.4k tok/s (smoke run) -> 500M
-  would be ~8.5h/arm = 17 GPU-h, breaching the frozen 8 GPU-h cap.
-  Discovery tier permits the shorter budget ('cheapest falsification',
-  OPERATING-PLAN section 2); both arms remain matched; thresholds,
-  bars, and kill criteria are unchanged. Conditioning sample steps
-  rescaled to {500, 3000, 6000, 10000, 12500}."
+budget: "512k tokens per arm (1000 steps x 512 tokens); 2 GPU-hours
+  cap; ~30 min per arm expected on TITAN RTX; both arms run in
+  parallel on cuda:0/cuda:1.
+  PRE-RUN AMENDMENT 2026-08-30 (no results read): the from-scratch
+  budget (200M tokens/arm) was superseded by the pretrained-start
+  design revision (prior_runs run 3): PTQ-init training uses the
+  AF-proven short budget (1000 steps). Both arms matched; bars,
+  parity gate, and the remaining kill criteria unchanged.
+  Conditioning samples at {100, 500, 1000}."
 stop_conditions:
-  - "Both arms complete 12,500 steps, materialize checkpoints, and
+  - "Both arms complete 1000 steps, materialize checkpoints, and
     write eval summaries."
 expected_artifacts:
   - "per arm: history.jsonl (step, loss, code-flip, throughput),
