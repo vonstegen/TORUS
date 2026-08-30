@@ -23,7 +23,7 @@ from pathlib import Path
 PPL_RATIO = 0.97
 ARC_MARGIN = 0.03
 LAMBADA_MARGIN = 0.02
-BUDGET_STEPS = 12_500            # 200M tokens (amended pre-run)
+BUDGET_STEPS = 1000               # 512k tokens (amended 2026-08-30)
 PARITY_TOLERANCE = 0.1
 XCHECK_TOLERANCE = 0.1           # nats; catches materialize breakage (the
                                  # 25.6-nat class), not fp16 checkpoint
@@ -113,8 +113,8 @@ def audit(run_dir: Path) -> dict:
     out["kills"] = kills
 
     out["bars"] = evaluate_thresholds(arms)
-
-    if integrity or any(k["reason"] == "nan_loss" for k in kills):
+    if integrity or any(k["reason"] in ("nan_loss", "zero_grad")
+                        for k in kills):
         out["verdict"] = "INVALID"
     elif any(k["reason"] == "loss_gap" for k in kills):
         out["verdict"] = "DECIDED"

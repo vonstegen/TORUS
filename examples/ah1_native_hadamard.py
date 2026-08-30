@@ -1,48 +1,32 @@
-"""EXP-A-H1 driver: small-model native Hadamard ternary training.
+"""EXP-A-H1 driver: native Hadamard ternary training (pretrained-start).
 
-Preregistered 2026-08-29 (manifest: research/track-a5-hadamard/EXP-A-H1/manifest.yaml).
+Preregistered 2026-08-29; design revised 2026-08-30 (manifest:
+research/track-a5-hadamard/EXP-A-H1/manifest.yaml — prior_runs
+records runs 1-3 INVALID). Pretrained-start design: OPT-125M
+pretrained weights, PTQ ternary init in both bases, AF-proven
+recipe (torus.train.ste.ternary_quantize_ste_torch: per-group
+absmean scales, group 128, zero threshold 0.7, detach-trick STE;
+SGD momentum 0.9, lr 1e-3, clip 1.0, seq 128, batch 4, 1000
+steps, openwebtext stream).
+
+Paired design: both arms initialize from the same pretrained W0
+(control: plain domain; hadamard: R_out W0 R_in rotated domain),
+consume the identical token stream from byte 0, run the identical
+optimizer/schedule/budget. The rotation is the only axis.
 
 Modes:
-  --mode prep          Build GPT-2(OPT)-tokenized openwebtext train/test
-                       caches from parquet shards (list_repo_files
-                       discovery). Refuses to overwrite; records shard
-                       names + sha256 + token counts in a manifest.
-  --mode parity        Build the model for one arm, compute the step-0
-                       CE loss on the first batch, write parity.json.
-                       The launcher runs this for BOTH arms before any
-                       training and passes the gate only if
-                       |loss_control - loss_hadamard| <= 0.1 nats.
-  --mode train         Train one arm (--arm control|hadamard) from
-                       random init on the shared token stream; saves
-                       the runtime state, materializes W_eff into a
-                       stock HF checkpoint, and records the
-                       materialize cross-check (runtime CE vs
-                       materialized CE on the same window).
-  --mode materialize   Manual fallback: load the saved runtime state,
-                       materialize W_eff into a stock HF checkpoint
-                       (used by the launcher only if the in-process
-                       path failed).
-
-Paired design: both arms initialize from the same random W0 (same
-torch seed), consume the identical token stream from byte 0, and run
-an identical AdamW/cosine schedule. The hadamard arm differs ONLY by
-the fixed block-64 Sylvester rotations (W_eff = R_out Q R_in, ternary
-Q trained in the rotated domain) and by the live loss-gap self-check.
-
-Parameterization (v2, correcting the 2026-08-29 run-1 recipe defect):
-each ternary linear stores a NORMALIZED latent (codes near {-1,0,1},
-init = W0 / mean|W0|) plus an INDEPENDENTLY LEARNED per-linear scale
-gamma (init = mean|W0|). The scale is a free parameter (BitNet-gamma
-style): run 1 recomputed scale = mean|latent| every forward, which
-feeds dL/dw = scale * g_eff back into |w| growth — a positive
-feedback that diverged both arms from loss 8.8 (step 2000) back to
-10.4 (step 12500) with code-flip rate ~0. The learned scale breaks
-the feedback; scales are excluded from weight decay.
+  --mode prep          Build GPT-2(OPT)-tokenized openwebtext caches.
+  --mode parity        Step-0 CE loss of one arm (the launcher gates
+                       |loss_control - loss_hadamard| <= 0.1 nats).
+  --mode train         Train one arm; saves runtime state, materializes
+                       W_eff into a stock HF checkpoint (untied
+                       embeddings), records the materialize
+                       cross-check.
+  --mode materialize   Manual fallback (loads saved state).
 
 Deployed representation of both arms: packed ternary codes (2
-bits/entry) + one fp16 per-linear scale. The rotation matrices are
-fixed structural constants derived from the dims (zero per-weight
-storage).
+bits/entry) + per-group fp16 scales. Rotations are fixed structural
+constants derived from the dims (zero per-weight storage).
 """
 from __future__ import annotations
 
@@ -54,7 +38,6 @@ import sys
 import time
 from pathlib import Path
 
-# Triton bypass — same intent as eval_lm.py / distill_run.py.
 try:
     import triton  # noqa: F401
 except ModuleNotFoundError:
@@ -64,28 +47,27 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+from torus.train.ste import ternary_quantize_ste_torch
+
 # ---- frozen constants (manifest) -------------------------------------------
 MODEL_ID = "facebook/opt-125m"
 OWT_DATASET = "Skylion007/openwebtext"
 OWT_N_SHARDS = 4                # ~50M tokens each (GPT-2 tokenizer)
 TEST_FRACTION = 0.01
 SEED = 7
-SEQ_LEN = 512
-BATCH = 32                      # 16,384 tokens / step
-TOTAL_STEPS = 12_500            # 200M tokens (pre-run amendment: measured
-                                # TITAN RTX throughput ~27-38k tok/s incl.
-                                # checkpointing; 500M would breach the
-                                # frozen 8 GPU-h cap)
-LR = 6e-4                       # v2 recipe (run 1 used 2e-3)
-WARMUP_STEPS = 2_000
-MIN_LR_RATIO = 0.1
-WEIGHT_DECAY = 0.01
+SEQ_LEN = 128                   # AF recipe
+BATCH = 4                       # 512 tokens / step
+TOTAL_STEPS = 1000              # 512k tokens/arm (amended 2026-08-30)
+LR = 1e-3                       # AF recipe
+MOMENTUM = 0.9                  # AF recipe
 GRAD_CLIP = 1.0
+GROUP_SIZE = 128                # AF per-group absmean
+ZERO_THRESHOLD = 0.7            # AF zero band
 BLOCK = 64                      # Sylvester H block size (2^6)
-COND_SAMPLE_STEPS = [500, 3_000, 6_000, 10_000, TOTAL_STEPS]
-FLIP_WINDOW = 500
+COND_SAMPLE_STEPS = [100, 500, TOTAL_STEPS]
+FLIP_WINDOW = 100
 LIVE_GAP_RATIO = 1.15
-LIVE_GAP_WINDOW = 2_000
+LIVE_GAP_WINDOW = 200
 PARITY_TOLERANCE = 0.1          # nats
 
 CACHE_TRAIN = "/tmp/ah1_owt_train_ids.npy"
@@ -95,9 +77,6 @@ PREP_MANIFEST = "/tmp/ah1_data_prep.json"
 
 # ---- rotation math ----------------------------------------------------------
 def sylvester_hadamard(n: int) -> torch.Tensor:
-    """Sylvester-constructed Hadamard matrix H_n (n a power of 2).
-
-    H_n is symmetric, orthogonal, normalized to H_n H_n = I."""
     if n & (n - 1):
         raise ValueError(f"n must be a power of 2, got {n}")
     h = torch.ones(1, 1, dtype=torch.float64)
@@ -107,7 +86,6 @@ def sylvester_hadamard(n: int) -> torch.Tensor:
 
 
 def rotate_blocks(x: torch.Tensor, h: torch.Tensor) -> torch.Tensor:
-    """Apply block-diagonal H to the last axis of x (x @ blockdiag(H))."""
     block = h.shape[0]
     d = x.shape[-1]
     if d % block:
@@ -118,7 +96,6 @@ def rotate_blocks(x: torch.Tensor, h: torch.Tensor) -> torch.Tensor:
 
 def materialize_w_eff(q: torch.Tensor, scale: float, h: torch.Tensor,
                       rotate_in: bool, rotate_out: bool) -> torch.Tensor:
-    """W_eff = R_out Q R_in (H symmetric, so R = blockdiag(H))."""
     block = h.shape[0]
     if rotate_in and q.shape[1] % block:
         raise ValueError("in dim not divisible by rotation block")
@@ -133,56 +110,36 @@ def materialize_w_eff(q: torch.Tensor, scale: float, h: torch.Tensor,
     return w
 
 
-# ---- ternary quantization ---------------------------------------------------
-def ternary_quantize(w: torch.Tensor) -> tuple[torch.Tensor, float]:
-    """Absmean-scale ternary quantize (deployed-form record helper)."""
-    scale = float(w.detach().abs().mean().clamp(min=1e-8))
-    q = (w / scale).round().clamp(-1.0, 1.0)
-    return q, scale
-
-
-def ternary_codes(w: torch.Tensor) -> torch.Tensor:
-    """Codes of a NORMALIZED latent with a straight-through estimator.
-
-    Forward value = round-clamp; backward = identity (the classic STE
-    detach trick). Plain round().clamp() passes ZERO gradient — run
-    2's defect, caught by the conditioning proxy reading 0.0."""
-    q = w.round().clamp(-1.0, 1.0)
-    return w + (q - w).detach()
-
-
 # ---- arm modules ------------------------------------------------------------
 class TernaryLinear(torch.nn.Module):
-    """Control arm: ternary STE linear.
+    """Control arm: plain ternary STE linear, AF-proven quantize.
 
-    v2: normalized latent (W0 / mean|W0|) + independently learned
-    per-linear scale gamma (init mean|W0|), BitNet-gamma style."""
+    Latent = pretrained W0 (raw). Effective weight =
+    ternary_quantize_ste_torch(latent) — per-group absmean scales
+    (group 128), zero threshold 0.7, detach-trick STE."""
 
     def __init__(self, weight0: torch.Tensor, bias0: torch.Tensor | None):
         super().__init__()
-        s0 = float(weight0.abs().mean().clamp(min=1e-8))
-        self.weight_latent = torch.nn.Parameter(weight0.detach().clone() / s0)
-        self.scale = torch.nn.Parameter(torch.tensor(s0))
+        if weight0.shape[1] % GROUP_SIZE:
+            raise ValueError("in dim not divisible by group size")
+        self.weight_latent = torch.nn.Parameter(weight0.detach().clone())
         if bias0 is not None:
             self.bias = torch.nn.Parameter(bias0.detach().clone())
         else:
             self.register_parameter("bias", None)
 
     def effective_weight(self) -> torch.Tensor:
-        return ternary_codes(self.weight_latent) * self.scale
+        return ternary_quantize_ste_torch(
+            self.weight_latent, group_size=GROUP_SIZE,
+            threshold=ZERO_THRESHOLD, calibrate_norm=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return F.linear(x, self.effective_weight(), self.bias)
 
 
 class RotatedTernaryLinear(torch.nn.Module):
-    """Hadamard arm: W_eff = R_out Q R_in with ternary Q.
-
-    weight_latent lives in the rotated domain (init = R_out W0 R_in /
-    mean|latent0|) with an independently learned per-linear scale.
-    R_out W0 R_in quantized at step 0 matches the control arm's step-0
-    function up to ternary-quantization noise in two bases (parity
-    gate)."""
+    """Hadamard arm: W_eff = R_out Q R_in, Q ternary in the rotated
+    domain (AF-proven quantize on the rotated latent R_out W0 R_in)."""
 
     def __init__(self, weight0: torch.Tensor, bias0: torch.Tensor | None,
                  h: torch.Tensor, rotate_out: bool = True):
@@ -191,6 +148,8 @@ class RotatedTernaryLinear(torch.nn.Module):
         d_out, d_in = weight0.shape
         if d_in % block or (rotate_out and d_out % block):
             raise ValueError("dims not divisible by rotation block")
+        if d_in % GROUP_SIZE:
+            raise ValueError("in dim not divisible by group size")
         self.register_buffer("h", h.half())
         self.rotate_out = rotate_out
         latent0 = weight0.detach().clone().float()
@@ -198,23 +157,24 @@ class RotatedTernaryLinear(torch.nn.Module):
             *([h] * (d_in // block)))
         if rotate_out:
             latent0 = torch.block_diag(*([h] * (d_out // block))) @ latent0
-        s0 = float(latent0.abs().mean().clamp(min=1e-8))
-        self.weight_latent = torch.nn.Parameter(latent0 / s0)
-        self.scale = torch.nn.Parameter(torch.tensor(s0))
+        self.weight_latent = torch.nn.Parameter(latent0)
         if bias0 is not None:
             self.bias = torch.nn.Parameter(bias0.detach().clone())
         else:
             self.register_parameter("bias", None)
 
     def effective_weight(self) -> torch.Tensor:
-        return materialize_w_eff(ternary_codes(self.weight_latent),
-                                 float(self.scale.detach()), self.h,
-                                 True, self.rotate_out)
+        q = ternary_quantize_ste_torch(
+            self.weight_latent, group_size=GROUP_SIZE,
+            threshold=ZERO_THRESHOLD, calibrate_norm=False)
+        return materialize_w_eff(q, 1.0, self.h, True, self.rotate_out)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        q = ternary_codes(self.weight_latent)
+        q = ternary_quantize_ste_torch(
+            self.weight_latent, group_size=GROUP_SIZE,
+            threshold=ZERO_THRESHOLD, calibrate_norm=False)
         xr = rotate_blocks(x, self.h)
-        y = F.linear(xr, q * self.scale, None)
+        y = F.linear(xr, q, None)
         if self.rotate_out:
             y = rotate_blocks(y, self.h)
         return y if self.bias is None else y + self.bias
@@ -222,14 +182,11 @@ class RotatedTernaryLinear(torch.nn.Module):
 
 # ---- model construction -----------------------------------------------------
 def build_arm(arm: str, device: str) -> tuple:
-    """Build OPT-125M from random init with the arm's linear modules.
-
-    Returns (model, h, linear_modules, tokenizer)."""
-    from transformers import AutoTokenizer, OPTConfig, OPTForCausalLM
+    """Build OPT-125M from PRETRAINED weights with the arm's modules."""
+    from transformers import AutoTokenizer, OPTForCausalLM
 
     torch.manual_seed(SEED)
-    config = OPTConfig.from_pretrained(MODEL_ID)
-    model = OPTForCausalLM(config)
+    model = OPTForCausalLM.from_pretrained(MODEL_ID)
     h = sylvester_hadamard(BLOCK)
     linear_modules: list = []
 
@@ -251,15 +208,9 @@ def build_arm(arm: str, device: str) -> tuple:
             swap(attn, getattr(attn, name), name)
         swap(layer, layer.fc1, "fc1")
         swap(layer, layer.fc2, "fc2")
-    # lm_head: input rotated, output (vocab) NOT rotated.
     swap(model, model.lm_head, "lm_head", rotate_out=False)
 
-    # The original tie (embed_tokens == lm_head.weight) is broken by the
-    # swap; the lm_head latent was initialized from the same W0 as the
-    # control arm's, so the paired design holds. Embeddings train fp32
-    # in BOTH arms identically.
     model.to(device)
-    model.gradient_checkpointing_enable()
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     return model, h, linear_modules, tokenizer
 
@@ -270,11 +221,7 @@ def make_stream(cache_path: str) -> np.ndarray:
 
 
 class TokenWindowIter:
-    """Deterministic non-overlapping windows from a token cache.
-
-    Both arms get byte-identical streams because iteration always
-    starts at offset 0 and advances by exactly BATCH*SEQ_LEN tokens.
-    Budgets larger than one cache pass wrap cyclically."""
+    """Deterministic non-overlapping windows from a token cache."""
 
     def __init__(self, stream: np.ndarray, n_windows: int | None = None):
         self.stream = stream
@@ -291,7 +238,6 @@ class TokenWindowIter:
         return self
 
     def __next__(self) -> tuple[torch.Tensor, torch.Tensor]:
-        # base excludes the final partial window.
         base = (self.pos % self.n) * self.window_tokens
         x = np.asarray(self.stream[base:base + self.window_tokens + 1],
                        dtype=np.int64)
@@ -299,14 +245,6 @@ class TokenWindowIter:
         labels = torch.from_numpy(x[1:].copy()).reshape(BATCH, SEQ_LEN)
         self.pos += 1
         return ids, labels
-
-
-def lr_at(step: int) -> float:
-    if step < WARMUP_STEPS:
-        return LR * (step + 1) / WARMUP_STEPS
-    t = (step - WARMUP_STEPS) / max(1, TOTAL_STEPS - WARMUP_STEPS)
-    return MIN_LR_RATIO * LR + (1 - MIN_LR_RATIO) * LR * 0.5 * (
-        1 + math.cos(math.pi * t))
 
 
 # ---- data prep --------------------------------------------------------------
@@ -332,8 +270,6 @@ def prep_data(out_manifest: str = PREP_MANIFEST) -> None:
         import pyarrow.parquet as pq
         table = pq.read_table(path)
         texts = [t for t in table.column("text").to_pylist() if t]
-        # Multithreaded batch tokenization (tokenizers lib): a few
-        # minutes per shard instead of hours.
         segs = []
         for i in range(0, len(texts), 1000):
             batch = tokenizer(texts[i:i + 1000],
@@ -392,15 +328,9 @@ def train(arm: str, device: str, run_dir: str,
     it = TokenWindowIter(stream)
     if len(it) == 0:
         raise SystemExit("[ah1] token cache too small for one window")
-    scales = [m.scale for m in linear_modules]
-    other = [p for p in model.parameters()
-             if all(p is not s for s in scales)]
-    optimizer = torch.optim.AdamW(
-        [{"params": scales, "weight_decay": 0.0},
-         {"params": other, "weight_decay": WEIGHT_DECAY}],
-        lr=LR, betas=(0.9, 0.95))
-    history_path = run_dir / "history.jsonl"
-    history = open(history_path, "a")
+    optimizer = torch.optim.SGD(model.parameters(), lr=LR,
+                                momentum=MOMENTUM)
+    history = open(run_dir / "history.jsonl", "a")
     conditioning: dict = {}
     flip_ref: dict[int, torch.Tensor] = {}
     step = 0
@@ -412,8 +342,6 @@ def train(arm: str, device: str, run_dir: str,
             if step >= max_steps:
                 break
             ids, labels = ids.to(device), labels.to(device)
-            for g in optimizer.param_groups:
-                g["lr"] = lr_at(min(step, TOTAL_STEPS - 1))
             optimizer.zero_grad(set_to_none=True)
             logits = model(ids).logits
             loss = F.cross_entropy(
@@ -428,9 +356,7 @@ def train(arm: str, device: str, run_dir: str,
                     float((m.weight_latent.grad.norm(2)
                            / m.weight_latent.grad.norm(1).clamp(min=1e-12))
                           .item()) for m in linear_modules]))
-                conditioning[f"step_{step + 1}"] = {
-                    "g2_over_g1_mean": g2g1,
-                }
+                conditioning[f"step_{step + 1}"] = {"g2_over_g1_mean": g2g1}
                 if g2g1 == 0.0:
                     _abort(run_dir, "zero_grad", arm, step)
             optimizer.step()
@@ -439,8 +365,8 @@ def train(arm: str, device: str, run_dir: str,
             if step % 100 == 0:
                 rate = None
                 if step % FLIP_WINDOW == 0:
-                    codes = {i: ternary_codes(m.weight_latent.detach()
-                                              ).flatten()
+                    codes = {i: (m.weight_latent.detach() / 1.0).round()
+                             .clamp(-1, 1).flatten()
                              for i, m in enumerate(linear_modules)}
                     if flip_ref:
                         total = sum(c.numel() for c in codes.values())
@@ -459,7 +385,7 @@ def train(arm: str, device: str, run_dir: str,
                 history.write(json.dumps(rec) + "\n")
                 history.flush()
                 window_loss = 0.0
-            if arm == "hadamard" and step % 1000 == 0:
+            if arm == "hadamard" and step % 200 == 0:
                 gap = _live_loss_gap(run_dir.parent, step)
                 if gap is not None and gap > LIVE_GAP_RATIO:
                     _abort(run_dir, "loss_gap", arm, step, gap=gap)
@@ -468,18 +394,15 @@ def train(arm: str, device: str, run_dir: str,
     history.close()
     elapsed = time.time() - t0
     tokens = step * BATCH * SEQ_LEN
-    # runtime CE on a held-out window (test cache, window 0)
     test_it = TokenWindowIter(make_stream(CACHE_TEST))
     runtime_ce = _ce_on_window(model, *next(iter(test_it)), device)
-    # save runtime state + materialize in-process
     save_state_and_materialize(arm, run_dir, model, linear_modules)
-    # materialize cross-check: same window through the stock checkpoint
     mat_ce = _materialized_ce(run_dir / "final_hf", device)
     summary = {
         "arm": arm,
         "steps": step,
         "tokens": tokens,
-        "final_loss_window": _tail_loss(run_dir, 500),
+        "final_loss_window": _tail_loss(run_dir, 100),
         "throughput_tok_s": round(tokens / elapsed, 1),
         "wall_s": round(elapsed, 1),
         "peak_vram_mb": round(torch.cuda.max_memory_allocated(device) / 2**20),
@@ -543,8 +466,6 @@ def _rolling(path: Path, step: int, window: int) -> float | None:
 
 
 def _tail_loss(run_dir: Path, window: int) -> float | None:
-    """Mean loss over the last `window` steps (from per-100-step
-    records), independent of the absolute step count."""
     pairs = []
     with open(run_dir / "history.jsonl") as f:
         for line in f:
@@ -562,10 +483,11 @@ def _tail_loss(run_dir: Path, window: int) -> float | None:
 
 def _write_cost_vector(model, linear_modules, run_dir: Path):
     n_codes = sum(m.weight_latent.numel() for m in linear_modules)
-    n_linears = len(linear_modules)
     code_bytes = n_codes * 2 // 8  # 2 bits/entry packed
-    scale_bytes = n_linears * 2   # fp16 per-linear scale
-    meta_bytes = n_linears * 8    # headers
+    scale_bytes = sum(m.weight_latent.shape[0] *
+                      (m.weight_latent.shape[1] // GROUP_SIZE)
+                      for m in linear_modules) * 2  # fp16 per group
+    meta_bytes = len(linear_modules) * 8
     cost = {
         "n_ternary_entries": n_codes,
         "code_bytes_packed": code_bytes,
@@ -573,20 +495,17 @@ def _write_cost_vector(model, linear_modules, run_dir: Path):
         "metadata_bytes": meta_bytes,
         "deployed_bytes": code_bytes + scale_bytes + meta_bytes,
         "fp16_linears_bytes": n_codes * 2,
-        "rotation_storage_bytes": 0,  # fixed structural constants
+        "rotation_storage_bytes": 0,
         "note": "identical formula for both arms; rotations are fixed "
                 "constants derived from dims (zero per-weight storage). "
                 "Embeddings (fp16, trained) excluded: identical in both "
                 "arms. Never quoted as 1.58 bits/weight: physical packing "
-                "is 2 bits/entry + scales + metadata.",
+                "is 2 bits/entry + per-group fp16 scales + metadata.",
     }
     (run_dir / "cost_vector.json").write_text(json.dumps(cost, indent=2))
 
 
 # ---- state save + materialize ----------------------------------------------
-LINEAR_PATH_TEMPLATES = None  # built once in _linear_path_names
-
-
 def _linear_path_names(model) -> list[str]:
     path_names = []
     for li in range(len(model.model.decoder.layers)):
@@ -600,11 +519,8 @@ def _linear_path_names(model) -> list[str]:
 
 def save_state_and_materialize(arm: str, run_dir: str,
                                model=None, linear_modules=None) -> None:
-    """Save runtime state + materialized HF checkpoint.
+    from transformers import AutoTokenizer, OPTConfig, OPTForCausalLM
 
-    Called in-process from train() with the live model; the CLI mode
-    rebuilds from the saved state (fallback path)."""
-    from transformers import OPTConfig, OPTForCausalLM
     run_dir = Path(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
     if model is None:
@@ -618,7 +534,6 @@ def save_state_and_materialize(arm: str, run_dir: str,
     config.tie_word_embeddings = False
     stock = OPTForCausalLM(config)
     sd = dict(stock.state_dict())
-    # trained embeddings/norms/pos/bias: copy from trained model
     for k, v in model.state_dict().items():
         if any(k.startswith(p) for p in
                ["model.decoder.embed_", "model.decoder.layers.",
@@ -626,7 +541,6 @@ def save_state_and_materialize(arm: str, run_dir: str,
             if ("weight_latent" not in k and "scale" not in k
                     and not k.endswith(".h")):
                 sd[k] = v.detach().clone()
-    # W_eff per swapped linear, in linear_modules order
     path_names = _linear_path_names(model)
     assert len(path_names) == len(linear_modules)
     for pname, m in zip(path_names, linear_modules, strict=True):
@@ -634,13 +548,10 @@ def save_state_and_materialize(arm: str, run_dir: str,
     stock.load_state_dict(sd)
     out_dir = run_dir / "final_hf"
     stock.save_pretrained(out_dir)
-    from transformers import AutoTokenizer
     AutoTokenizer.from_pretrained(MODEL_ID).save_pretrained(out_dir)
-    # ternary codes + scales for the deployed-form record
     codes_meta = {}
     for pname, m in zip(path_names, linear_modules, strict=True):
-        codes_meta[pname] = {"scale": float(m.scale.detach()),
-                             "shape": list(m.weight_latent.shape)}
+        codes_meta[pname] = {"shape": list(m.weight_latent.shape)}
     (run_dir / "codes_meta.json").write_text(
         json.dumps(codes_meta, indent=2))
     print(f"[ah1] {arm}: state + materialized checkpoint saved", flush=True)
@@ -651,8 +562,7 @@ def parity(arm: str, device: str, out_dir: str) -> None:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     model, _, _, _ = build_arm(arm, device)
-    stream = make_stream(CACHE_TRAIN)
-    it = iter(TokenWindowIter(stream))
+    it = iter(TokenWindowIter(make_stream(CACHE_TRAIN)))
     ids, labels = next(it)
     loss = _ce_on_window(model, ids, labels, device)
     rec = {"arm": arm, "step0_loss": loss}
