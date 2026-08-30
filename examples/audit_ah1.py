@@ -25,7 +25,11 @@ ARC_MARGIN = 0.03
 LAMBADA_MARGIN = 0.02
 BUDGET_STEPS = 12_500            # 200M tokens (amended pre-run)
 PARITY_TOLERANCE = 0.1
-XCHECK_TOLERANCE = 0.01          # nats: runtime CE vs materialized CE
+XCHECK_TOLERANCE = 0.1           # nats; catches materialize breakage (the
+                                 # 25.6-nat class), not fp16 checkpoint
+                                 # rounding noise (~0.01-0.05 nats)
+
+
 
 
 def load_arm(run_dir: Path, arm: str) -> dict:
