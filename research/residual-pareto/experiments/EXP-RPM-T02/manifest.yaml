@@ -1,0 +1,149 @@
+id: EXP-RPM-T02
+title: "AF5 tournament at D5p — held-out capability of trained T2 vs controls under catastrophic TWN damage"
+track: R
+subtrack: RPM-T (task robustness; AF5 gate — Track B condition 3)
+tier: confirmation
+status: PREREGISTERED
+date_proposed: '2026-08-30T22:30:00Z'
+owner: research harness
+claims_addressed: [RPM-001, A-RP-LRN]
+rationale: |
+  The AF5 rerun at a regime where the correction has room to act,
+  per the 2026-08-28 reassessment (condition 3 unblock path 1) and
+  the user's steering chain. EXP-RPM-T02-PROBE (20260830T204622Z,
+  DECIDED REGIMES_FOUND) froze the selection: D5p (TWN thr 0.6,
+  base ppl 697.29), where the damaged base loses hellaswag
+  (-0.236), boolq (-0.093), winogrande (-0.067), openbookqa
+  (-0.058) — and where trained T2's recovery is evidenced on the
+  training-aligned ladder (Stage 2 v6/v7: trained T2 ppl 697->26.6
+  at thr 0.6 vs random T2 680.7).
+
+  T01's null is regime-miscalibrated (its eval driver applied
+  Gaussian sigma=0.2 ~ FP16; correction annotated in T01's
+  verdict). T02 reruns the SAME protocol at D5p with the FROZEN T01
+  thresholds.
+hypothesis: |
+  At AF2-D (model.layers.0.mlp.down_proj) under D5p TWN damage
+  (threshold=0.6, group_size=128, calibrate_norm=False, base ppl
+  697.29) with the sha256-pinned Stage 1.5 D5p seed-001 adapters:
+  1. Trained t2_ternary separates from random_t2_ternary by
+     >= +1 sigma-of-difference on >= 3 of 4 held-out tasks.
+  2. Trained t2_ternary separates from random_lora by >= +1
+     sigma-of-difference on >= 3 of 4 held-out tasks.
+  3. Trained t2_ternary wins or ties the best trained comparator
+     (int4_residual, int8_residual, lora, dense_adapter) on >= 3 of
+     4 held-out tasks.
+  4. Trained t2_ternary is above chance (>= random_t2_ternary
+     mean) on >= 3 of 4 held-out tasks.
+  All four hold -> AF5 satisfied: task-relevant T2 value above the
+  preregistered threshold -> Track B condition 3 MET.
+kill_criteria: |
+  - Verification gate: the damaged base (no adapter) must reproduce
+    the probe's frozen D5p scores on the 4 tasks within
+    2 x stderr on >= 3 of 4 tasks (hellaswag 0.4256, winogrande
+    0.5501, boolq 0.5691, openbookqa 0.2980 — probe_summary.json).
+    Violation -> run INVALID (environment/instrument drift).
+  - Any cell failing to complete -> run INVALID (rerun cleanly).
+  - Adapter sha256 must match the Stage 1.5 D5p artifacts at RUN;
+    any mismatch -> that arm INVALID (recorded).
+  - Budget: 4 GPU-h (32 evals, ~120-140 min expected). Overrun ->
+    abort.
+  - Decision (frozen T01 thresholds): PASS iff ALL four hypothesis
+    rules hold; else FAIL, recording which rules missed and which
+    fail triggers fired (T2 below random_t2 mean on >= 2/4; T2 more
+    than 2 sigma below random_lora on >= 2/4).
+expected_artifacts:
+  - runs/r/EXP-RPM-T02/<ts>/per_arm/<arm>/<task>/eval.summary.json
+  - runs/r/EXP-RPM-T02/<ts>/per_arm/<arm>/<task>/eval.full.json
+  - runs/r/EXP-RPM-T02/<ts>/base/<task>/eval.summary.json (gate)
+  - runs/r/EXP-RPM-T02/<ts>/held_out_summary.json (per-task
+    aggregates + threshold application)
+  - runs/r/EXP-RPM-T02/<ts>/ARTIFACTS.json (sha256 manifest)
+artifact_paths: []
+contamination_risks:
+  - Held-out task datasets cached on Legion (deterministic eval,
+    fp16, batch 16) — reuse permitted, T01 protocol.
+  - TWN damage is deterministic; the damaged base reproduces
+    bit-exactly (probe run 2 == run 1 bit-identical).
+experiment:
+  model: allenai/OLMo-1B-0724-hf
+  site: model.layers.0.mlp.down_proj
+  dtype: float16
+  eval_dtype: float16
+  damage_regime:
+    id: D5p
+    mechanism: TWN
+    threshold: 0.6
+    group_size: 128
+    calibrate_norm: false
+    calibration_ppl: 697.29
+    probe_source: runs/r/EXP-RPM-T02-PROBE/20260830T204622Z
+  seed: 1
+  arms:
+    - t2_ternary
+    - int4_residual
+    - int8_residual
+    - lora
+    - dense_adapter
+    - random_t2_ternary
+    - random_lora
+  reuse_inputs:
+    adapters_from: runs/r/EXP-RPM-D5p/20260824T144239Z/af2d/seed-001/<arm>/
+    sha256_pin: per-arm adapter sha256 recorded at RUN (ARTIFACTS.json)
+  held_out_tasks:
+    - task: hellaswag
+      metric: acc_norm
+      n_shots: 0
+    - task: winogrande
+      metric: acc
+      n_shots: 0
+      subset: winogrande_xl
+    - task: boolq
+      metric: acc
+      n_shots: 0
+    - task: openbookqa
+      metric: acc_norm
+      n_shots: 0
+  eval_protocol:
+    batch_size: 16
+    limit: null
+  cells: 32 (7 arms x 4 tasks + 4 base verification)
+pass_thresholds:
+  - "T2 vs random_t2 >= +1 sigma-of-difference on >= 3 of 4 tasks"
+  - "T2 vs random_lora >= +1 sigma-of-difference on >= 3 of 4 tasks"
+  - "T2 wins or ties the best trained comparator on >= 3 of 4 tasks"
+  - "T2 above chance (> random_t2 mean) on >= 3 of 4 tasks"
+fail_thresholds:
+  - "T2 below chance (< random_t2 mean) on >= 2 of 4 tasks"
+  - "T2 more than 2 sigma-of-difference below random_lora on >= 2
+    of 4 tasks"
+sigma_of_difference: "sqrt(stderr_t2^2 + stderr_other^2) from
+  lm-eval per-task stderr (frozen formulation; T01 used a trained-
+  arms std proxy — recorded deviation, more conservative where
+  stderr_t2 > 0)"
+budget:
+  wall_clock: "~140 min on Legion cuda:0"
+  gpu_cap: "4 GPU-h"
+decision_block:
+  result_summary: ""
+  confidence_and_reproduction: ""
+  next_permitted_experiment: ""
+  experiments_blocked: []
+  conclusion: ""
+supersedes: null
+next_permitted_experiment: "Track B condition 3 review on the T02
+  verdict"
+revision: ""
+run_namespace: "runs/r/EXP-RPM-T02/<timestamp>/"
+freeze_exception:
+  change: "New driver examples/t02_af5_tournament.py (TWN-capable
+    held-out arm eval; reuses the T01 script's arm loaders,
+    patchers, and aggregation; damage from the tournament driver's
+    frozen damage_target_module) + tests for the frozen threshold
+    application."
+  justification: "Required to execute the preregistered AF5
+    tournament at D5p; the T01 instrument is Gaussian-only. No
+    torus/ core or AF machinery changes; the T01 script is
+    untouched."
+  approved_by: "harness rule (OPERATING-PLAN section 1) + user
+    steering 2026-08-30 chain (capability-damaging AF5 after CAL)."
