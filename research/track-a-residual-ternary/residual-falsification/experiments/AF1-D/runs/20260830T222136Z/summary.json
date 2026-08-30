@@ -1,0 +1,121 @@
+{
+  "experiment": "EXP-AF-001-D",
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "per_seed": {
+    "1": {
+      "t1_only_fp16": {
+        "wikitext": 44.04568058080106,
+        "arc_easy": 0.6527777777777778,
+        "lambada_openai": 0.6010091209004463
+      },
+      "t1_only_ternary": {
+        "wikitext": 23.051270947057997,
+        "arc_easy": 0.6144781144781145,
+        "lambada_openai": 0.5319231515621968
+      }
+    },
+    "2": {
+      "t1_only_fp16": {
+        "wikitext": 17.92496504968045,
+        "arc_easy": 0.6645622895622896,
+        "lambada_openai": 0.5897535416262372
+      },
+      "t1_only_ternary": {
+        "wikitext": 18.37928744857212,
+        "arc_easy": 0.6279461279461279,
+        "lambada_openai": 0.5451193479526489
+      }
+    },
+    "3": {
+      "t1_only_fp16": {
+        "wikitext": 20.04550187684289,
+        "arc_easy": 0.6565656565656566,
+        "lambada_openai": 0.5806326411798952
+      },
+      "t1_only_ternary": {
+        "wikitext": 4052.0396518397597,
+        "arc_easy": 0.5534511784511784,
+        "lambada_openai": 0.2458761886279837
+      }
+    }
+  },
+  "armA_t1_only_fp16": {
+    "wikitext": [
+      27.338715835774803,
+      8.37588149296341
+    ],
+    "arc_easy": [
+      0.6579685746352414,
+      0.0034734619537429715
+    ],
+    "lambada_openai": [
+      0.5904651012355262,
+      0.005892932751997274
+    ]
+  },
+  "armB_t1_only_ternary": {
+    "wikitext": [
+      1364.4900700784633,
+      1343.7754676875204
+    ],
+    "arc_easy": [
+      0.5986251402918069,
+      0.02291914751161548
+    ],
+    "lambada_openai": [
+      0.4409728960476098,
+      0.09762270711652805
+    ]
+  },
+  "frozen_t2_means": {
+    "wikitext": [
+      20.96,
+      1.53
+    ],
+    "arc_easy": [
+      0.6,
+      0.004
+    ],
+    "lambada_openai": [
+      0.545,
+      0.003
+    ]
+  },
+  "frozen_random_t2_means": {
+    "wikitext": [
+      367.62,
+      null
+    ],
+    "arc_easy": [
+      0.4954,
+      null
+    ],
+    "lambada_openai": [
+      0.2554,
+      null
+    ]
+  },
+  "armA_instability_kill": false,
+  "bars": {
+    "z_t2_minus_armA": {
+      "wikitext": 0.7491613470519664,
+      "arc_easy": -10.942349414430135,
+      "lambada_openai": -6.875511731245992
+    },
+    "z_t2_minus_armB": {
+      "wikitext": 0.9998167339178912,
+      "arc_easy": 0.05909414545402006,
+      "lambada_openai": 1.0651007527147844
+    },
+    "n_pass_metrics": 0,
+    "regressions": [
+      "arc_easy",
+      "lambada_openai"
+    ],
+    "decision": "FAIL"
+  }
+}

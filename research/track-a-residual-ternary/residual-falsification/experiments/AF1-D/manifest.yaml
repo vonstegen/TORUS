@@ -126,8 +126,30 @@ freeze_exception:
   approved_by: "harness rule (OPERATING-PLAN section 1) + user
     steering 2026-08-30 chain (dedicated T1-only test, own
     preregistration)."
-supersedes: null
-result_summary: ""
-confidence_and_reproduction: ""
-next_permitted_experiment: ""
-conclusion: ""
+result_summary: "DECIDED FAIL (run 20260830T222136Z, 3 seeds x 2
+  arms, pre-train band 3/3 at 429.55). Arm A (whole-model FP16
+  continuation from the damaged start): ppl 27.34 +/- 8.38, arc
+  0.658 +/- 0.004, lambada 0.590 +/- 0.006 vs frozen T2
+  (20.96 +/- 1.53, 0.600 +/- 0.004, 0.545 +/- 0.003). z (T2 minus
+  arm A): wikitext +0.75 (T2, within noise), arc -10.94, lambada
+  -6.88 (arm A better) -> FAIL trigger (arm A beats T2 >2 sd on
+  >= 1 metric). Arm B (ternary continuation, descriptive):
+  seed-fragile (23.05 / 18.38 / 4052.04 ppl). No kills."
+confidence_and_reproduction: "Discovery tier, n=3 seeds; band gate
+  bit-reproducible; budget matched by construction; bars
+  unit-tested (6)."
+next_permitted_experiment: "None in the 2026-08-30 chain — it is
+  complete (CAL discovery -> AF5 rerun -> T1-only). Track B stays
+  locked on conditions 3 and 4 with definitive evidence."
+conclusion: "Acceptance-bar item 1 FAILS at the evidenced site:
+  the equal-budget T1-only continuation (whole-model FP16) beats
+  the T2 plane on capability (-10.9 sd arc, -6.9 sd lambada) and
+  ties on ppl. Per suite doc section 15 the conclusion is
+  downgraded: T2's evidenced niche is value over the random
+  structural prior and over no correction, NOT competitiveness
+  with base retraining or the equal-storage int8 correction.
+  Verdict: research/track-a-residual-ternary/
+  residual-falsification/experiments/AF1-D/verdict.md."
+status: DECIDED
+decision: FAIL
+grade: B

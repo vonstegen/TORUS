@@ -60,6 +60,19 @@ history:
       relevant axis for LRN absence, not damage-magnitude within
       a single damage type."
   - date: "2026-08-30"
+    transition: "annotation (no state change): T1-continuation axis"
+    cause: "EXP-AF-001-D DECIDED FAIL (run 20260830T222136Z,
+      acceptance-bar item 1 at the AF2-D site): the equal-budget
+      T1-only continuation (whole-model FP16 from the damaged
+      start) beats the T2 plane on capability (arc -10.9 sd,
+      lambada -6.9 sd) and ties on ppl. Learning-in-the-base
+      dominates learning-in-the-plane at matched training budget;
+      the plane's evidenced value remains the LRN axis (over the
+      random structural prior) and its storage cost structure, not
+      competitiveness with retraining. Verdict:
+      research/track-a-residual-ternary/
+      residual-falsification/experiments/AF1-D/verdict.md."
+  - date: "2026-08-30"
     transition: "annotation (no state change): held-out-task axis corrected"
     cause: "EXP-RPM-T02 (AF5 tournament at D5p, run
       20260830T211744Z): the T01 held-out NULL was regime-

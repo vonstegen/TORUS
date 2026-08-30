@@ -125,3 +125,20 @@ on both open conditions; the remaining registered attack is the
 dedicated T1-only test (steering order), which addresses neither
 condition 3 nor 4 directly but completes the correction-mechanism
 characterization.
+
+## Addendum 3, 2026-08-30 — T1-only test completes the chain; correction-mechanism niche bounded
+
+EXP-AF-001-D (20260830T222136Z, DECIDED FAIL) ran the damaged-start
+T1-only continuation (acceptance-bar item 1, AF4 arm 5): the
+whole-model FP16 continuation from the damaged state beats the
+frozen T2 plane at matched budget on capability (arc −10.9σ,
+lambada −6.9σ) and ties on ppl. Per suite doc §15 the conclusion
+is downgraded rather than rescued. Combined with T02 (int8 beats
+T2 on held-out tasks at matched storage) and the site-discovery
+null (condition 4), the correction mechanism's evidenced niche is
+now bounded: T2 adds real value over the random structural prior
+(LRN, including held-out tasks) and over no correction, but is not
+competitive with base retraining (this result) or the equal-storage
+int8 correction (T02). Track B remains locked on conditions 3 and
+4, both with definitive evidence; the 2026-08-30 steering chain is
+complete.
