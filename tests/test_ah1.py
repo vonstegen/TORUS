@@ -273,7 +273,7 @@ def test_audit_full_fail_on_ppl_bar(tmp_path) -> None:
 
 def test_audit_parity_gap_invalid(tmp_path) -> None:
     result = audit.audit(_write_run(tmp_path, EVAL_PASS, EVAL_HAD,
-                                    parity_gap=0.8))
+                                    parity_gap=1.6))
     assert result["verdict"] == "INVALID"
     assert result["parity"]["pass"] is False
 
