@@ -615,7 +615,8 @@ def save_state_and_materialize(arm: str, run_dir: str,
         if any(k.startswith(p) for p in
                ["model.decoder.embed_", "model.decoder.layers.",
                 "model.decoder.final_layer_norm", "model.decoder.project_"]):
-            if "weight_latent" not in k and "h" not in k and "scale" not in k:
+            if ("weight_latent" not in k and "scale" not in k
+                    and not k.endswith(".h")):
                 sd[k] = v.detach().clone()
     # W_eff per swapped linear, in linear_modules order
     path_names = _linear_path_names(model)
