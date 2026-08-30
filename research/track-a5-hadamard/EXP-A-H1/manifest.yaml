@@ -22,6 +22,21 @@ prior_runs:
       unchanged; the rerun uses the same experiment ID with a fresh
       timestamp (the design was never invalidated, its first
       execution was)."
+  - run: "runs/a/EXP-A-H1/20260829T224005Z (legion)"
+    status: "INVALID — STE passed ZERO gradient (caught by the
+      conditioning proxy reading 0.0 at all samples + grad probe)"
+    reason: "ternary_codes used plain round().clamp(), whose
+      derivative is zero — the ternary weights NEVER trained; the
+      loss drop (10.86 -> 9.05) came from scales + embeddings +
+      biases alone, the 9.1e-5 code-flip rate was weight-decay
+      noise, and the final wikitext ladder values (control 146,573
+      vs hadamard 139,897; ratio 0.9545) measured a frozen-codes
+      model, not the native-Hadamard training question. Also fully
+      explains run 1's divergence (zero-STE + scale feedback).
+      Fixed in commit 4101ca0 (detach-trick STE + zero-gradient
+      abort gate + identity-backward unit test). The materialize
+      repairs from this run (untie + suffix-match fixes) are kept.
+      Frozen bars unchanged; rerun under a fresh timestamp."
 title: "EXP-A-H1. From-random-init training of a 125M model with
   matched arms: standard ternary vs native rotated (Hadamard) ternary
   parameterization. Identical architecture/data/optimizer/schedule/
