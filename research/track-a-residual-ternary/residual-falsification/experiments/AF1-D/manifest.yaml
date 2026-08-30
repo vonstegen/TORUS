@@ -1,0 +1,133 @@
+id: EXP-AF-001-D
+title: "Damaged-start T1-only continuation vs T2 correction plane at matched budget (acceptance-bar item 1)"
+track: A
+subtrack: "AF1-D — equal-budget control from the damaged start"
+tier: discovery
+status: PREREGISTERED
+date_proposed: '2026-08-30T23:00:00Z'
+owner: research harness
+claims_addressed: []
+rationale: |
+  Residual-plane acceptance bar item 1 (suite doc
+  10-RESIDUAL-PLANE-FALSIFICATION-SUITE-V2 section 15) requires T2
+  to "outperform an equal-budget T1-only continuation"; AF4 arm 5
+  registers the arm: "T1-only with matched additional
+  optimizer/training budget". EXP-AF-001 (A-RP-001 CONFIRMED_FAIL)
+  tested arm A = PRISTINE FP16 base continued (whole model
+  trainable) vs arm B = damaged base + T2 plane: continued FP16
+  won. The damaged-start analog has NEVER run: what happens when
+  the base itself — already damaged by TWN PTQ — receives the same
+  optimizer budget the T2 plane receives? If T2 (4.2 MB, frozen
+  base) beats the base repairing itself in FP16 at matched tokens,
+  the correction mechanism passes the acceptance bar at its
+  evidenced site; if not, the plane adds nothing over retraining.
+
+  Per the user's steering order this is the last item of the
+  2026-08-30 chain and completes the correction-mechanism
+  characterization (reassessment addendum 2). It addresses neither
+  Track B condition 3 nor 4 directly.
+hypothesis: |
+  At the AF2-D site (model.layers.0.mlp.down_proj, TWN thr 0.7,
+  group 128, calibrate_norm=False; damaged base ppl 425.76) with
+  the matched AF2-D budget (SGD momentum 0.9, lr 1e-3, clip 1.0,
+  seq 128, batch 4, 500 steps, wikitext-103 stream), the frozen
+  AF2-D t2_ternary means beat the T1-only FP16 continuation (arm
+  A: damaged base, ALL weights trainable) by >2 sd-of-difference
+  on >= 2 of 3 capability metrics with no >= 2 sigma regression on
+  the third. The ternary-constrained continuation (arm B: only the
+  damaged layer trainable, in ternary space via STE, frozen
+  per-group scales) is recorded descriptively (matched-deployment
+  sibling, no gate).
+kill_criteria: |
+  - Verification: per-seed pre-train eval of the damaged base must
+    land in [400, 460] ppl (the AF2-D pre-train band; reference
+    425.76). Violation -> that cell INVALID.
+  - Arm A instability (AF1's arm-A kill analog): arm A post-train
+    wikitext ppl WORSE than the damaged base's 425.76 -> FAIL
+    trigger (the control itself destabilizes; recorded, not
+    INVALID).
+  - Divergence (NaN/inf loss in any arm/seed) -> that cell INVALID.
+  - Budget: 6 GPU-h cap (2 arms x 3 seeds x ~500 steps + evals;
+    ~1.5 GPU-h expected). Overrun -> abort.
+  - Frozen bars (acceptance-bar item 1 at this site; AF1 threshold
+    shape):
+    PASS: (t2_mean - armA_mean) > 2 x sd-of-difference on >= 2 of 3
+      metrics, with no >= 2 sigma regression on the remaining one.
+    FAIL: (armA_mean - t2_mean) > 2 x sd-of-difference on >= 1
+      metric.
+    NULL (neither): recorded as "no separation at this budget".
+  - sd-of-difference = sqrt(se_t2^2 + se_armA^2), t2 frozen means
+    and standard errors from the AF2-D verdict (verdict-D.md):
+    wikitext 20.96 +/- 1.53, arc_easy 0.600 +/- 0.004, lambada
+    0.545 +/- 0.003; random_t2_ternary reference 367.62 / 0.4954 /
+    0.2554.
+expected_artifacts:
+  - runs/a/EXP-AF-001-D/<ts>/seed-00X/<arm>/history.jsonl
+  - runs/a/EXP-AF-001-D/<ts>/seed-00X/<arm>/eval.summary.json
+  - runs/a/EXP-AF-001-D/<ts>/seed-00X/pre_train_eval.json
+  - runs/a/EXP-AF-001-D/<ts>/summary.json (arm x seed means +
+    bar application)
+  - runs/a/EXP-AF-001-D/<ts>/ARTIFACTS.json (driver SHA, env)
+artifact_paths: []
+contamination_risks: []
+experiment:
+  model: allenai/OLMo-1B-0724-hf
+  site: model.layers.0.mlp.down_proj
+  dtype: float16
+  eval_dtype: float16
+  damage: TWN (group_size 128, threshold 0.7, calibrate_norm
+    False), deterministic
+  budget: {n_steps: 500, batch_size: 4, seq_len: 128, lr: 0.001,
+           momentum: 0.9, grad_clip: 1.0}
+  ids_cache: /tmp/wikitext103_train_ids.npy (same stream as the
+    frozen AF2-D comparison)
+  seeds: [1, 2, 3]
+  arms:
+    - id: t1_only_fp16
+      role: primary bar arm
+      definition: "damaged base, ALL weights trainable (FP16
+        continuation from the damaged start; AF1 arm A's
+        damaged-start analog)"
+    - id: t1_only_ternary
+      role: descriptive (matched-deployment sibling, no gate)
+      definition: "damaged base frozen; ONLY the damaged layer's
+        CODES trainable: frozen per-group scale s_g = max |w_g| of
+        the damaged weight; latent codes c init = w / s (values
+        {0, +/-1}); forward weight = sign(c) * s with the
+        detach-trick STE (forward = sign(c) * s, backward =
+        identity on c) — step-0 forward is BIT-IDENTICAL to the
+        damaged base by construction"
+  comparison_arms:
+    - id: t2_ternary
+      source: "frozen AF2-D verdict means (verdict-D.md, n=3,
+        run 20260823T092339Z)"
+    - id: random_t2_ternary
+      source: "frozen AF2-D verdict means"
+  tasks: [wikitext, arc_easy, lambada_openai]
+exclusions: []
+decision_logic_summary: |
+  Apply the frozen bars above to the arm A means vs the frozen T2
+  means. Arm B reported descriptively alongside (continuation in
+  ternary space vs plane in ternary space — matched bytes). A PASS
+  evidences acceptance-bar item 1 at the AF2-D site; a FAIL
+  triggers the suite doc section 15 downgrade instruction
+  ("downgrade the conclusion appropriately rather than attempting
+  to rescue the architecture with additional complexity"); NULL is
+  recorded as no separation.
+freeze_exception:
+  change: "New driver examples/af1d_t1_continued.py: damaged base
+    + whole-model continuation (arm A) and ternary-STE layer
+    continuation (arm B) reusing the AF1 budget-control training
+    loop, the tournament driver's damage + eval, and the STE from
+    torus.train.ste. Tests for the bar application."
+  justification: "Required to execute the preregistered
+    acceptance-bar control; no torus/ core, AF machinery, or
+    existing driver changes."
+  approved_by: "harness rule (OPERATING-PLAN section 1) + user
+    steering 2026-08-30 chain (dedicated T1-only test, own
+    preregistration)."
+supersedes: null
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+conclusion: ""

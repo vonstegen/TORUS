@@ -468,6 +468,18 @@ its way into adaptive-gating experiments.
       loses to int8_residual on all 4 tasks. Track B condition 3
       stays blocked with definitive evidence. Next: dedicated
       T1-only test per the steering order.
+      **2026-08-30: T1-only test preregistered as
+      `EXP-AF-001-D`** (`research/track-a-residual-ternary/
+      residual-falsification/experiments/AF1-D/manifest.yaml`) —
+      the damaged-start T1-only continuation (acceptance-bar item
+      1, AF4 arm 5; never run: AF1's arm A was PRISTINE-FP16
+      continuation). Arms: t1_only_fp16 (damaged base, all weights
+      trainable; primary bar) + t1_only_ternary (damaged layer's
+      ternary codes via sign-STE, matched deployment; descriptive)
+      × seeds {1,2,3}, matched AF2-D budget, vs the frozen AF2-D
+      T2 means. Bars: PASS iff T2 beats arm A by >2 sd-of-diff on
+      ≥2 of 3 metrics with no ≥2σ regression; FAIL if arm A beats
+      T2 on ≥1; else NULL.
 - [x] **2.6** `EXP-AF-006(b)` — **AF6 dataset/context robustness.**
       **Done 2026-08-28 (EXP-AF-006b): DECIDED — general effect, not a
       window/corpus artifact.** EXP-AF-006 DECIDED INVALID
