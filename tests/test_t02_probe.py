@@ -4,10 +4,10 @@ Covers the pure rule functions in examples/t02_regime_probe.py:
 
   - per-task drop bar: >= max(3 x stderr_max, 0.02)
   - regime qualify rule: >= 1 of 4 tasks below the bar
-  - D1p near-FP16 verification gate (>= 3 of 4 tasks within
-    2 x stderr)
+  - T01-REPRO verification gate (AMENDED): gauss02 near-FP16 on
+    >= 3 of 4 tasks (T01's actual eval regime) -> else INVALID
   - frozen regime selection: largest summed drop; ties -> more
-    severe threshold
+    severe threshold; gauss02 never a candidate
   - probe summary decision mapping: REGIMES_FOUND / NO_REGIME /
     INVALID
 """
@@ -37,13 +37,21 @@ TASKS = ["hellaswag", "winogrande", "boolq", "openbookqa"]
 
 # FP16 reference: stable scores with small stderr.
 FP16 = {
-    "hellaswag": (0.6600, 0.005),
-    "winogrande": (0.6150, 0.004),
-    "boolq": (0.6600, 0.006),
-    "openbookqa": (0.3600, 0.010),
+    "hellaswag": (0.6614, 0.0047),
+    "winogrande": (0.6172, 0.0137),
+    "boolq": (0.6621, 0.0083),
+    "openbookqa": (0.3560, 0.0214),
 }
 
-# Near-FP16 regime (reproduces T01's D1p diagnosis).
+# T01-REPRO (gauss02): T01's actual eval regime — near-FP16.
+GAUSS02_NEAR = {
+    "hellaswag": (0.6590, 0.0047),
+    "winogrande": (0.6160, 0.0137),
+    "boolq": (0.6600, 0.0083),
+    "openbookqa": (0.3540, 0.0214),
+}
+
+# Near-FP16 regime (hypothetical).
 D1P_NEAR = {
     "hellaswag": (0.6590, 0.005),
     "winogrande": (0.6155, 0.004),
@@ -51,12 +59,19 @@ D1P_NEAR = {
     "openbookqa": (0.3570, 0.010),
 }
 
-# Clearly damaging regime: two tasks drop well past the bar.
+# Clearly damaging regime: three tasks drop well past the bar.
+D5P_DAMAGED = {
+    "hellaswag": (0.4256, 0.0049),  # drop ~0.236
+    "winogrande": (0.5501, 0.0140),  # drop ~0.067
+    "boolq": (0.5691, 0.0087),       # drop ~0.093
+    "openbookqa": (0.2980, 0.0205),  # drop ~0.058
+}
+
 D4P_DAMAGED = {
-    "hellaswag": (0.4000, 0.005),   # drop 0.26
-    "winogrande": (0.3000, 0.004),  # drop 0.315
-    "boolq": (0.6300, 0.006),       # drop 0.03 (below 3x stderr+abs? 0.03 >= max(0.018,0.02) -> qualifies too)
-    "openbookqa": (0.3500, 0.010),  # drop 0.01 -> no
+    "hellaswag": (0.4415, 0.0050),
+    "winogrande": (0.5485, 0.0140),
+    "boolq": (0.5633, 0.0087),
+    "openbookqa": (0.3080, 0.0207),
 }
 
 
@@ -77,10 +92,10 @@ def test_per_task_drop_abs_floor():
 
 
 def test_regime_qualifies_damaged():
-    v = t02.regime_qualifies(FP16, D4P_DAMAGED, TASKS)
+    v = t02.regime_qualifies(FP16, D5P_DAMAGED, TASKS)
     assert v["qualifying"] is True
-    assert v["per_task_drops"]["hellaswag"] == pytest.approx(0.26)
-    assert v["per_task_drops"]["openbookqa"] == 0.0
+    assert v["per_task_drops"]["hellaswag"] > 0.2
+    assert v["per_task_drops"]["winogrande"] > 0.0
 
 
 def test_regime_not_qualifying_near_fp16():
@@ -89,22 +104,26 @@ def test_regime_not_qualifying_near_fp16():
     assert v["summed_drop"] == 0.0
 
 
-def test_d1p_gate_passes_near_fp16():
-    g = t02.d1p_gate_ok(FP16, D1P_NEAR, TASKS)
+def test_t01_repro_gate_passes_near_fp16():
+    g = t02.t01_repro_gate_ok(FP16, GAUSS02_NEAR, TASKS)
     assert g["gate_ok"] is True
     assert g["n_tasks_near_fp16"] == 4
 
 
-def test_d1p_gate_fails_when_damaged():
-    g = t02.d1p_gate_ok(FP16, D4P_DAMAGED, TASKS)
+def test_t01_repro_gate_fails_when_damaged():
+    g = t02.t01_repro_gate_ok(FP16, D5P_DAMAGED, TASKS)
     assert g["gate_ok"] is False
 
 
-def _results(regime_scores_by_id):
+def _results(regime_scores_by_id, gauss02=GAUSS02_NEAR):
     out = {
         "fp16": {"regime_id": "fp16", "scores": FP16,
                  "verdict": {"qualifying": False, "per_task_drops": {},
                              "summed_drop": 0.0}},
+        "gauss02": {"regime_id": "gauss02", "scores": gauss02,
+                    "verdict": {"qualifying": False,
+                                "per_task_drops": {},
+                                "summed_drop": 0.0}},
     }
     for rid, scores in regime_scores_by_id.items():
         out[rid] = {
@@ -116,18 +135,16 @@ def _results(regime_scores_by_id):
 
 
 def test_select_regime_largest_drop():
-    results = _results({"D1p": D1P_NEAR, "D4p": D4P_DAMAGED})
-    sel = t02.select_regime(results)
-    assert sel["selected"] == "D4p"
-    assert sel["qualifying_regimes"] == ["D4p"]
-
-
-def test_select_regime_tie_prefers_more_severe():
-    alt = dict(D4P_DAMAGED)
-    results = _results({"D4p": alt, "D5p": D4P_DAMAGED})
+    results = _results({"D4p": D4P_DAMAGED, "D5p": D5P_DAMAGED})
     sel = t02.select_regime(results)
     assert sel["selected"] == "D5p"
     assert set(sel["qualifying_regimes"]) == {"D4p", "D5p"}
+
+
+def test_select_regime_tie_prefers_more_severe():
+    results = _results({"D4p": D4P_DAMAGED, "D5p": D4P_DAMAGED})
+    sel = t02.select_regime(results)
+    assert sel["selected"] == "D5p"
 
 
 def test_select_regime_none():
@@ -137,12 +154,20 @@ def test_select_regime_none():
     assert sel["qualifying_regimes"] == []
 
 
+def test_gauss02_never_a_candidate():
+    # Even if gauss02's scores happened to show a drop, the frozen
+    # exclusion keeps it out of the candidate set.
+    results = _results({}, gauss02=D5P_DAMAGED)
+    sel = t02.select_regime(results)
+    assert sel["selected"] is None
+
+
 def test_probe_summary_regimes_found():
-    results = _results({"D1p": D1P_NEAR, "D4p": D4P_DAMAGED})
+    results = _results({"D4p": D4P_DAMAGED, "D5p": D5P_DAMAGED})
     s = t02.build_probe_summary(results, TASKS)
     assert s["probe_valid"] is True
     assert s["decision"] == "REGIMES_FOUND"
-    assert s["selection"]["selected"] == "D4p"
+    assert s["selection"]["selected"] == "D5p"
 
 
 def test_probe_summary_no_regime():
@@ -151,9 +176,10 @@ def test_probe_summary_no_regime():
     assert s["decision"] == "NO_REGIME"
 
 
-def test_probe_summary_invalid_when_d1p_gate_fails():
-    # If even D1p is damaged, the environment/instrument drifted.
-    results = _results({"D1p": D4P_DAMAGED, "D4p": D4P_DAMAGED})
+def test_probe_summary_invalid_when_gate_fails():
+    # If gauss02 itself is damaged, the environment/instrument
+    # drifted -> INVALID.
+    results = _results({"D5p": D5P_DAMAGED}, gauss02=D5P_DAMAGED)
     s = t02.build_probe_summary(results, TASKS)
     assert s["probe_valid"] is False
     assert s["decision"] == "INVALID"

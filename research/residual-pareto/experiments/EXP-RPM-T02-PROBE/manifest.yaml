@@ -10,13 +10,28 @@ claims_addressed: [RPM-001, A-RP-LRN]
 rationale: |
   Track B condition 3 (AF5 task-relevant T2 value) is BLOCKED:
   EXP-RPM-T01 (AF5 at AF2-D D1p) failed with T2 vs random_t2 >= +1
-  sigma on 0 of 4 held-out tasks, and T01's own diagnosis was that
-  the D1p damaged base was already near FP16 on those tasks — the
-  correction had nothing to recover. Per the 2026-08-28 reassessment
-  and the user's steering chain (capability-damaging AF5 rerun after
-  CAL), this probe finds a regime where the damaged base actually
-  LOSES held-out capability, so the AF5 tournament can be run where
-  the correction has room to act.
+  sigma on 0 of 4 held-out tasks, and T01's diagnosis was that the
+  damaged base was already near FP16 on those tasks — the correction
+  had nothing to recover. Per the 2026-08-28 reassessment and the
+  user's steering chain (capability-damaging AF5 rerun after CAL),
+  this probe finds a regime where the damaged base actually LOSES
+  held-out capability, so the AF5 tournament can be run where the
+  correction has room to act.
+
+  AMENDMENT 2026-08-30 (run 1 INVALID): T01's manifest lists D1p
+  (TWN threshold 1.0) but T01's eval driver
+  (examples/eval_untrained_arms_v2.py,
+  damage_target_module_gaussian) actually applied GAUSSIAN
+  sigma=0.20 at eval time — per the Stage 2 v2 CAL pilot that is
+  ppl 13.13 ~ FP16, i.e. an essentially undamaged base. T01's
+  'nothing to recover' diagnosis is true for ITS eval regime, not
+  for TWN damage. Run 1 of this probe (frozen gate: D1p near-FP16)
+  measured the TWN D1p base and found it degrades 3 of 4 held-out
+  tasks (hellaswag 0.661->0.479, boolq 0.662->0.537, winogrande
+  0.617->0.541) — the gate premise was wrong and the run is
+  INVALID. The verification gate is amended to the T01-REPRO cell
+  (Gaussian sigma=0.20 must be near-FP16), which reproduces T01's
+  actual eval base and pins the T01 regime-mismatch finding.
 
   Bounds: EXP-RPM-SITE-DISCOVERY (2026-08-30) pinned catastrophic
   damage to two sites: L0-down TWN and L0-v Gaussian. The
@@ -30,20 +45,27 @@ rationale: |
   that axis regardless of base degradation).
 hypothesis: |
   At least one regime in the preregistered AF2-D TWN severity band
-  {D1p (thr 1.0), D2' (0.9), D3' (0.8), D4' (0.7), D5' (0.6)} moves
+  {D1p (thr 1.0), D2p (0.9), D3p (0.8), D4p (0.7), D5p (0.6)} moves
   at least one held-out task (hellaswag / winogrande / boolq /
   openbookqa) off its FP16 score by >= max(3 x stderr, 0.02).
-  Additionally, D1p reproduces T01's diagnosis: near-FP16 on all 4
-  tasks (|FP16 - D1p| <= 2 x stderr on >= 3 of 4).
+  Additionally, the T01-REPRO cell (Gaussian sigma=0.20 at AF2-D)
+  reproduces T01's actual eval regime: near-FP16 on all 4 tasks.
 kill_criteria: |
   - REGIME QUALIFIES iff >= 1 of 4 held-out tasks drops by
     >= max(3 x stderr_max, 0.02) below FP16, where stderr_max =
     max(FP16 stderr, regime stderr) from lm-eval's per-task stderr.
-  - Probe verification gate: D1p must be near-FP16
-    (|FP16 - D1p| <= 2 x stderr on >= 3 of 4 tasks; T01's diagnosis).
-    Violation -> probe INVALID (environment or instrument drift).
+  - Probe verification gate (AMENDED 2026-08-30, run 1 INVALID):
+    the T01-REPRO cell (Gaussian sigma=0.20 at AF2-D) must be
+    near-FP16 (|FP16 - gauss02| <= 2 x stderr on >= 3 of 4 tasks).
+    This reproduces T01's actual eval base and pins the T01
+    regime-mismatch finding. Violation -> probe INVALID.
+    ORIGINAL gate (superseded): D1p near-FP16 — calibrated on T01's
+    reported diagnosis; WRONG premise: T01 evaluated on a Gaussian
+    sigma=0.2 base (~FP16), not the TWN D1p base. The TWN D1p base
+    actually degrades 3 of 4 held-out tasks (run 1 data, recorded
+    as non-decision evidence).
   - Any cell failing to complete -> probe INVALID (rerun cleanly).
-  - Budget: 3 GPU-h for the whole probe (24 evals, ~90-100 min
+  - Budget: 3 GPU-h for the whole probe (28 evals, ~110-130 min
     expected on one GPU). Overrun -> abort.
   - Regime selection for the AF5 rerun (frozen here): among
     qualifying regimes, the one with the largest summed drop over
@@ -68,11 +90,17 @@ experiment:
   dtype: float16
   eval_dtype: float16
   damage: TWN (--damage-ptq group_size=128 calibrate_norm=False),
-    deterministic (no seed dependence); damaged weight frozen
+    deterministic (no seed dependence); damaged weight frozen;
+    the T01-REPRO cell uses Gaussian sigma=0.20 damage_seed=0
   regimes:
     - id: fp16
       threshold: null
       calibration_ppl: 13.09
+    - id: gauss02
+      threshold: null
+      gaussian_sigma: 0.20
+      calibration_ppl: 13.13
+      note: T01-REPRO verification cell (T01's actual eval regime)
     - id: D1p
       threshold: 1.0
       calibration_ppl: 88.31
@@ -105,7 +133,7 @@ experiment:
   eval_protocol:
     batch_size: 16
     limit: null
-  cells: 24 (6 regimes x 4 tasks)
+  cells: 28 (7 regimes x 4 tasks)
 exclusions:
   - "L0-v Gaussian sigma in {0.5, 1.0}: the discovery pinned it as
     the only other catastrophic site, but its tournament failed the
@@ -116,7 +144,8 @@ exclusions:
     catastrophic damage at this site to {TWN, Gaussian} and the
     Gaussian axis there is not qualifying (span 2.26)."
 decision_logic_summary: |
-  Frozen probe rules: qualify rule + D1p verification gate above.
+  Frozen probe rules: qualify rule + T01-REPRO verification gate
+  above.
   - >= 1 qualifying regime -> DECIDED REGIME(S) FOUND; the frozen
     selection rule (largest summed drop, tie -> more severe) names
     the AF5 tournament regime. EXP-RPM-T02 is preregistered
@@ -129,11 +158,28 @@ decision_logic_summary: |
 freeze_exception:
   change: "New eval-only driver examples/t02_regime_probe.py (damage
     + held-out-task eval; reuses the tournament driver's frozen TWN
-    damage function) + launcher t02-probe-launch.sh + tests."
+    damage function) + tests."
   justification: "Required to execute the preregistered probe; no
     torus/ core, AF machinery, or eval_lm.py changes."
   approved_by: "harness rule (OPERATING-PLAN section 1) + user
     steering 2026-08-30 chain (capability-damaging AF5 after CAL)."
+prior_runs:
+  - timestamp: '20260830T201326Z'
+    status: INVALID
+    cause: "Verification-gate miscalibration (frozen gate: D1p
+      near-FP16 per T01's diagnosis). The gate premise was wrong:
+      T01's manifest lists D1p (TWN thr 1.0) but its eval driver
+      (eval_untrained_arms_v2.py, damage_target_module_gaussian)
+      actually applied Gaussian sigma=0.20 at eval time (CAL ppl
+      13.13 ~ FP16). The TWN D1p base actually degrades 3 of 4
+      held-out tasks (hellaswag 0.6614->0.4785, boolq
+      0.6621->0.5370, winogrande 0.6172->0.5414; openbookqa within
+      noise) — the INVALID-vs-FAIL distinction fired exactly as
+      intended. Amendment: verification gate -> T01-REPRO cell
+      (Gaussian sigma=0.20 near-FP16), grid 24 -> 28 cells; the
+      frozen qualify/selection rules unchanged. Run 1's data is
+      non-decision evidence; the TWN map will reproduce bit-exactly
+      (deterministic damage)."
 supersedes: null
 result_summary: ""
 confidence_and_reproduction: ""

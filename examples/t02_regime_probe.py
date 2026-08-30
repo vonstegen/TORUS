@@ -2,19 +2,22 @@
 
 Evaluates the DAMAGED BASE ONLY (no training, no adapters) on the
 four T01 held-out tasks (hellaswag, winogrande, boolq, openbookqa)
-across the preregistered AF2-D TWN severity band {fp16, D1p..D5p}
-plus the FP16 baseline, then applies the frozen rules from
+across the preregistered AF2-D severity grid {fp16, gauss02
+(T01-REPRO), D1p..D5p}, then applies the frozen rules from
 research/residual-pareto/experiments/EXP-RPM-T02-PROBE/manifest.yaml:
 
   QUALIFIES iff >= 1 of 4 tasks drops by >= max(3 x stderr_max, 0.02)
   below FP16.
 
-  Verification gate: D1p near-FP16 (|FP16 - D1p| <= 2 x stderr on
-  >= 3 of 4 tasks) — T01's diagnosis; violation -> INVALID.
+  Verification gate (AMENDED, run 1 INVALID): gauss02 (Gaussian
+  sigma=0.20 — the regime T01's eval driver actually applied) must
+  be near-FP16 (|FP16 - gauss02| <= 2 x stderr on >= 3 of 4 tasks),
+  reproducing T01's actual eval base and pinning the T01
+  regime-mismatch finding. Violation -> INVALID.
 
 Damage: TWN via the frozen tournament driver's
-damage_target_module (group_size=128, calibrate_norm=False),
-deterministic.
+damage_target_module (group_size=128, calibrate_norm=False) and
+Gaussian via damage_target_module_gaussian — both deterministic.
 
 Rule functions are pure (dict-only) so tests import them without
 torch. The CLI needs the Legion environment (torch + lm-eval).
@@ -36,12 +39,13 @@ GATE_SIGMA = 2.0
 GATE_TASKS_MIN = 3
 
 REGIMES = [
-    {"id": "fp16", "threshold": None},
-    {"id": "D1p", "threshold": 1.0},
-    {"id": "D2p", "threshold": 0.9},
-    {"id": "D3p", "threshold": 0.8},
-    {"id": "D4p", "threshold": 0.7},
-    {"id": "D5p", "threshold": 0.6},
+    {"id": "fp16", "threshold": None, "gaussian_sigma": None},
+    {"id": "gauss02", "threshold": None, "gaussian_sigma": 0.20},
+    {"id": "D1p", "threshold": 1.0, "gaussian_sigma": None},
+    {"id": "D2p", "threshold": 0.9, "gaussian_sigma": None},
+    {"id": "D3p", "threshold": 0.8, "gaussian_sigma": None},
+    {"id": "D4p", "threshold": 0.7, "gaussian_sigma": None},
+    {"id": "D5p", "threshold": 0.6, "gaussian_sigma": None},
 ]
 
 TASKS = [
@@ -51,6 +55,9 @@ TASKS = [
     ("openbookqa", "acc_norm"),
 ]
 
+# Verification/selection cells excluded from the candidate set.
+NON_CANDIDATE_REGIMES = ("fp16", "gauss02")
+
 
 # ---- frozen rule functions (pure) -------------------------------------
 
@@ -58,8 +65,8 @@ def per_task_drop(fp16_score: float, fp16_stderr: float,
                   regime_score: float, regime_stderr: float) -> float:
     """Capability drop of a regime below FP16 on one task.
 
-    Returns max(0, fp16 - regime) if it exceeds the frozen bar,
-    else 0.0.
+    Returns the drop if it exceeds the frozen bar
+    max(3 x stderr_max, 0.02), else 0.0.
     """
     stderr_max = max(fp16_stderr, regime_stderr, 0.0)
     bar = max(DROP_SIGMA * stderr_max, DROP_MIN_ABS)
@@ -84,14 +91,15 @@ def regime_qualifies(fp16: dict[str, tuple[float, float]],
     }
 
 
-def d1p_gate_ok(fp16: dict[str, tuple[float, float]],
-                d1p: dict[str, tuple[float, float]],
-                tasks: list[str]) -> dict:
-    """Verification gate: D1p near-FP16 on >= 3 of 4 tasks."""
+def t01_repro_gate_ok(fp16: dict[str, tuple[float, float]],
+                      gauss02: dict[str, tuple[float, float]],
+                      tasks: list[str]) -> dict:
+    """Verification gate: gauss02 (T01's actual eval regime) is
+    near-FP16 on >= 3 of 4 tasks."""
     ok_tasks = []
     for task in tasks:
         f_s, f_e = fp16[task]
-        d_s, d_e = d1p[task]
+        d_s, d_e = gauss02[task]
         se = max(f_e, d_e, 0.0)
         if abs(f_s - d_s) <= GATE_SIGMA * se:
             ok_tasks.append(task)
@@ -107,7 +115,7 @@ def select_regime(results: dict[str, dict]) -> dict:
     ties -> more severe threshold (later in REGIMES order wins)."""
     best = None
     for regime_id, r in results.items():
-        if regime_id == "fp16":
+        if regime_id in NON_CANDIDATE_REGIMES:
             continue
         v = r["verdict"]
         if not v["qualifying"]:
@@ -125,8 +133,8 @@ def select_regime(results: dict[str, dict]) -> dict:
 def build_probe_summary(results: dict[str, dict],
                         task_order: list[str]) -> dict:
     fp16 = results["fp16"]["scores"]
-    d1p = results["D1p"]["scores"]
-    gate = d1p_gate_ok(fp16, d1p, task_order)
+    gauss02 = results["gauss02"]["scores"]
+    gate = t01_repro_gate_ok(fp16, gauss02, task_order)
     selection = select_regime(results)
     per_regime = {
         rid: {
@@ -138,7 +146,7 @@ def build_probe_summary(results: dict[str, dict],
     return {
         "tasks": task_order,
         "regimes": per_regime,
-        "d1p_gate": gate,
+        "t01_repro_gate": gate,
         "selection": selection,
         "probe_valid": gate["gate_ok"],
         "decision": (
@@ -147,6 +155,8 @@ def build_probe_summary(results: dict[str, dict],
         ),
     }
 
+
+# ---- CLI --------------------------------------------------------------
 
 def _eval_one(model, tokenizer, task_name: str, metric: str,
               batch_size: int) -> tuple[float, float]:
@@ -169,7 +179,6 @@ def _eval_one(model, tokenizer, task_name: str, metric: str,
     return value, stderr
 
 
-
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--out-dir", type=Path, required=True)
@@ -187,6 +196,7 @@ def main(argv: list[str] | None = None) -> int:
     from examples.af2_storage_tournament import (
         build_base,
         damage_target_module,
+        damage_target_module_gaussian,
         resolve_target_module,
     )
 
@@ -202,6 +212,11 @@ def main(argv: list[str] | None = None) -> int:
                 model, "model.layers.0.mlp.down_proj")
             damage_target_module(target, group_size=128,
                                  threshold=regime["threshold"])
+        elif regime["gaussian_sigma"] is not None:
+            target = resolve_target_module(
+                model, "model.layers.0.mlp.down_proj")
+            damage_target_module_gaussian(
+                target, sigma=regime["gaussian_sigma"], seed=0)
         scores: dict[str, tuple[float, float]] = {}
         for task_name, metric in TASKS:
             score, stderr = _eval_one(model, tokenizer, task_name,
@@ -222,7 +237,7 @@ def main(argv: list[str] | None = None) -> int:
 
     fp16_scores = results["fp16"]["scores"]
     for rid, r in results.items():
-        if rid == "fp16":
+        if rid in NON_CANDIDATE_REGIMES:
             r["verdict"] = {"qualifying": False, "per_task_drops": {},
                             "summed_drop": 0.0}
         else:
