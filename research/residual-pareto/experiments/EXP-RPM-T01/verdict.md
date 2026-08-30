@@ -233,3 +233,21 @@ Output at:
 - `runs/r/EXP-RPM-T01/20260825T192400Z/ARTIFACTS.json` (sha256 manifest)
 - `research/residual-pareto/experiments/EXP-RPM-T01/manifest.yaml` (this verdict's manifest)
 - `research/residual-pareto/experiments/EXP-RPM-T01/verdict.md` (this file)
+## CORRECTION 2026-08-30 — regime-mismatch finding (EXP-RPM-T02-PROBE)
+
+T01's manifest lists `damage_regime: D1p, threshold: 1.0` (TWN), but
+T01's eval driver (`examples/eval_held_out_tasks.py` →
+`eval_untrained_arms_v2.py`, `damage_target_module_gaussian`)
+applied **Gaussian σ=0.20** to the base at eval time. Per the
+Stage 2 v2 CAL pilot that is ppl 13.13 ≈ FP16 — an essentially
+undamaged base. T01's adapters were D1p-trained (sha256 match
+against the Stage 1.5 artifact), evaluated on a near-FP16 base.
+
+Consequence: T01's diagnosis "the damaged base was already near FP16
+on those tasks — nothing to recover" is **true for T01's actual
+(Gaussian σ=0.2) eval regime, not for TWN damage**. The TWN
+damaged bases degrade held-out capability at every severity:
+EXP-RPM-T02-PROBE (20260830T204622Z) measured hellaswag
+0.6614→0.4256, boolq 0.6621→0.5691, winogrande 0.6172→0.5501 at
+D5p (thr 0.6). The AF5 rerun is preregistered as EXP-RPM-T02 at
+D5p with the frozen T01 thresholds.

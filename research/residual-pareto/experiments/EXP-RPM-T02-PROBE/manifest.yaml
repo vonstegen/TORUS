@@ -181,7 +181,28 @@ prior_runs:
       non-decision evidence; the TWN map will reproduce bit-exactly
       (deterministic damage)."
 supersedes: null
-result_summary: ""
-confidence_and_reproduction: ""
-next_permitted_experiment: ""
-conclusion: ""
+result_summary: "DECIDED REGIMES_FOUND -> D5p selected (run
+  20260830T204622Z, 28/28 cells). T01-REPRO gate PASS 4/4 (gauss02
+  ~ FP16 on all tasks — T01's actual eval base reproduced, pinning
+  the T01 regime-mismatch finding). ALL five TWN regimes qualify:
+  hellaswag -0.18..-0.24, boolq -0.09..-0.13, winogrande
+  -0.06..-0.08 at every severity; openbookqa borderline. Frozen
+  selection (largest summed drop): D5p (thr 0.6, base ppl 697.29,
+  summed drop 0.3959)."
+confidence_and_reproduction: "Discovery tier. TWN map bit-identical
+  across run 1 (INVALID) and run 2 (valid) — deterministic damage;
+  gate and rules covered by 16 unit tests. Run 1 INVALID fired the
+  gate exactly as designed and produced the T01 regime-mismatch
+  finding (recorded in prior_runs)."
+next_permitted_experiment: "EXP-RPM-T02 — AF5 tournament at D5p
+  (confirmation tier, separate preregistration): T01 protocol +
+  frozen T01 thresholds, sha256-pinned Stage 1.5 D5p adapters,
+  damaged base verified against this probe's D5p scores."
+conclusion: "Held-out capability degrades at every AF2-D TWN
+  severity; T01's null was regime-miscalibration (Gaussian sigma=0.2
+  eval base ~ FP16), not task insensitivity. The AF5 gate can be
+  tested at D5p where the correction has room to act. Verdict:
+  research/residual-pareto/experiments/EXP-RPM-T02-PROBE/verdict.md."
+status: DECIDED
+decision: REGIMES_FOUND_D5p
+grade: B

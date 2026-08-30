@@ -1,0 +1,232 @@
+{
+  "tasks": [
+    "hellaswag",
+    "winogrande",
+    "boolq",
+    "openbookqa"
+  ],
+  "regimes": {
+    "fp16": {
+      "scores": {
+        "hellaswag": [
+          0.6614220274845648,
+          0.004722589460698295
+        ],
+        "winogrande": [
+          0.6172059984214681,
+          0.013660946109441928
+        ],
+        "boolq": [
+          0.6620795107033639,
+          0.00827284478934442
+        ],
+        "openbookqa": [
+          0.356,
+          0.021434712356072687
+        ]
+      },
+      "verdict": {
+        "qualifying": false,
+        "per_task_drops": {},
+        "summed_drop": 0.0
+      }
+    },
+    "gauss02": {
+      "scores": {
+        "hellaswag": [
+          0.6614220274845648,
+          0.004722589460698295
+        ],
+        "winogrande": [
+          0.6132596685082873,
+          0.013687214761883042
+        ],
+        "boolq": [
+          0.6605504587155964,
+          0.00828196044607121
+        ],
+        "openbookqa": [
+          0.356,
+          0.021434712356072687
+        ]
+      },
+      "verdict": {
+        "qualifying": false,
+        "per_task_drops": {},
+        "summed_drop": 0.0
+      }
+    },
+    "D1p": {
+      "scores": {
+        "hellaswag": [
+          0.47849034056960765,
+          0.004985162074336051
+        ],
+        "winogrande": [
+          0.5414364640883977,
+          0.01400414685379184
+        ],
+        "boolq": [
+          0.5370030581039755,
+          0.008721074177479618
+        ],
+        "openbookqa": [
+          0.31,
+          0.020704041021724684
+        ]
+      },
+      "verdict": {
+        "qualifying": true,
+        "per_task_drops": {
+          "hellaswag": 0.18293168691495715,
+          "winogrande": 0.07576953433307032,
+          "boolq": 0.12507645259938838,
+          "openbookqa": 0.0
+        },
+        "summed_drop": 0.38377767384741585
+      }
+    },
+    "D2p": {
+      "scores": {
+        "hellaswag": [
+          0.4856602270464051,
+          0.004987728900897647
+        ],
+        "winogrande": [
+          0.5556432517758485,
+          0.013965196769083407
+        ],
+        "boolq": [
+          0.5492354740061162,
+          0.008702553362422788
+        ],
+        "openbookqa": [
+          0.324,
+          0.020950557312477552
+        ]
+      },
+      "verdict": {
+        "qualifying": true,
+        "per_task_drops": {
+          "hellaswag": 0.1757618004381597,
+          "winogrande": 0.06156274664561956,
+          "boolq": 0.11284403669724774,
+          "openbookqa": 0.0
+        },
+        "summed_drop": 0.350168583781027
+      }
+    },
+    "D3p": {
+      "scores": {
+        "hellaswag": [
+          0.4690300736904999,
+          0.004980200451851498
+        ],
+        "winogrande": [
+          0.5501183898973955,
+          0.013981711904049721
+        ],
+        "boolq": [
+          0.5675840978593272,
+          0.008664798701065773
+        ],
+        "openbookqa": [
+          0.298,
+          0.020475118092988954
+        ]
+      },
+      "verdict": {
+        "qualifying": true,
+        "per_task_drops": {
+          "hellaswag": 0.19239195379406487,
+          "winogrande": 0.06708760852407258,
+          "boolq": 0.09449541284403673,
+          "openbookqa": 0.0
+        },
+        "summed_drop": 0.3539749751621742
+      }
+    },
+    "D4p": {
+      "scores": {
+        "hellaswag": [
+          0.4415455088627763,
+          0.004955564650015862
+        ],
+        "winogrande": [
+          0.5485398579321231,
+          0.013986110301017752
+        ],
+        "boolq": [
+          0.563302752293578,
+          0.008674684806135216
+        ],
+        "openbookqa": [
+          0.308,
+          0.020667032987466052
+        ]
+      },
+      "verdict": {
+        "qualifying": true,
+        "per_task_drops": {
+          "hellaswag": 0.21987651862178847,
+          "winogrande": 0.06866614048934494,
+          "boolq": 0.09877675840978595,
+          "openbookqa": 0.0
+        },
+        "summed_drop": 0.38731941752091936
+      }
+    },
+    "D5p": {
+      "scores": {
+        "hellaswag": [
+          0.42561242780322645,
+          0.004934250390879592
+        ],
+        "winogrande": [
+          0.5501183898973955,
+          0.013981711904049721
+        ],
+        "boolq": [
+          0.5691131498470948,
+          0.008661108320775528
+        ],
+        "openbookqa": [
+          0.298,
+          0.020475118092988954
+        ]
+      },
+      "verdict": {
+        "qualifying": true,
+        "per_task_drops": {
+          "hellaswag": 0.23580959968133836,
+          "winogrande": 0.06708760852407258,
+          "boolq": 0.09296636085626908,
+          "openbookqa": 0.0
+        },
+        "summed_drop": 0.39586356906168
+      }
+    }
+  },
+  "t01_repro_gate": {
+    "gate_ok": true,
+    "n_tasks_near_fp16": 4,
+    "near_fp16_tasks": [
+      "hellaswag",
+      "winogrande",
+      "boolq",
+      "openbookqa"
+    ]
+  },
+  "selection": {
+    "selected": "D5p",
+    "qualifying_regimes": [
+      "D1p",
+      "D2p",
+      "D3p",
+      "D4p",
+      "D5p"
+    ]
+  },
+  "probe_valid": true,
+  "decision": "REGIMES_FOUND"
+}
