@@ -142,8 +142,13 @@ def ternary_quantize(w: torch.Tensor) -> tuple[torch.Tensor, float]:
 
 
 def ternary_codes(w: torch.Tensor) -> torch.Tensor:
-    """Codes of a NORMALIZED latent (threshold 0.5 in latent units)."""
-    return w.round().clamp(-1.0, 1.0)
+    """Codes of a NORMALIZED latent with a straight-through estimator.
+
+    Forward value = round-clamp; backward = identity (the classic STE
+    detach trick). Plain round().clamp() passes ZERO gradient — run
+    2's defect, caught by the conditioning proxy reading 0.0."""
+    q = w.round().clamp(-1.0, 1.0)
+    return w + (q - w).detach()
 
 
 # ---- arm modules ------------------------------------------------------------
@@ -419,12 +424,15 @@ def train(arm: str, device: str, run_dir: str,
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), GRAD_CLIP)
             if step + 1 in COND_SAMPLE_STEPS:
+                g2g1 = float(np.mean([
+                    float((m.weight_latent.grad.norm(2)
+                           / m.weight_latent.grad.norm(1).clamp(min=1e-12))
+                          .item()) for m in linear_modules]))
                 conditioning[f"step_{step + 1}"] = {
-                    "g2_over_g1_mean": float(np.mean([
-                        float((m.weight_latent.grad.norm(2)
-                               / m.weight_latent.grad.norm(1).clamp(min=1e-12))
-                              .item()) for m in linear_modules])),
+                    "g2_over_g1_mean": g2g1,
                 }
+                if g2g1 == 0.0:
+                    _abort(run_dir, "zero_grad", arm, step)
             optimizer.step()
             window_loss += float(loss.detach())
             step += 1

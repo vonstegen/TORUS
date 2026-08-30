@@ -120,6 +120,14 @@ def test_ternary_codes_normalized() -> None:
     assert ah1.ternary_codes(w).tolist()[0] == [0.0, 1.0, 0.0, -1.0]
 
 
+def test_ternary_codes_ste_gradient_is_identity() -> None:
+    w = torch.tensor([0.3, 0.7, -0.2, -0.9, 1.5], requires_grad=True)
+    q = ah1.ternary_codes(w)
+    assert q.tolist() == [0.0, 1.0, 0.0, -1.0, 1.0]
+    q.sum().backward()
+    assert torch.allclose(w.grad, torch.ones_like(w))
+
+
 def test_plain_linear_v2_init_and_effective() -> None:
     torch.manual_seed(0)
     w0 = torch.randn(8, 8)
