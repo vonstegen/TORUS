@@ -1,0 +1,212 @@
+id: EXP-RPM-SITE-DISCOVERY
+title: "Track B condition-4 site-discovery sweep — CAL-only second-site search"
+track: A
+subtrack: "RPM Stage 2 site discovery (Track B condition 4 unblock path 2)"
+tier: discovery
+status: PREREGISTERED
+date_proposed: '2026-08-30T21:00:00Z'
+owner: research harness
+claims_addressed:
+  - RPM-006
+rationale: |
+  Track B condition 4 (>= 2 layer categories with Pareto-qualifying
+  trained-vs-random separation) is BLOCKED: only AF2-D
+  (model.layers.0.mlp.down_proj, TWN) qualifies. Per the 2026-08-28
+  reassessment and the user's 2026-08-30 steering, this is the
+  CAL-first second-site discovery: narrow purpose only — find whether
+  a second site exists under independently calibrated damage. CAL is
+  allowed to return NO second site. A candidate is frozen before any
+  tournament; a null result records A-RP-002 as site-local within the
+  searched space, with NO expansion of the grid.
+
+  Evidence bounds (from the Stage 2 v2 CAL pilot, 72 frozen cells):
+  - Gaussian sigma -> ppl axes: L0-v_proj span 20070 (QUALIFYING,
+    tournament at sigma=0.2 NOT QUALIFYING — nothing-to-recover);
+    L15-down span 3.49 (QUALIFYING, tournaments at 0.2/0.5/1.0 NOT
+    QUALIFYING); AF2-D-down span 2.26 (NOT QUALIFYING); L0-q span
+    0.15 (NOT QUALIFYING).
+  - TWN: catastrophic only at L0-down (threshold -> ppl 697/430/303/
+    204/88 over {0.6..1.0}); degenerate at L8/L15-down (any
+    group_size). TWN at attention projections is UNMEASURED — the
+    highest-prior untested pairing for a second site.
+  The grid therefore sweeps the two demonstrated-informative loci
+  through depth (Gaussian x v_proj, Gaussian x down_proj) plus the
+  untested mechanism x category pairing (TWN x v_proj).
+hypothesis: |
+  Within the preregistered grid — Gaussian x v_proj@L{1,2,4,8,12,15},
+  Gaussian x down_proj@L{1,4,8,12}, TWN x v_proj@L{0,4,15} — at least
+  one site is a second-site CANDIDATE: CAL-qualifying per the frozen
+  Stage 2 v2 rule AND the damaged base reaches ppl >= 100 at some
+  knob value (i.e. a site where the correction phenomenon could
+  exist). If no site satisfies the candidate rule, the discovery
+  returns NO SECOND SITE and A-RP-002 is annotated site-local within
+  the searched space.
+kill_criteria: |
+  - QUALIFYING (frozen Stage 2 v2 rule, UNCHANGED): >= 3 knob values
+    produce ppl in distinct reproducibility bands (round(ppl,0))
+    separated by >= 1 ppl unit AND spanning >= 2 ppl units total.
+  - CANDIDATE = QUALIFYING AND max per-knob ppl_mean >= 100.
+    Qualifying sites with max ppl < 100 are recorded NON-CANDIDATE
+    with reason 'mild axis; nothing-to-recover risk (EXP-RPM-T01 and
+    the L0-v / L15 tournament diagnoses)'.
+  - Budget cap: 16 GPU-h for the whole sweep (measured 3 min/cell in
+    the Stage 2 v2 pilot -> ~12 h expected for 239 cells). Overrun
+    -> abort; incomplete sites INVALID; completed sites decide.
+  - Site verification gate: the zero-knob cell (sigma=0.0 for
+    Gaussian sites and for the TWN sites' baseline cell) must
+    reproduce the FP16 baseline band 13 (|ppl - 13.0932| <= 0.05).
+    Violation -> site INVALID.
+  - Reference cells (whole-run environment + path verification):
+    (1) Gaussian v_proj@L0 sigma=0.5 seed-001 must reproduce band
+    439 (ppl in [438, 440] — frozen pilot value 439.2520);
+    (2) TWN down_proj@L0 threshold=0.7 seed-001 must land in
+    [400, 460] (frozen AF2-D pre-train band; EXP-RPM-CAL 429.55).
+    Violation -> whole run INVALID (environment drift).
+  - Any cell failing to complete -> that site INVALID (recorded);
+    the decision applies to the valid site set.
+expected_artifacts:
+  - runs/r/EXP-RPM-SITE-DISCOVERY/<timestamp>/<site-id>/sigma-<v>/seed-<n>/pre_train_eval.json
+  - runs/r/EXP-RPM-SITE-DISCOVERY/<timestamp>/<site-id>/thr-<v>/seed-<n>/pre_train_eval.json
+  - runs/r/EXP-RPM-SITE-DISCOVERY/<timestamp>/<site-id>/baseline/seed-001/pre_train_eval.json (TWN sites)
+  - runs/r/EXP-RPM-SITE-DISCOVERY/<timestamp>/<site-id>/site_cal_summary.json (per-site: knob -> ppl, qualifying verdict)
+  - runs/r/EXP-RPM-SITE-DISCOVERY/<timestamp>/sweep_summary.json (verification gates, reference checks, candidate list)
+  - runs/r/EXP-RPM-SITE-DISCOVERY/<timestamp>/ARTIFACTS.json (driver SHA, env-lock)
+artifact_paths:
+  - experiments/EXP-RPM-SITE-DISCOVERY/manifest.yaml
+contamination_risks: []
+experiment:
+  model: allenai/OLMo-1B-0724-hf
+  dtype: float16
+  eval_dtype: float16
+  tasks: [wikitext]
+  seeds: [1, 2, 3]
+  n_steps: 0
+  batch_size: 4
+  seq_len: 128
+  driver: examples/af2_storage_tournament.py (frozen pilot protocol;
+    no driver changes — TWN/Gaussian damage + path-aware dims +
+    pre-train eval all landed in the Stage 2 v2 commits)
+  gaussian:
+    sigma_values: [0.0, 0.05, 0.10, 0.20, 0.50, 1.00]
+    damage_seed: 0
+    grid:
+      - site_id: gauss-v-L1
+        target: model.layers.1.self_attn.v_proj
+      - site_id: gauss-v-L2
+        target: model.layers.2.self_attn.v_proj
+      - site_id: gauss-v-L4
+        target: model.layers.4.self_attn.v_proj
+      - site_id: gauss-v-L8
+        target: model.layers.8.self_attn.v_proj
+      - site_id: gauss-v-L12
+        target: model.layers.12.self_attn.v_proj
+      - site_id: gauss-v-L15
+        target: model.layers.15.self_attn.v_proj
+      - site_id: gauss-d-L1
+        target: model.layers.1.mlp.down_proj
+      - site_id: gauss-d-L4
+        target: model.layers.4.mlp.down_proj
+      - site_id: gauss-d-L8
+        target: model.layers.8.mlp.down_proj
+      - site_id: gauss-d-L12
+        target: model.layers.12.mlp.down_proj
+  twn:
+    threshold_values: [0.0, 0.4, 0.6, 0.8, 0.9, 1.0]
+    group_size: 128
+    calibrate_norm: false
+    grid:
+      - site_id: twn-v-L0
+        target: model.layers.0.self_attn.v_proj
+      - site_id: twn-v-L4
+        target: model.layers.4.self_attn.v_proj
+      - site_id: twn-v-L15
+        target: model.layers.15.self_attn.v_proj
+  reference_cells:
+    - site_id: ref-gauss-v-L0
+      target: model.layers.0.self_attn.v_proj
+      mechanism: gaussian
+      knob: 0.5
+      seed: 1
+      expect_band: [438, 440]
+      frozen_value: 439.2520
+    - site_id: ref-twn-d-L0
+      target: model.layers.0.mlp.down_proj
+      mechanism: twn
+      knob: 0.7
+      seed: 1
+      expect_band: [400, 460]
+      frozen_value: 429.55
+  baseline_cells:
+    # One sigma=0.0 cell per TWN site: the site verification gate.
+    - site_id: twn-v-L0
+    - site_id: twn-v-L4
+    - site_id: twn-v-L15
+  execution_order:
+    # Reference cells first (environment verification before grid
+    # spend), then the highest-prior site (TWN x attention pairing),
+    # then the Gaussian depth maps, then the TWN depth anchors.
+    - ref-gauss-v-L0
+    - ref-twn-d-L0
+    - twn-v-L0
+    - gauss-v-L1
+    - gauss-v-L2
+    - gauss-v-L4
+    - gauss-v-L8
+    - gauss-v-L12
+    - gauss-v-L15
+    - gauss-d-L1
+    - gauss-d-L4
+    - gauss-d-L8
+    - gauss-d-L12
+    - twn-v-L4
+    - twn-v-L15
+  total_cells: 239
+exclusions:
+  # Preregistered, with reasons; a null result does NOT license
+  # expansion to any excluded locus.
+  - "k_proj / o_proj: q_proj demonstrated Gaussian-robust at L0
+    (span 0.15); v_proj is the demonstrated-sensitive attention
+    projection. Unmeasured loci excluded to bound the sweep."
+  - "mlp gate_proj / up_proj: never demonstrated informative under
+    any damage mechanism; excluded."
+  - "TWN at down_proj depths {1,4,12}: Stage 2 v1/v5 established
+    TWN-down_proj degeneracy away from L0 (L8, L15 degenerate at any
+    group_size). The TWN boundary location is a mechanism-envelope
+    question, not second-site discovery."
+  - "Gaussian down_proj@L15 and Gaussian v_proj@L0: already measured
+    in the Stage 2 v2 pilot (QUALIFYING) and their tournaments
+    failed; known non-candidates, present only as reference cells."
+  - "sigma values beyond {0.0..1.0}: the pilot grid is frozen."
+  - "Layers beyond 15: OLMo-1B-0724-hf has 16 layers (0-15); the
+    anchor set covers the depth range."
+decision_logic_summary: |
+  CANDIDATES = sites with qualifying=true AND max ppl >= 100.
+  - >= 1 candidate -> DECIDED CANDIDATE(S) FOUND. The candidate list
+    and their knob -> ppl maps are frozen here. Confirmation is a NEW
+    preregistration: a tournament at ONE candidate site, with the
+    knob value chosen there from the frozen map at a catastrophic
+    band (ppl >= 100) — the selection rules are frozen in the
+    confirmation manifest, not here. Candidate priority rule frozen
+    here: attention-category (v_proj) candidate with the largest span
+    first; if only MLP-down candidates exist, Track B condition 4's
+    category criterion remains unmet regardless (same category as
+    AF2-D), and the confirmation records that.
+  - 0 candidates -> DECIDED NO SECOND SITE. A-RP-002 annotated
+    site-local within the searched space (INDEX + claim annotation).
+    RPM-006's layer-category criterion stays unmet; no grid
+    expansion.
+freeze_exception:
+  change: "None — the driver (examples/af2_storage_tournament.py at
+    HEAD) already implements the Stage 2 v2 CAL protocol (path-aware
+    dims, Gaussian + TWN damage, --n-steps 0 pre-train eval). New
+    files only: launcher site-discovery-launch.sh, summary module
+    examples/site_discovery_summary.py + CLI, tests."
+  justification: "Required to execute the preregistered discovery
+    sweep; no torus/ core or AF machinery changes."
+  approved_by: "harness rule (OPERATING-PLAN section 1) + user
+    steering 2026-08-30 (CAL-first second-site discovery)."
+supersedes: null
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+conclusion: ""

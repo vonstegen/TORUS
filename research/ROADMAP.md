@@ -541,6 +541,17 @@ advantage (per RPM proposal §13). The current state:
       the new damage recipe's threshold->ppl mapping on AF2-D first
       (so v2 has a known calibration); freeze metric keys in the
       manifest; specify the ppl sign convention for monotonicity
+      **2026-08-30: second-site discovery preregistered as
+      `EXP-RPM-SITE-DISCOVERY`** (`research/residual-pareto/
+      experiments/EXP-RPM-SITE-DISCOVERY/manifest.yaml`) — CAL-only
+      sweep of the demonstrated-informative loci, per the user's
+      CAL-first steering (2026-08-30): Gaussian × v_proj@{1,2,4,8,
+      12,15}, Gaussian × down_proj@{1,4,8,12}, TWN × v_proj@{0,4,15}
+      (13 sites × 18 cells + 3 baselines + 2 frozen reference
+      cells). CANDIDATE = pilot QUALIFYING rule (≥3 separated ppl
+      bands, ≥2-unit span) AND max ppl ≥ 100. Candidates freeze
+      before any tournament; a null result annotates A-RP-002
+      site-local — no grid expansion.
 - [x] **3.2** `EXP-A-H1` — **Native Hadamard controlled training (discovery
       → confirmation).** Small model (100M–500M),
       matched arms: standard ternary vs. native rotated ternary
