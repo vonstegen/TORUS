@@ -128,7 +128,7 @@ def test_rotated_linear_latent_is_rotated_w0() -> None:
     h = ah1.sylvester_hadamard(4)
     w0 = torch.randn(8, 256) * 0.02
     mod = ah1.RotatedTernaryLinear(w0, None, h, rotate_out=True)
-    expected = torch.block_diag(*([h] * 64)) @ w0 @ torch.block_diag(
+    expected = torch.block_diag(*([h] * 2)) @ w0 @ torch.block_diag(
         *([h] * 64))
     assert torch.allclose(mod.weight_latent.detach(), expected, atol=1e-6)
 
