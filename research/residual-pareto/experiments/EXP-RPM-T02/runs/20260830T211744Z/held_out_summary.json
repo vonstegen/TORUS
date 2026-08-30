@@ -1,0 +1,198 @@
+{
+  "experiment": "EXP-RPM-T02",
+  "site": "model.layers.0.mlp.down_proj",
+  "damage": {
+    "mechanism": "TWN",
+    "threshold": 0.6,
+    "group_size": 128
+  },
+  "base_gate": {
+    "gate_ok": true,
+    "n_tasks_in_band": 4,
+    "in_band_tasks": [
+      "hellaswag",
+      "winogrande",
+      "boolq",
+      "openbookqa"
+    ]
+  },
+  "by_task": {
+    "hellaswag": {
+      "t2_ternary": [
+        0.5853415654252141,
+        0.00491656121359154
+      ],
+      "int4_residual": [
+        0.29575781716789484,
+        0.004554499409291194
+      ],
+      "int8_residual": [
+        0.5978888667596096,
+        0.004893220635011468
+      ],
+      "lora": [
+        0.635929097789285,
+        0.004801852881329662
+      ],
+      "dense_adapter": [
+        0.6340370444134634,
+        0.0048071469251619444
+      ],
+      "random_t2_ternary": [
+        0.4335789683330014,
+        0.0049455580698519585
+      ],
+      "random_lora": [
+        0.4342760406293567,
+        0.004946485466544363
+      ]
+    },
+    "winogrande": {
+      "t2_ternary": [
+        0.5619573796369376,
+        0.013944181296470948
+      ],
+      "int4_residual": [
+        0.49171270718232046,
+        0.01405055532282417
+      ],
+      "int8_residual": [
+        0.5911602209944752,
+        0.013816954295135714
+      ],
+      "lora": [
+        0.601420678768745,
+        0.013760357176873711
+      ],
+      "dense_adapter": [
+        0.6045777426992897,
+        0.013741678387545343
+      ],
+      "random_t2_ternary": [
+        0.5453827940015785,
+        0.013994481027066056
+      ],
+      "random_lora": [
+        0.5414364640883977,
+        0.01400414685379184
+      ]
+    },
+    "boolq": {
+      "t2_ternary": [
+        0.5834862385321101,
+        0.00862228802067404
+      ],
+      "int4_residual": [
+        0.5672782874617737,
+        0.008665526684416072
+      ],
+      "int8_residual": [
+        0.5972477064220183,
+        0.008578054401368341
+      ],
+      "lora": [
+        0.6284403669724771,
+        0.008451598145076813
+      ],
+      "dense_adapter": [
+        0.581039755351682,
+        0.008629425249245488
+      ],
+      "random_t2_ternary": [
+        0.5654434250764526,
+        0.008669824006667961
+      ],
+      "random_lora": [
+        0.5568807339449541,
+        0.008688282882073791
+      ]
+    },
+    "openbookqa": {
+      "t2_ternary": [
+        0.33,
+        0.02104961216613478
+      ],
+      "int4_residual": [
+        0.264,
+        0.01973288558592215
+      ],
+      "int8_residual": [
+        0.312,
+        0.020740596536488017
+      ],
+      "lora": [
+        0.342,
+        0.021236147199899316
+      ],
+      "dense_adapter": [
+        0.334,
+        0.02111349234774381
+      ],
+      "random_t2_ternary": [
+        0.294,
+        0.02039509548493655
+      ],
+      "random_lora": [
+        0.306,
+        0.020629569998345414
+      ]
+    }
+  },
+  "threshold_verdict": {
+    "per_task": {
+      "hellaswag": {
+        "z_vs_random_t2": 21.762441641480255,
+        "z_vs_random_lora": 21.66043998714494,
+        "t2_beats_best_trained": false,
+        "t2_above_chance": true
+      },
+      "winogrande": {
+        "z_vs_random_t2": 0.8389795308297919,
+        "z_vs_random_lora": 1.0383766114976984,
+        "t2_beats_best_trained": false,
+        "t2_above_chance": true
+      },
+      "boolq": {
+        "z_vs_random_t2": 1.4756031558772387,
+        "z_vs_random_lora": 2.1735615884877078,
+        "t2_beats_best_trained": false,
+        "t2_above_chance": true
+      },
+      "openbookqa": {
+        "z_vs_random_t2": 1.228271196263913,
+        "z_vs_random_lora": 0.8143010548017069,
+        "t2_beats_best_trained": false,
+        "t2_above_chance": true
+      }
+    },
+    "rules": {
+      "r1_t2_vs_random_t2_ge_1sd": [
+        true,
+        3
+      ],
+      "r2_t2_vs_random_lora_ge_1sd": [
+        true,
+        3
+      ],
+      "r3_t2_wins_or_ties_best_trained": [
+        false,
+        0
+      ],
+      "r4_t2_above_chance": [
+        true,
+        4
+      ]
+    },
+    "fail_triggers": {
+      "f1_t2_below_chance": [
+        false,
+        0
+      ],
+      "f2_t2_far_below_random_lora": [
+        false,
+        0
+      ]
+    },
+    "decision": "FAIL"
+  }
+}

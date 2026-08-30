@@ -125,15 +125,27 @@ budget:
   wall_clock: "~140 min on Legion cuda:0"
   gpu_cap: "4 GPU-h"
 decision_block:
-  result_summary: ""
-  confidence_and_reproduction: ""
-  next_permitted_experiment: ""
+  result_summary: "DECIDED FAIL (run 20260830T211744Z, 32/32 cells,
+    base gate 4/4 bit-match vs the probe). Frozen rules: r1 TRUE
+    (3/4; hellaswag +21.76 sd vs random_t2), r2 TRUE (3/4), r3
+    FALSE (0/4 — int8 wins 3 tasks, lora 1), r4 TRUE (4/4); no
+    fail triggers. PASS requires ALL four -> FAIL."
+  confidence_and_reproduction: "Confirmation tier, single seed
+    (T01 protocol). Base bit-matches the probe's frozen values;
+    adapters sha256-pinned; thresholds unit-tested (9)."
+  next_permitted_experiment: "Dedicated T1-only test (own
+    preregistration) per the steering order."
   experiments_blocked: []
-  conclusion: ""
-supersedes: null
-next_permitted_experiment: "Track B condition 3 review on the T02
-  verdict"
-revision: ""
+  conclusion: "Trained T2 manifests the architecture-vs-training
+    signal on held-out tasks at D5p (hellaswag +21.76 sd — the
+    first held-out LRN evidence; T01's null fully explained by its
+    near-FP16 Gaussian eval base) but loses to the best trained
+    comparator (int8) on every task -> the frozen AF5 threshold is
+    NOT met; Track B condition 3 stays blocked. Verdict:
+    research/residual-pareto/experiments/EXP-RPM-T02/verdict.md."
+status: DECIDED
+decision: FAIL
+grade: B
 run_namespace: "runs/r/EXP-RPM-T02/<timestamp>/"
 freeze_exception:
   change: "New driver examples/t02_af5_tournament.py (TWN-capable

@@ -1,0 +1,13 @@
+{
+  "experiment": "EXP-RPM-T02",
+  "adapters_root": "runs/r/EXP-RPM-D5p/20260824T144239Z",
+  "adapter_sha256": {
+    "t2_ternary": "b9c7269f876938128568d6f92eb7a8821c0782e9fbf9788673ba56a941f790c0",
+    "int4_residual": "4a633b228192f0cd5be800352fdfa6382e209a370b3be2e63aeff76ebc6e79f6",
+    "int8_residual": "8e23868d9f8b520b440538ac99b7dd1078e28f48f39d5b55127dc0173863fc5c",
+    "lora": "3917cde4120e6265c72f368e5ff2688833739d1f082a6af71b79f538b45a579e",
+    "dense_adapter": "46cae4e137248265b097fb28f0204bfe1c64c047a49dc63a279ba484cbaba4c3",
+    "random_t2_ternary": "f2dc9ce78e3297d3395df45669d3c8cb0afe08ede436e0f4903413bb890cae7e",
+    "random_lora": "0393638fe1d2f76ea3fedc179567d44ec7a09bb99336af93694e4c2c0c391859"
+  }
+}

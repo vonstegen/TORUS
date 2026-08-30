@@ -21,11 +21,27 @@ supporting_experiments:
     decision: FAIL (LRN axis)
     effect: "L15 down_proj under Gaussian sigma=1.00 (n=3 seeds). Trained T2 LOSES to random T2 on arc_easy (-2.15 sigma) and lambada_openai (-2.26 sigma), with only wikitext within noise. The LRN fail threshold (T2 << random T2 on >=2 of 3 metrics) is triggered. LRN inverts at high Gaussian damage."
   - id: Stage 4 EXP-RPM-T01
-    decision: NULL (LRN axis on held-out tasks)
-    effect: "AF2-D / D1p held-out capability tasks (hellaswag, winogrande, boolq, openbookqa): trained T2 vs random T2 max z +0.29 sigma on openbookqa. LRN fails to manifest on held-out tasks even at the AF2-D site where it was positive on the in-distribution calibration tasks."
+    decision: NULL (LRN axis on held-out tasks) — SUPERSEDED INTERPRETATION 2026-08-30
+    effect: "AF2-D / D1p held-out capability tasks: trained T2 vs
+      random T2 max z +0.29 sigma. EXP-RPM-T02-PROBE established
+      that T01's eval driver applied Gaussian sigma=0.20 (CAL ppl
+      13.13 ~ FP16) despite the manifest's TWN D1p — the null was
+      a near-undamaged eval base, not held-out-task insensitivity.
+      At the properly damaging D5p regime (TWN thr 0.6, base ppl
+      697), trained T2 vs random T2 on held-out tasks is
+      POSITIVE: hellaswag +21.76 sd, boolq +1.48 sd, openbookqa
+      +1.23 sd, winogrande +0.84 sd (EXP-RPM-T02)."
+  - id: EXP-RPM-T02 (AF5 tournament at D5p)
+    decision: LRN POSITIVE on held-out tasks; AF5 gate FAIL (r3)
+    effect: "First held-out-task LRN evidence: at D5p TWN damage,
+      trained T2 recovers hellaswag 0.426->0.585 (+21.76 sd over
+      random T2) — the random structural prior recovers +0.008.
+      LRN extends to held-out tasks at catastrophic AF2-D TWN
+      severity. HOWEVER the frozen AF5 threshold is not met: T2
+      loses to the best trained comparator (int8_residual) on all
+      4 tasks (r3: 0/4). Held-out LRN value is real but not
+      competitive at matched storage."
   - id: EXP-RPM-AF2D-SEVERITY (Stage 2 v6)
-    decision: CONFIRMED_AT_AF2D_TWN_BAND
-    effect: "AF2-D down_proj under TWN damage-severity sweep {0.6, 0.7, 0.8, 0.9, 1.0} (n=3 seeds, all 105 cells). Trained T2 vs random T2 z-scores on all 3 capability metrics at every threshold (z 10-1687 sigma; trained T2 dramatically recovers ppl 30→18 across thresholds while random T2 stays 80-680). The LRN operating band at AF2-D TWN is the full preregistered range. State promoted to CONFIRMED_AT_AF2D_TWN_BAND. Damage TYPE (TWN vs Gaussian) is the relevant axis for LRN absence, not damage magnitude within a single damage type."
 unlock_rules_affected: ["Track B oracle gating (B1) — REPLACES A-RP-002 as the gate dependency for learned adaptive precision"]
 history:
   - date: "2026-08-25"
@@ -33,5 +49,27 @@ history:
     cause: "Decomposed from A-RP-002 per H-RPM-FRAMEWORK-PROPOSAL in response to evidence that LRN is positive at AF2-D TWN damage (Stage 1 / 1.5) but null or inverted at other tested sites (Stage 2 v2/v3/v4 L15 Gaussian; Stage 4 EXP-RPM-T01 held-out tasks). Track B gating now depends on LRN, not the composite A-RP-002. LRN operating band is currently bounded by the AF2-D TWN regime and is NOT yet mapped across damage severity. EXP-RPM-AF2D-SEVERITY (pending) is the next experiment to map the LRN boundary."
   - date: "2026-08-26"
     transition: "REGIME_CONDITIONAL -> CONFIRMED_AT_AF2D_TWN_BAND"
-    cause: "EXP-RPM-AF2D-SEVERITY (Stage 2 v6): 5 thresholds x 5 arms x 3 seeds = 105 cells at AF2-D TWN. Trained T2 vs random T2 >=+2 sigma on all 3 capability metrics at every preregistered threshold. LRN operating band at AF2-D TWN damage-severity is the full preregistered range. State renamed to CONFIRMED_AT_AF2D_TWN_BAND because the claim is now confirmed at a specific site/damage-type band. Damage-type axis (TWN vs Gaussian vs held-out) is the relevant axis for LRN absence, not damage-magnitude within a single damage type."
+    cause: "EXP-RPM-AF2D-SEVERITY (Stage 2 v6): 5 thresholds x 5
+      arms x 3 seeds = 105 cells at AF2-D TWN. Trained T2 vs
+      random T2 >=+2 sigma on all 3 capability metrics at every
+      preregistered threshold. LRN operating band at AF2-D TWN
+      damage-severity is the full preregistered range. State
+      renamed to CONFIRMED_AT_AF2D_TWN_BAND because the claim is
+      now confirmed at a specific site/damage-type band.
+      Damage-type axis (TWN vs Gaussian vs held-out) is the
+      relevant axis for LRN absence, not damage-magnitude within
+      a single damage type."
+  - date: "2026-08-30"
+    transition: "annotation (no state change): held-out-task axis corrected"
+    cause: "EXP-RPM-T02 (AF5 tournament at D5p, run
+      20260830T211744Z): the T01 held-out NULL was regime-
+      miscalibrated (Gaussian sigma=0.2 ~ FP16 eval base). At D5p
+      TWN (base ppl 697) trained T2 vs random T2 is POSITIVE on
+      held-out tasks (hellaswag +21.76 sd — first held-out-task
+      LRN evidence). The band characterization widens: LRN at
+      AF2-D TWN extends to held-out capability at catastrophic
+      severity. The frozen AF5 gate itself fails on r3 (T2 loses
+      to int8 on 4/4) — held-out value real, not competitive.
+      Verdict: research/residual-pareto/experiments/EXP-RPM-T02/
+      verdict.md."
 conclusion: "The LRN axis is REGIME_CONDITIONAL across site/damage-type combinations but CONFIRMED_AT_AF2D_TWN_BAND specifically: at AF2-D TWN damage-severity {0.6, 0.7, 0.8, 0.9, 1.0}, trained T2 dramatically recovers capability (ppl 30->18) while random T2 does not (ppl 80-680). The LRN operating band at AF2-D TWN is the full preregistered range. Damage TYPE (TWN vs Gaussian vs held-out tasks) is the relevant axis for LRN absence; damage MAGNITUDE within a single damage type does not modulate LRN. Track B adaptive precision can now proceed within the AF2-D TWN band; extrapolation to other regimes is unsupported by current evidence."

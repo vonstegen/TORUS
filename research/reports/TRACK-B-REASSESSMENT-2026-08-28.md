@@ -99,3 +99,29 @@ no grid expansion — exclusions frozen). Condition 3 (AF5) is now
 the only unblock path with a registered attack: a damage regime
 that actually moves held-out-task capability, per T01's own
 diagnosis, then the preregistered AF5 threshold applies.
+
+## Addendum 2, 2026-08-30 — condition 3: AF5 rerun at D5p DECIDED FAIL (definitive)
+
+EXP-RPM-T02-PROBE (20260830T204622Z, DECIDED REGIMES_FOUND) and
+EXP-RPM-T02 (20260830T211744Z, DECIDED FAIL) resolve condition 3:
+
+1. **T01's null was regime-miscalibrated.** T01's eval driver
+   applied Gaussian σ=0.20 (CAL ppl 13.13 ≈ FP16) despite its
+   manifest's TWN D1p. At real TWN damage the damaged base loses
+   held-out capability at every severity (hellaswag 0.661→0.426 at
+   D5p).
+2. **The architecture-vs-training signal manifests on held-out
+   tasks** at D5p: trained T2 recovers hellaswag 0.426→0.585
+   (+21.76σ vs random T2) — the first held-out-task LRN evidence.
+3. **The frozen AF5 threshold is nevertheless not met**: r3 —
+   T2 wins/ties the best trained comparator — is 0/4; int8_residual
+   beats T2 on every held-out task. No fail trigger fired; this is
+   a threshold miss, not a decisive fail.
+
+Condition 3 stays BLOCKED with definitive evidence: held-out T2
+value is real but below the preregistered AF5 bar. Combined with
+the condition-4 addendum (NO_SECOND_SITE), Track B remains locked
+on both open conditions; the remaining registered attack is the
+dedicated T1-only test (steering order), which addresses neither
+condition 3 nor 4 directly but completes the correction-mechanism
+characterization.

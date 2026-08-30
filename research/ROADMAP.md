@@ -457,19 +457,17 @@ its way into adaptive-gating experiments.
 - [ ] **2.5** `EXP-AF-005` — **AF5 downstream-transfer gate.** Proxy and
       capability metrics on every AF run (classes per 1.4). Task-relevant T2
       value must exceed the preregistered threshold.
-      **2026-08-30: AF5-regime probe preregistered as
-      `EXP-RPM-T02-PROBE`** (`research/residual-pareto/experiments/
-      EXP-RPM-T02-PROBE/manifest.yaml`) — T01's diagnosis (nothing
-      to recover at D1p) motivates finding where the damaged base
-      actually loses held-out capability: damaged-base-only eval of
-      {hellaswag, winogrande, boolq, openbookqa} × {FP16,
-      D1p..D5p} on the AF2-D TWN band (24 cells). Frozen rules:
-      qualify = ≥1 task drops ≥ max(3×stderr, 0.02) below FP16;
-      D1p near-FP16 verification gate; selection = largest summed
-      drop (tie → more severe). The AF5 tournament (EXP-RPM-T02) is
-      a separate preregistration at the selected regime, reusing
-      the sha256-pinned Stage 1.5 adapters + the frozen T01
-      thresholds.
+      **2026-08-30: EXP-RPM-T02-PROBE DECIDED REGIMES_FOUND → D5p
+      (thr 0.6, base ppl 697); EXP-RPM-T02 DECIDED FAIL.** The
+      probe found held-out capability degrades at every TWN
+      severity AND that T01's null was regime-miscalibrated (its
+      eval driver applied Gaussian σ=0.2 ≈ FP16 — T01's verdict
+      carries the correction). The T02 tournament at D5p produced
+      the first held-out-task LRN evidence (hellaswag +21.76σ vs
+      random T2) but FAILED the frozen AF5 threshold on r3: T2
+      loses to int8_residual on all 4 tasks. Track B condition 3
+      stays blocked with definitive evidence. Next: dedicated
+      T1-only test per the steering order.
 - [x] **2.6** `EXP-AF-006(b)` — **AF6 dataset/context robustness.**
       **Done 2026-08-28 (EXP-AF-006b): DECIDED — general effect, not a
       window/corpus artifact.** EXP-AF-006 DECIDED INVALID
