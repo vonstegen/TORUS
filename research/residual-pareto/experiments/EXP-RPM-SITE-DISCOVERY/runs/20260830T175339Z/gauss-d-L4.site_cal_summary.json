@@ -1,0 +1,66 @@
+{
+  "site_id": "gauss-d-L4",
+  "n_knobs": 6,
+  "n_seed_cells": 18,
+  "knob_to_ppl": [
+    {
+      "knob": 0.0,
+      "n_seeds": 3,
+      "ppl_mean": 13.093198488512625,
+      "ppl_stderr": 0.0,
+      "ppl_min": 13.093198488512625,
+      "ppl_max": 13.093198488512625
+    },
+    {
+      "knob": 0.05,
+      "n_seeds": 3,
+      "ppl_mean": 13.095631208027191,
+      "ppl_stderr": 0.0,
+      "ppl_min": 13.095631208027191,
+      "ppl_max": 13.095631208027191
+    },
+    {
+      "knob": 0.1,
+      "n_seeds": 3,
+      "ppl_mean": 13.102312807821482,
+      "ppl_stderr": 0.0,
+      "ppl_min": 13.102312807821482,
+      "ppl_max": 13.102312807821482
+    },
+    {
+      "knob": 0.2,
+      "n_seeds": 3,
+      "ppl_mean": 13.130203477299572,
+      "ppl_stderr": 0.0,
+      "ppl_min": 13.130203477299572,
+      "ppl_max": 13.130203477299572
+    },
+    {
+      "knob": 0.5,
+      "n_seeds": 3,
+      "ppl_mean": 13.340076973735881,
+      "ppl_stderr": 0.0,
+      "ppl_min": 13.34007697373588,
+      "ppl_max": 13.34007697373588
+    },
+    {
+      "knob": 1.0,
+      "n_seeds": 3,
+      "ppl_mean": 14.309280323478902,
+      "ppl_stderr": 0.0,
+      "ppl_min": 14.309280323478902,
+      "ppl_max": 14.309280323478902
+    }
+  ],
+  "ppl_span": 1.2160818349662765,
+  "n_distinct_ppl_bands": 2,
+  "bands_separated": true,
+  "qualifying": false,
+  "baseline_ok": true,
+  "baseline_ppl": 13.093198488512625,
+  "baseline_expect": 13.0932,
+  "max_ppl": 14.309280323478902,
+  "candidate": false,
+  "candidate_reason": "not qualifying",
+  "rule": "QUALIFYING iff >= 3 knob values produce ppl in distinct reproducibility bands (round(ppl,0)) separated by >= 1 ppl unit AND spanning >= 2 ppl units total"
+}

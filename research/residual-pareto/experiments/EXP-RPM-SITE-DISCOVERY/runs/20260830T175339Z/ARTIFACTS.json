@@ -1,0 +1,8 @@
+{
+  "run_timestamp": "20260830T175339Z",
+  "driver_sha": "f1a29df6dfcabdc9ac1296f80caa8ce174035d27",
+  "manifest": "research/residual-pareto/experiments/EXP-RPM-SITE-DISCOVERY/manifest.yaml",
+  "environment": "legion; 2x TITAN RTX; venv .venv; env pinned empirically by bit-exact reference cells (439.2520499 / 429.5512705)",
+  "cells": 239,
+  "note": "ARTIFACTS.json written at summarize time; ref cells pin the run environment"
+}

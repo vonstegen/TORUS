@@ -1,0 +1,66 @@
+{
+  "site_id": "twn-v-L0",
+  "n_knobs": 6,
+  "n_seed_cells": 18,
+  "knob_to_ppl": [
+    {
+      "knob": 0.0,
+      "n_seeds": 3,
+      "ppl_mean": 28.59548363745218,
+      "ppl_stderr": 0.0,
+      "ppl_min": 28.595483637452183,
+      "ppl_max": 28.595483637452183
+    },
+    {
+      "knob": 0.4,
+      "n_seeds": 3,
+      "ppl_mean": 28.59548363745218,
+      "ppl_stderr": 0.0,
+      "ppl_min": 28.595483637452183,
+      "ppl_max": 28.595483637452183
+    },
+    {
+      "knob": 0.6,
+      "n_seeds": 3,
+      "ppl_mean": 45.603594774666725,
+      "ppl_stderr": 0.0,
+      "ppl_min": 45.60359477466672,
+      "ppl_max": 45.60359477466672
+    },
+    {
+      "knob": 0.8,
+      "n_seeds": 3,
+      "ppl_mean": 67.75836213347013,
+      "ppl_stderr": 0.0,
+      "ppl_min": 67.75836213347013,
+      "ppl_max": 67.75836213347013
+    },
+    {
+      "knob": 0.9,
+      "n_seeds": 3,
+      "ppl_mean": 74.01332918997771,
+      "ppl_stderr": 0.0,
+      "ppl_min": 74.01332918997771,
+      "ppl_max": 74.01332918997771
+    },
+    {
+      "knob": 1.0,
+      "n_seeds": 3,
+      "ppl_mean": 26.472047977790385,
+      "ppl_stderr": 0.0,
+      "ppl_min": 26.472047977790385,
+      "ppl_max": 26.472047977790385
+    }
+  ],
+  "ppl_span": 47.54128121218733,
+  "n_distinct_ppl_bands": 5,
+  "bands_separated": true,
+  "qualifying": true,
+  "baseline_ok": true,
+  "baseline_ppl": 13.093198488512625,
+  "baseline_expect": 13.0932,
+  "max_ppl": 74.01332918997771,
+  "candidate": false,
+  "candidate_reason": "mild axis; nothing-to-recover risk (EXP-RPM-T01 and the L0-v / L15 tournament diagnoses)",
+  "rule": "QUALIFYING iff >= 3 knob values produce ppl in distinct reproducibility bands (round(ppl,0)) separated by >= 1 ppl unit AND spanning >= 2 ppl units total"
+}

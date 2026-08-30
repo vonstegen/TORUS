@@ -1,0 +1,66 @@
+{
+  "site_id": "twn-v-L4",
+  "n_knobs": 6,
+  "n_seed_cells": 18,
+  "knob_to_ppl": [
+    {
+      "knob": 0.0,
+      "n_seeds": 3,
+      "ppl_mean": 13.688010624649655,
+      "ppl_stderr": 0.0,
+      "ppl_min": 13.688010624649653,
+      "ppl_max": 13.688010624649653
+    },
+    {
+      "knob": 0.4,
+      "n_seeds": 3,
+      "ppl_mean": 13.688010624649655,
+      "ppl_stderr": 0.0,
+      "ppl_min": 13.688010624649653,
+      "ppl_max": 13.688010624649653
+    },
+    {
+      "knob": 0.6,
+      "n_seeds": 3,
+      "ppl_mean": 13.756667754318363,
+      "ppl_stderr": 0.0,
+      "ppl_min": 13.756667754318363,
+      "ppl_max": 13.756667754318363
+    },
+    {
+      "knob": 0.8,
+      "n_seeds": 3,
+      "ppl_mean": 13.810717497015682,
+      "ppl_stderr": 0.0,
+      "ppl_min": 13.810717497015684,
+      "ppl_max": 13.810717497015684
+    },
+    {
+      "knob": 0.9,
+      "n_seeds": 3,
+      "ppl_mean": 13.934580316525235,
+      "ppl_stderr": 0.0,
+      "ppl_min": 13.934580316525235,
+      "ppl_max": 13.934580316525235
+    },
+    {
+      "knob": 1.0,
+      "n_seeds": 3,
+      "ppl_mean": 14.01634937945793,
+      "ppl_stderr": 0.0,
+      "ppl_min": 14.016349379457932,
+      "ppl_max": 14.016349379457932
+    }
+  ],
+  "ppl_span": 0.328338754808275,
+  "n_distinct_ppl_bands": 1,
+  "bands_separated": true,
+  "qualifying": false,
+  "baseline_ok": true,
+  "baseline_ppl": 13.093198488512625,
+  "baseline_expect": 13.0932,
+  "max_ppl": 14.01634937945793,
+  "candidate": false,
+  "candidate_reason": "not qualifying",
+  "rule": "QUALIFYING iff >= 3 knob values produce ppl in distinct reproducibility bands (round(ppl,0)) separated by >= 1 ppl unit AND spanning >= 2 ppl units total"
+}

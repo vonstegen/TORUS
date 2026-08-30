@@ -552,6 +552,16 @@ advantage (per RPM proposal §13). The current state:
       bands, ≥2-unit span) AND max ppl ≥ 100. Candidates freeze
       before any tournament; a null result annotates A-RP-002
       site-local — no grid expansion.
+      **DONE 2026-08-30: DECIDED NO_SECOND_SITE** (run
+      `runs/r/EXP-RPM-SITE-DISCOVERY/20260830T175339Z`, 239/239
+      cells, refs bit-exact, 13/13 sites valid): 0 candidates — 9
+      sites CAL-qualifying but all mild (max ppl 15.3–74.0);
+      catastrophic damage is pinned to layer 0 (L0-down TWN, L0-v
+      Gaussian). A-RP-002 annotated site-local; RPM-006's
+      layer-category criterion stays unmet; condition 4 stays
+      blocked. Verdict:
+      `research/residual-pareto/experiments/EXP-RPM-SITE-DISCOVERY/
+      verdict.md`.
 - [x] **3.2** `EXP-A-H1` — **Native Hadamard controlled training (discovery
       → confirmation).** Small model (100M–500M),
       matched arms: standard ternary vs. native rotated ternary

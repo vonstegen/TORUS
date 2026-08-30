@@ -12,7 +12,19 @@ date_registered: "2026-08-23"
 state: UNTESTED
 status: ""
 required_evidence: [RPM-D, RPM-L, EXP-RPM-000]
-supporting_experiments: []
+supporting_experiments:
+  - id: "EXP-RPM-SITE-DISCOVERY"
+    decision: "NO_SECOND_SITE (discovery, 2026-08-30)"
+    effect: "PASS+ layer-category criterion (>= 2 layer categories
+      with Pareto-qualifying separation) remains UNMET. The
+      CAL-only sweep (239 cells, 13 sites, refs bit-exact) found 9
+      qualifying-but-MILD sites (max ppl 15.3-74.0 < 100 candidate
+      bar) and 0 candidates: catastrophic damage exists only at
+      layer-0 sites (L0-down TWN, L0-v Gaussian). The activation
+      boundary question therefore cannot be posed away from layer 0
+      with the tested mechanisms. Verdict:
+      research/residual-pareto/experiments/EXP-RPM-SITE-DISCOVERY/
+      verdict.md."
 unlock_rules_affected:
   - "Scientific interpretation of T2's mechanism (learned signal vs structural prior) regardless of Pareto outcome"
 history:

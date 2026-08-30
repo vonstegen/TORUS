@@ -1,0 +1,82 @@
+{
+  "run_dir": "runs/r/EXP-RPM-SITE-DISCOVERY/20260830T175339Z",
+  "reference_cells": [
+    {
+      "site_id": "ref-gauss-v-L0",
+      "knob": 0.5,
+      "frozen_value": 439.252,
+      "band": [
+        438.0,
+        440.0
+      ],
+      "observed": 439.2520498804073,
+      "ok": true
+    },
+    {
+      "site_id": "ref-twn-d-L0",
+      "knob": 0.7,
+      "frozen_value": 429.55,
+      "band": [
+        400.0,
+        460.0
+      ],
+      "observed": 429.5512704717107,
+      "ok": true
+    }
+  ],
+  "references_ok": true,
+  "run_valid": true,
+  "n_sites": 13,
+  "n_candidates": 0,
+  "candidates": [],
+  "candidate_priority": [],
+  "qualifying_non_candidates": [
+    {
+      "site_id": "gauss-d-L1",
+      "reason": "mild axis; nothing-to-recover risk (EXP-RPM-T01 and the L0-v / L15 tournament diagnoses)",
+      "max_ppl": 26.13279855104845
+    },
+    {
+      "site_id": "gauss-d-L12",
+      "reason": "mild axis; nothing-to-recover risk (EXP-RPM-T01 and the L0-v / L15 tournament diagnoses)",
+      "max_ppl": 15.320522607047494
+    },
+    {
+      "site_id": "gauss-v-L1",
+      "reason": "mild axis; nothing-to-recover risk (EXP-RPM-T01 and the L0-v / L15 tournament diagnoses)",
+      "max_ppl": 26.311097787778152
+    },
+    {
+      "site_id": "gauss-v-L12",
+      "reason": "mild axis; nothing-to-recover risk (EXP-RPM-T01 and the L0-v / L15 tournament diagnoses)",
+      "max_ppl": 20.71514142162257
+    },
+    {
+      "site_id": "gauss-v-L15",
+      "reason": "mild axis; nothing-to-recover risk (EXP-RPM-T01 and the L0-v / L15 tournament diagnoses)",
+      "max_ppl": 17.928805669528643
+    },
+    {
+      "site_id": "gauss-v-L2",
+      "reason": "mild axis; nothing-to-recover risk (EXP-RPM-T01 and the L0-v / L15 tournament diagnoses)",
+      "max_ppl": 52.17616422538345
+    },
+    {
+      "site_id": "gauss-v-L4",
+      "reason": "mild axis; nothing-to-recover risk (EXP-RPM-T01 and the L0-v / L15 tournament diagnoses)",
+      "max_ppl": 20.354934209678255
+    },
+    {
+      "site_id": "gauss-v-L8",
+      "reason": "mild axis; nothing-to-recover risk (EXP-RPM-T01 and the L0-v / L15 tournament diagnoses)",
+      "max_ppl": 19.133506642283685
+    },
+    {
+      "site_id": "twn-v-L0",
+      "reason": "mild axis; nothing-to-recover risk (EXP-RPM-T01 and the L0-v / L15 tournament diagnoses)",
+      "max_ppl": 74.01332918997771
+    }
+  ],
+  "invalid_sites": [],
+  "decision": "NO_SECOND_SITE"
+}

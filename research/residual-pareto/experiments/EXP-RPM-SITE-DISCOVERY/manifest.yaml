@@ -221,5 +221,32 @@ prior_runs:
       to serialized per-GPU pairs (one worker per GPU at a time);
       the grid relaunched under a fresh timestamp. The 18 completed
       cells of this run are not decision evidence."
-next_permitted_experiment: ""
-conclusion: ""
+result_summary: "DECIDED NO_SECOND_SITE. 239/239 cells; 13/13 sites
+  valid (baselines in FP16 band); reference cells bit-exact
+  (439.2520499 vs frozen 439.2520; 429.5512705 vs 429.55). 9 of 13
+  sites QUALIFYING but ALL mild: max ppl 15.3-74.0, none >= 100 ->
+  0 candidates. Closest: twn-v-L0 74.0 (thr=0.9, non-monotonic
+  TWN x attention map). Depth gradient: Gaussian v_proj span
+  20070 (L0, pilot) -> 39.1 (L2) -> 7.6 (L12); TWN x v_proj 47.5
+  (L0) -> 0.3 (L4); down_proj max 26.1 anywhere."
+confidence_and_reproduction: "Discovery tier; whole-grid null.
+  Reference cells bit-reproduce the frozen pilot values, pinning
+  the environment; rule implementation covered by 22 unit tests
+  reproducing the four frozen pilot decisions. Run 1
+  (20260830T174505Z) INVALID on a launcher execution defect
+  (concurrent workers per GPU -> CUDA OOM on ref cells); design
+  unchanged, recorded in prior_runs."
+next_permitted_experiment: "Per the steering order: capability-
+  damaging AF5 rerun (Track B condition 3 unblock path 1), then the
+  dedicated T1-only test. No second-site confirmation tournament is
+  permitted (0 candidates); no grid expansion (exclusions frozen)."
+conclusion: "A-RP-002 is site-local within the searched space: the
+  correction phenomenon's damage precondition (catastrophic damage,
+  base ppl >= 100) exists only at layer-0 sites (L0-down TWN, L0-v
+  Gaussian). RPM-006's layer-category criterion stays unmet; Track
+  B condition 4 stays blocked. Verdict:
+  research/residual-pareto/experiments/EXP-RPM-SITE-DISCOVERY/
+  verdict.md."
+status: DECIDED
+decision: NO_SECOND_SITE
+grade: B

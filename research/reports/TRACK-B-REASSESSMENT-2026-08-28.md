@@ -76,3 +76,26 @@ sequential-curriculum assumption from any future B-track design
   (oracle gating), EXP-B-02x (learned gating), EXP-B-03x (OLMoE
   adaptive precision) — all remain locked until conditions 3 and 4
   are met.
+
+## Addendum 2026-08-30 — condition 4: second-site discovery returned NO_SECOND_SITE
+
+EXP-RPM-SITE-DISCOVERY (run `runs/r/EXP-RPM-SITE-DISCOVERY/
+20260830T175339Z`, 239/239 cells, refs bit-exact, 13/13 sites valid,
+verdict `research/residual-pareto/experiments/EXP-RPM-SITE-DISCOVERY/
+verdict.md`) swept the evidence-bounded grid — Gaussian ×
+v_proj@{1,2,4,8,12,15} + down_proj@{1,4,8,12}, TWN × v_proj@{0,4,15}
+— under the frozen candidate rule (CAL-qualifying AND damaged-base
+ppl ≥ 100). Result: **0 candidates.** Nine sites qualify with
+informative-but-mild damage axes (max ppl 15.3–74.0); four do not
+qualify. Catastrophic damage is pinned to layer 0 (L0-down TWN,
+L0-v Gaussian σ≥0.5); the untested TWN×attention pairing is
+informative but never catastrophic (peak 74.0 at thr=0.9, L0).
+
+Consequences: A-RP-002 annotated site-local within the searched
+space (annotation only; CONFIRMED_PASS unchanged); RPM-006's
+layer-category criterion remains unmet; **condition 4 stays
+blocked** and no second-site tournament is permitted (0 candidates,
+no grid expansion — exclusions frozen). Condition 3 (AF5) is now
+the only unblock path with a registered attack: a damage regime
+that actually moves held-out-task capability, per T01's own
+diagnosis, then the preregistered AF5 threshold applies.
