@@ -207,6 +207,19 @@ freeze_exception:
     steering 2026-08-30 (CAL-first second-site discovery)."
 supersedes: null
 result_summary: ""
-confidence_and_reproduction: ""
+prior_runs:
+  - timestamp: '20260830T174505Z'
+    status: INVALID
+    cause: "Launcher execution defect: all 15 site workers were
+      backgrounded concurrently (up to 8 processes per GPU) -> CUDA
+      OOM on the reference cells (driver.log OOM trace in the ref
+      cell dirs). Design and frozen rules unchanged; the smoke cells
+      pre-verified all four driver paths bit-exact (ref-gauss-v-L0
+      sigma=0.5 -> 439.2520499; ref-twn-d-L0 thr=0.7 -> 429.5512705;
+      v_proj sigma=0.0 -> 13.0931985; TWN x v_proj thr=1.0 ->
+      26.472, runs clean with real signal). The launcher was fixed
+      to serialized per-GPU pairs (one worker per GPU at a time);
+      the grid relaunched under a fresh timestamp. The 18 completed
+      cells of this run are not decision evidence."
 next_permitted_experiment: ""
 conclusion: ""

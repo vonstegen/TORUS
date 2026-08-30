@@ -9,7 +9,6 @@
 #
 # Usage:
 #   ./site-discovery-launch.sh              # launch all sites, 2 GPUs
-#   ./site-discovery-launch.sh --foreground # foreground (debug)
 #   ./site-discovery-launch.sh ref-gauss-v-L0   # only that site
 set -uo pipefail
 
@@ -54,11 +53,9 @@ ORDER=(
     twn-v-L4 twn-v-L15
 )
 
-foreground=false
 selected=""
 for arg in "$@"; do
     case "$arg" in
-        --foreground) foreground=true ;;
         --help|-h) sed -n '2,26p' "$0"; exit 0 ;;
         *) selected="$arg" ;;
     esac
@@ -186,26 +183,40 @@ run_reference() {  # <ref_id> <gpu>
         echo "[site-disc] === ref=$ref_id COMPLETE ==="
     } >> "$log" 2>&1
 }
-i=0
-for site_id in "${sites_to_run[@]}"; do
-    gpu=$((i % 2))
-    i=$((i + 1))
-    if [ "$site_id" = "ref-gauss-v-L0" ] || [ "$site_id" = "ref-twn-d-L0" ]; then
-        run_reference "$site_id" "$gpu" &
+# Serialized per-GPU pairs: exactly ONE worker per GPU at a time.
+# (Run 20260830T174505Z INVALID: concurrent launch of all 15 workers
+# put up to 8 processes per GPU -> CUDA OOM on the reference cells.)
+_is_ref() {
+    [ "$1" = "ref-gauss-v-L0" ] || [ "$1" = "ref-twn-d-L0" ]
+}
+idx=0
+n_sites=${#sites_to_run[@]}
+while [ "$idx" -lt "$n_sites" ]; do
+    s0="${sites_to_run[$idx]}"
+    idx=$((idx + 1))
+    if _is_ref "$s0"; then
+        run_reference "$s0" 0 &
     else
-        run_site "$site_id" "$gpu" &
+        run_site "$s0" 0 &
     fi
-    pids+=($!)
-    if $foreground; then
-        wait "${pids[-1]}"
-        pids=()
+    p0=$!
+    if [ "$idx" -lt "$n_sites" ]; then
+        s1="${sites_to_run[$idx]}"
+        idx=$((idx + 1))
+        if _is_ref "$s1"; then
+            run_reference "$s1" 1 &
+        else
+            run_site "$s1" 1 &
+        fi
+        p1=$!
+    else
+        p1=""
+    fi
+    wait "$p0"
+    if [ -n "$p1" ]; then
+        wait "$p1"
     fi
 done
 
-if ! $foreground; then
-    echo "[site-disc] launched ${#pids[@]} workers; wait with:"
-    echo "[site-disc]   tail -f $LOG_DIR/*_${TS}.log"
-    wait
-    echo "[site-disc] all workers done at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    echo "[site-disc] summarize: .venv/bin/python site-discovery-summarize.py --run-dir $RUN_DIR"
-fi
+echo "[site-disc] all workers done at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+echo "[site-disc] summarize: .venv/bin/python site-discovery-summarize.py --run-dir $RUN_DIR"
