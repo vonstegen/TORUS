@@ -597,8 +597,8 @@ def save_state_and_materialize(arm: str, run_dir: str,
     Called in-process from train() with the live model; the CLI mode
     rebuilds from the saved state (fallback path)."""
     from transformers import OPTConfig, OPTForCausalLM
-
     run_dir = Path(run_dir)
+    run_dir.mkdir(parents=True, exist_ok=True)
     if model is None:
         model, h, linear_modules, tokenizer = build_arm(arm, "cpu")
         model.load_state_dict(torch.load(run_dir / f"{arm}_state.pt",
