@@ -298,3 +298,26 @@ def test_audit_materialize_crosscheck_invalid(tmp_path) -> None:
                                     xcheck_nats=0.5))
     assert result["verdict"] == "INVALID"
     assert any("cross-check" in f for f in result["integrity_failures"])
+
+
+
+def test_materialize_unties_embeddings(tmp_path) -> None:
+    """The materialized checkpoint must keep the trained fp32
+    embeddings independent of the ternary lm_head W_eff (OPT's
+    tie_word_embeddings shares storage; load_state_dict with a tie
+    lets the last key overwrite both)."""
+    pytest.importorskip("transformers")
+    model, h, linear_modules, _ = ah1.build_arm("control", "cpu")
+    with torch.no_grad():
+        # move trained params a little so embed != lm_head W_eff clearly
+        model.model.decoder.embed_tokens.weight.add_(1.0)
+    ah1.save_state_and_materialize("control", str(tmp_path / "arm"),
+                                   model, linear_modules)
+    from transformers import AutoModelForCausalLM
+    loaded = AutoModelForCausalLM.from_pretrained(
+        str(tmp_path / "arm" / "final_hf"), torch_dtype=torch.float32)
+    embed = loaded.model.decoder.embed_tokens.weight.detach()
+    lm_head = loaded.lm_head.weight.detach()
+    assert not torch.allclose(embed, lm_head)
+    assert torch.allclose(embed, model.model.decoder.embed_tokens.weight
+                          .detach(), atol=1e-6)

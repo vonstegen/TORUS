@@ -607,6 +607,7 @@ def save_state_and_materialize(arm: str, run_dir: str,
     torch.save({k: v.detach().cpu() for k, v in model.state_dict().items()},
                run_dir / f"{arm}_state.pt")
     config = OPTConfig.from_pretrained(MODEL_ID)
+    config.tie_word_embeddings = False
     stock = OPTForCausalLM(config)
     sd = dict(stock.state_dict())
     # trained embeddings/norms/pos/bias: copy from trained model
