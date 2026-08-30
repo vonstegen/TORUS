@@ -178,6 +178,9 @@ def main(argv: list[str] | None = None) -> int:
     args = p.parse_args(argv)
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
     import torch
     from transformers import AutoTokenizer
 
