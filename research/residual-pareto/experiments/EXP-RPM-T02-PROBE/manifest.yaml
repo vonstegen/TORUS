@@ -1,0 +1,141 @@
+id: EXP-RPM-T02-PROBE
+title: "AF5-regime probe — where does held-out capability actually degrade on the damaged base?"
+track: R
+subtrack: RPM-T (task robustness; AF5 gate — condition 3 unblock path 1)
+tier: discovery
+status: PREREGISTERED
+date_proposed: '2026-08-30T21:30:00Z'
+owner: research harness
+claims_addressed: [RPM-001, A-RP-LRN]
+rationale: |
+  Track B condition 3 (AF5 task-relevant T2 value) is BLOCKED:
+  EXP-RPM-T01 (AF5 at AF2-D D1p) failed with T2 vs random_t2 >= +1
+  sigma on 0 of 4 held-out tasks, and T01's own diagnosis was that
+  the D1p damaged base was already near FP16 on those tasks — the
+  correction had nothing to recover. Per the 2026-08-28 reassessment
+  and the user's steering chain (capability-damaging AF5 rerun after
+  CAL), this probe finds a regime where the damaged base actually
+  LOSES held-out capability, so the AF5 tournament can be run where
+  the correction has room to act.
+
+  Bounds: EXP-RPM-SITE-DISCOVERY (2026-08-30) pinned catastrophic
+  damage to two sites: L0-down TWN and L0-v Gaussian. The
+  architecture-vs-training separation (trained T2 >> random T2) is
+  demonstrated ONLY on the AF2-D TWN band (Stage 2 v6/v7, thresholds
+  0.6-1.0); the L0-v tournament failed that axis at every tested
+  sigma. The AF5 gate therefore targets the AF2-D TWN severity axis
+  where the correction phenomenon is evidenced. L0-v excluded
+  (preregistered reason: its tournament failed architecture-vs-
+  training — trained ~ random — so an AF5 pass there is excluded by
+  that axis regardless of base degradation).
+hypothesis: |
+  At least one regime in the preregistered AF2-D TWN severity band
+  {D1p (thr 1.0), D2' (0.9), D3' (0.8), D4' (0.7), D5' (0.6)} moves
+  at least one held-out task (hellaswag / winogrande / boolq /
+  openbookqa) off its FP16 score by >= max(3 x stderr, 0.02).
+  Additionally, D1p reproduces T01's diagnosis: near-FP16 on all 4
+  tasks (|FP16 - D1p| <= 2 x stderr on >= 3 of 4).
+kill_criteria: |
+  - REGIME QUALIFIES iff >= 1 of 4 held-out tasks drops by
+    >= max(3 x stderr_max, 0.02) below FP16, where stderr_max =
+    max(FP16 stderr, regime stderr) from lm-eval's per-task stderr.
+  - Probe verification gate: D1p must be near-FP16
+    (|FP16 - D1p| <= 2 x stderr on >= 3 of 4 tasks; T01's diagnosis).
+    Violation -> probe INVALID (environment or instrument drift).
+  - Any cell failing to complete -> probe INVALID (rerun cleanly).
+  - Budget: 3 GPU-h for the whole probe (24 evals, ~90-100 min
+    expected on one GPU). Overrun -> abort.
+  - Regime selection for the AF5 rerun (frozen here): among
+    qualifying regimes, the one with the largest summed drop over
+    the 4 tasks (ties -> the more severe threshold). The AF5
+    tournament (EXP-RPM-T02, a separate preregistration) then runs
+    at that regime reusing the sha256-pinned Stage 1.5 adapters.
+  - 0 qualifying regimes -> the AF5 rerun cannot be posed on the
+    preregistered band; recorded as evidence that the held-out
+    tasks are insensitive to AF2-D TWN severity at every calibrated
+    level (condition 3 evidence), no regime expansion.
+expected_artifacts:
+  - runs/r/EXP-RPM-T02-PROBE/<ts>/<regime>/<task>/eval.summary.json
+  - runs/r/EXP-RPM-T02-PROBE/<ts>/<regime>/<task>/eval.full.json
+  - runs/r/EXP-RPM-T02-PROBE/<ts>/probe_summary.json (per-regime
+    per-task scores + stderr + drops + qualifying verdicts)
+  - runs/r/EXP-RPM-T02-PROBE/<ts>/ARTIFACTS.json (driver SHA)
+artifact_paths: []
+contamination_risks: []
+experiment:
+  model: allenai/OLMo-1B-0724-hf
+  site: model.layers.0.mlp.down_proj
+  dtype: float16
+  eval_dtype: float16
+  damage: TWN (--damage-ptq group_size=128 calibrate_norm=False),
+    deterministic (no seed dependence); damaged weight frozen
+  regimes:
+    - id: fp16
+      threshold: null
+      calibration_ppl: 13.09
+    - id: D1p
+      threshold: 1.0
+      calibration_ppl: 88.31
+    - id: D2p
+      threshold: 0.9
+      calibration_ppl: 203.60
+    - id: D3p
+      threshold: 0.8
+      calibration_ppl: 303.06
+    - id: D4p
+      threshold: 0.7
+      calibration_ppl: 429.55
+    - id: D5p
+      threshold: 0.6
+      calibration_ppl: 697.29
+  held_out_tasks:
+    - task: hellaswag
+      metric: acc_norm
+      n_shots: 0
+    - task: winogrande
+      metric: acc
+      n_shots: 0
+      subset: winogrande_xl
+    - task: boolq
+      metric: acc
+      n_shots: 0
+    - task: openbookqa
+      metric: acc_norm
+      n_shots: 0
+  eval_protocol:
+    batch_size: 16
+    limit: null
+  cells: 24 (6 regimes x 4 tasks)
+exclusions:
+  - "L0-v Gaussian sigma in {0.5, 1.0}: the discovery pinned it as
+    the only other catastrophic site, but its tournament failed the
+    architecture-vs-training axis (trained ~ random T2) at every
+    tested sigma — an AF5 pass there is excluded by that axis
+    regardless of base degradation."
+  - "Mechanisms beyond TWN on the AF2-D band: Stage 3 v2 bounded
+    catastrophic damage at this site to {TWN, Gaussian} and the
+    Gaussian axis there is not qualifying (span 2.26)."
+decision_logic_summary: |
+  Frozen probe rules: qualify rule + D1p verification gate above.
+  - >= 1 qualifying regime -> DECIDED REGIME(S) FOUND; the frozen
+    selection rule (largest summed drop, tie -> more severe) names
+    the AF5 tournament regime. EXP-RPM-T02 is preregistered
+    separately at that regime (T01 protocol + frozen T01
+    thresholds: T2 vs random_t2 >= +1 sigma on >= 3 of 4 tasks,
+    etc.).
+  - 0 qualifying regimes -> DECIDED NO_REGIME; held-out tasks
+    insensitive to AF2-D TWN severity; condition 3 evidence
+    recorded; no regime expansion.
+freeze_exception:
+  change: "New eval-only driver examples/t02_regime_probe.py (damage
+    + held-out-task eval; reuses the tournament driver's frozen TWN
+    damage function) + launcher t02-probe-launch.sh + tests."
+  justification: "Required to execute the preregistered probe; no
+    torus/ core, AF machinery, or eval_lm.py changes."
+  approved_by: "harness rule (OPERATING-PLAN section 1) + user
+    steering 2026-08-30 chain (capability-damaging AF5 after CAL)."
+supersedes: null
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+conclusion: ""
