@@ -94,11 +94,24 @@ def apply_bars(arm_a: dict[str, tuple[float, float]],
 
 # ---- CLI --------------------------------------------------------------
 
+
+def _extract_eval(pre: dict, task: str) -> float:
+    """Extract the metric value from a raw simple_evaluate dict.
+
+    Mirrors the tournament driver's pre_train_eval_if_damaged:
+    first non-stderr key containing 'acc' or 'word_perplexity'.
+    """
+    for k, v in pre["results"][task].items():
+        if "_stderr" in k:
+            continue
+        if "acc" in k or "word_perplexity" in k:
+            return float(v)
+    raise KeyError(f"no metric found for {task}: {pre['results'][task]}")
+
+
 def _damage(model, target):
     from examples.af2_storage_tournament import damage_target_module
     damage_target_module(target, group_size=128, threshold=0.7)
-
-
 def _patch_sign_ste(module, w0):
     """Replace module.forward: weight = sign(c) * s (frozen scales).
 
@@ -175,7 +188,8 @@ def main(argv: list[str] | None = None) -> int:
         pre = eval_arm(model, tokenizer,
                        tasks=["wikitext", "arc_easy", "lambada_openai"],
                        batch_size=4)
-        pre_summary = {k: v["value"] for k, v in pre["tasks"].items()}
+        pre_summary = {task: _extract_eval(pre, task)
+                       for task in METRICS}
         (seed_dir / "pre_train_eval.json").write_text(
             json.dumps(pre_summary, indent=2))
         band_ok = (PRE_TRAIN_BAND[0] <= pre_summary["wikitext"]
@@ -214,11 +228,11 @@ def main(argv: list[str] | None = None) -> int:
         armA_dir.mkdir(exist_ok=True)
         (armA_dir / "history.jsonl").write_text(
             "\n".join(json.dumps(h) for h in histA))
+        evalA_summary = {task: _extract_eval(evalA, task)
+                          for task in METRICS}
         (armA_dir / "eval.summary.json").write_text(
-            json.dumps({k: v["value"] for k, v in evalA["tasks"].items()},
-                       indent=2))
-        per_seed[seed_s]["t1_only_fp16"] = {
-            k: v["value"] for k, v in evalA["tasks"].items()}
+            json.dumps(evalA_summary, indent=2))
+        per_seed[seed_s]["t1_only_fp16"] = evalA_summary
         print(f"[af1d] seed {seed} armA: "
               f"{per_seed[seed_s]['t1_only_fp16']}", flush=True)
         del modelA
@@ -253,11 +267,11 @@ def main(argv: list[str] | None = None) -> int:
         armB_dir.mkdir(exist_ok=True)
         (armB_dir / "history.jsonl").write_text(
             "\n".join(json.dumps(h) for h in histB))
+        evalB_summary = {task: _extract_eval(evalB, task)
+                          for task in METRICS}
         (armB_dir / "eval.summary.json").write_text(
-            json.dumps({k: v["value"] for k, v in evalB["tasks"].items()},
-                       indent=2))
-        per_seed[seed_s]["t1_only_ternary"] = {
-            k: v["value"] for k, v in evalB["tasks"].items()}
+            json.dumps(evalB_summary, indent=2))
+        per_seed[seed_s]["t1_only_ternary"] = evalB_summary
         print(f"[af1d] seed {seed} armB: "
               f"{per_seed[seed_s]['t1_only_ternary']}", flush=True)
         del modelB
