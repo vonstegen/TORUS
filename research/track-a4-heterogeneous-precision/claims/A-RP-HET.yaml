@@ -1,0 +1,60 @@
+id: A-RP-HET
+claim_version: 1
+track: A
+title: "H2 — evidence-directed heterogeneous precision: selective precision retention at measured sensitivity sites beats uniform low-bit allocation"
+statement: "A heterogeneous-precision model that retains higher precision
+  ONLY at empirically measured sensitivity sites (first protected
+  region: model.layers.0.mlp.down_proj — the layer-0 damage locus)
+  and uses ternary representation where the model tolerates it,
+  retains downstream capability better than a uniform ternary
+  allocation at matched training budget, while remaining
+  competitive with uniform INT8 on capability AND on actual
+  physical footprint (packed codes + scales + metadata +
+  protected weights, serialized bytes measured from Run 0)."
+quantitative_thresholds:
+  - "H-bar: hetero beats uniform ternary by > 2 sd-of-difference on
+    >= 2 of 3 ladder metrics (wikitext ppl, arc_easy,
+    lambada_openai) with no >= 2 sigma regression on the third."
+  - "C1-bar: hetero is not worse than uniform INT8 by > 2
+    sd-of-difference on ANY ladder metric AND its measured
+    serialized footprint is <= the INT8 arm's."
+  - "C2-check: hetero's deficit vs the equal-budget FP16
+    continuation is not meaningfully larger than INT8's (per-metric
+    z within 2 of the INT8 arm's)."
+  - "FAIL: either kill bar misses -> H2 dies at discovery tier; A4
+    closes quickly (no robustness sweep, curriculum search, or
+    scale-up on perplexity alone)."
+date_registered: "2026-08-30"
+state: TESTING
+required_evidence:
+  - "EXP-A4-001 (discovery): PASS requires H-bar AND C1-bar AND
+    C2-check at n=3 seeds. Only a PASS authorizes site expansion,
+    robustness, kernel work, and scaling. A FAIL closes A4."
+supporting_experiments:
+  - id: "EXP-RPM-SITE-DISCOVERY"
+    decision: "NO_SECOND_SITE (motivating evidence)"
+    effect: "The layer-0 damage locus: catastrophic damage exists
+      only at layer 0 under {TWN, Gaussian}; deeper layers are
+      robust to every tested mechanism — direct evidence that the
+      model does not need uniform precision treatment."
+  - id: "EXP-A-011 / Stage 1-3"
+    decision: "motivating evidence"
+    effect: "The sensitivity gradient across layers (L0 down_proj
+      catastrophic; L8/L15 degenerate) bounds where precision is
+      needed."
+history:
+  - date: "2026-08-30"
+    transition: "UNTESTED -> TESTING"
+    cause: "User selection of Hypothesis 2 = evidence-directed
+      heterogeneous precision (A4), from the program synthesis
+      (TORUS-PROGRAM-SYNTHESIS-2026-08-30.md section 5): the only
+      surviving architecture both directly motivated by TORUS's
+      strongest structural evidence (the depth gradient) and
+      untested head-to-head against the baselines that now define
+      success. The first protected region is layer 0
+      (evidence-backed); the final protected set (embeddings,
+      norms, other projections) is deliberately left open pending a
+      discovery PASS. Track C remains alive but separate and does
+      not compete with H2 for interpretation of the same evidence."
+unlock_rules_affected: []
+conclusion: ""

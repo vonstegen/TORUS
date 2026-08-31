@@ -1,0 +1,152 @@
+id: EXP-A4-001
+title: "H2 discovery — heterogeneous precision vs uniform low-bit allocation (hostile first experiment)"
+track: A
+subtrack: A4 (heterogeneous layer precision)
+tier: discovery
+status: PREREGISTERED
+date_proposed: '2026-08-30T23:30:00Z'
+owner: research harness
+claims_addressed: [A-RP-HET]
+rationale: |
+  Hypothesis 2 per the user's selection and the program synthesis
+  (TORUS-PROGRAM-SYNTHESIS-2026-08-30.md): the depth gradient /
+  layer-0 damage locus suggests the model does not need uniform
+  precision treatment. H2 asks whether precision allocated ONLY
+  where sensitivity is measured beats uniform allocation, instead
+  of asking ternary to work everywhere and repairing damage
+  afterward. This is deliberately the smallest, most hostile
+  experiment that can answer whether H2 deserves a program branch:
+  no robustness sweep, no curriculum search, no scale-up on ppl
+  alone. Track C remains alive but separate; it does not compete
+  with H2 for interpretation of this evidence.
+
+  Physical accounting is part of Run 0: every arm reports nominal
+  bits/weight AND actual serialized bytes (packed codes + per-group
+  scales + metadata + protected FP16 weights), measured by the
+  driver from the structures it writes — metadata, packing
+  alignment, and protected weights are never allowed to vanish from
+  the comparison.
+hypothesis: |
+  At matched training budget and joint-training structure (C5), the
+  heterogeneous arm — ternary (per-group absmean, threshold 0.0,
+  group 128, STE-trained) on all linear weights EXCEPT the
+  protected site model.layers.0.mlp.down_proj (kept and trained in
+  FP16) — beats the uniform ternary arm on capability (H-bar) and
+  is not worse than the uniform INT8 arm on capability or on
+  measured serialized footprint (C1-bar), with a continuation
+  deficit no worse than INT8's (C2-check). If either kill bar
+  misses, H2 dies at discovery tier and A4 closes quickly.
+kill_criteria: |
+  - Gate 1 (environment): fp16_reference wikitext ppl within
+    |ppl - 13.0932| <= 0.2 (the frozen program baseline).
+    Violation -> run INVALID.
+  - Gate 2 (quantizer biting): uniform_ternary step-0 wikitext
+    ppl >= 100 (whole-model ternary PTQ is catastrophic — sanity
+    that the quantizer actually bites). Violation -> run INVALID.
+  - H-bar (KILL): z(hetero better than uniform ternary) > 2
+    sd-of-difference on >= 2 of 3 ladder metrics (wikitext ppl,
+    arc_easy, lambada_openai) AND no metric z < -2. Miss -> FAIL.
+  - C1-bar (KILL): z(hetero vs uniform INT8) >= -2 on ALL 3 metrics
+    (hetero not worse beyond noise) AND
+    serialized_bytes(hetero) <= serialized_bytes(int8_uniform).
+    Miss -> FAIL.
+  - C2-check: for every metric, z(hetero vs fp16_continue) >=
+    z(int8 vs fp16_continue) - 2 (hetero's continuation deficit is
+    not meaningfully larger than the INT8 baseline's). Miss ->
+    FAIL.
+  - Decision: PASS iff H-bar AND C1-bar AND C2-check; else FAIL
+    (record per-bar details). A PASS authorizes site expansion,
+    robustness, kernel work, and scaling — nothing before it.
+  - Budget: 8 GPU-h cap; NaN/inf loss in any cell -> that cell
+    INVALID; incomplete cell -> INVALID.
+  - sd-of-difference = sqrt(se_a^2 + se_b^2), per-metric direction
+    (wikitext ppl lower-is-better).
+expected_artifacts:
+  - runs/a/EXP-A4-001/<ts>/seed-00X/<arm>/history.jsonl
+  - runs/a/EXP-A4-001/<ts>/seed-00X/<arm>/eval.summary.json
+  - runs/a/EXP-A4-001/<ts>/seed-00X/<arm>/footprint.json (nominal
+    bpw, packed bytes, scale bytes, protected bytes, metadata
+    bytes, total serialized bytes)
+  - runs/a/EXP-A4-001/<ts>/summary.json (arm x seed means + bar
+    application)
+  - runs/a/EXP-A4-001/<ts>/ARTIFACTS.json (driver SHA)
+artifact_paths: []
+contamination_risks: []
+experiment:
+  model: allenai/OLMo-1B-0724-hf
+  dtype: float16
+  eval_dtype: float16
+  scope: "all nn.Linear weights (attn q/k/v/o, mlp gate/up/down);
+    token embeddings and lm_head kept FP16 in ALL arms (identical
+    across arms; counted identically in every footprint)"
+  protected_site: model.layers.0.mlp.down_proj
+  protected_note: "run 0 protects exactly the demonstrated TWN
+    damage locus. The protected set may extend (embeddings, norms,
+    other projections) only after a discovery PASS authorizes site
+    expansion — layer 0 is the first protected region, not the
+    final solution (user directive)."
+  budget: {n_steps: 500, batch_size: 4, seq_len: 128, lr: 0.001,
+           momentum: 0.9, grad_clip: 1.0}
+  ids_cache: /tmp/wikitext103_train_ids.npy
+  objective: next-token cross-entropy, joint training (C5; no
+    sequential curriculum)
+  seeds: [1, 2, 3]
+  arms:
+    - id: uniform_ternary
+      role: "primary H-bar baseline"
+      definition: "all linears ternary (per-group absmean, thr 0.0,
+        group 128, STE-trained latents init at FP16 weights);
+        everything else FP16, trainable"
+    - id: hetero_ternary
+      role: "the H2 arm"
+      definition: "identical to uniform_ternary EXCEPT
+        model.layers.0.mlp.down_proj unwrapped (FP16, trainable)"
+    - id: int8_uniform
+      role: "C1 storage baseline (kill bar)"
+      definition: "all linears per-row int8 (fp16 row scales,
+        STE-trained), everything else FP16 trainable"
+    - id: int4_uniform
+      role: "descriptive second storage baseline"
+      definition: "all linears per-row int4 (fp16 row scales,
+        STE-trained), everything else FP16 trainable"
+    - id: fp16_continue
+      role: "C2 continuation baseline"
+      definition: "pristine FP16, ALL weights trainable, same
+        budget (A-RP-001 arm-A protocol)"
+    - id: fp16_reference
+      role: "measurement reference, NOT a competitive target;
+        eval-only, no training"
+  tasks: [wikitext, arc_easy, lambada_openai]
+  footprint:
+    nominal_bpw: "reported per arm"
+    serialized_bytes: "packed codes (2 bits per ternary code; 8 per
+      int8; 4 per int4) + fp16 scales (per group for ternary, per
+      row for int8/int4) + per-layer metadata JSON + protected FP16
+      layer weights (hetero) — measured by the driver from the
+      structures it serializes"
+exclusions:
+  - "Robustness sweeps, curriculum search, held-out-task ladders,
+    kernel/benchmark work, and scaling: NOT part of discovery; they
+    require a PASS (user directive)."
+  - "Protected sets beyond L0 down_proj in run 0 (see
+    protected_note)."
+decision_logic_summary: |
+  Apply the frozen bars above to the n=3 arm means. PASS -> H2 gets
+  a program branch (site expansion etc., preregistered separately).
+  FAIL -> A4 closes quickly; recorded per the synthesis C1-C7.
+freeze_exception:
+  change: "New driver examples/a4_hetero_precision.py: whole-model
+    linear quantization wrappers (ternary thr 0.0 group 128 STE;
+    per-row int8/int4 STE) + protected-site exemption + footprint
+    serialization + bar application; reuses the AF1 budget-control
+    training loop and the tournament driver's eval/damage-free
+    build."
+  justification: "Required to execute the preregistered H2
+    discovery; no torus/ core or AF machinery changes."
+  approved_by: "harness rule (OPERATING-PLAN section 1) + user
+    selection of Hypothesis 2 (2026-08-30)."
+supersedes: null
+result_summary: ""
+confidence_and_reproduction: ""
+next_permitted_experiment: ""
+conclusion: ""

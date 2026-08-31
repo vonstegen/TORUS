@@ -1,6 +1,12 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
+**Revision:** 2.25 (2026-08-30) — **Hypothesis 2 = evidence-directed
+  heterogeneous precision (A4).** Claim A-RP-HET (TESTING);
+  EXP-A4-001 preregistered (hostile discovery: hetero vs uniform
+  ternary vs INT8/INT4 vs continuation vs FP16 reference; KILL bars
+  H/C1/C2 from the synthesis constraints; Run-0 physical
+  accounting; PASS-only escalation). Track C alive but separate.
 **Revision:** 2.24 (2026-08-30) — **Experimentation FROZEN at
   `1b271df` pending Hypothesis 2.** Program-level synthesis
   written: `research/reports/TORUS-PROGRAM-SYNTHESIS-2026-08-30.md`
