@@ -1,8 +1,22 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
+**Revision:** 2.23 (2026-08-30) — **Residual-plane branch CLOSED:
+  MECHANISM CONFIRMED / COMPETITIVE ARCHITECTURE NOT SUPPORTED.**
+  Track B FROZEN (conditions 3 and 4 blocked with definitive
+  evidence); no rescue experiments authorized. The mechanism
+  evidence stands (A-RP-LRN incl. held-out hellaswag +21.76σ at
+  D5p; A-RP-002 site-local); the architecture case fails at the
+  competitive baselines (T02: INT8 beats T2 4/4 held-out;
+  AF-001-D: equal-budget continuation −10.9σ arc / −6.9σ lambada).
+  Closure: `research/reports/RESIDUAL-PLANE-CLOSURE-2026-08-30.md`;
+  cross-program synthesis (optimization/representation ≠
+  downstream capability):
+  `research/reports/CROSS-PROGRAM-SYNTHESIS-2026-08-30.md`.
+  Next-architecture gating order (suite doc §15 addendum):
+  mechanism signal → capability check → competitive baseline →
+  robustness → scale.
 **Revision:** 2.22 (2026-08-25) — **Stage 2 v6 EXP-RPM-AF2D-SEVERITY
-- Stage 2 v7 (EXP-RPM-AF2D-CONFIRM-V7): CONFIRMED — boundary confirmation at AF2-D TWN thr {0.6, 0.8, 1.0} with FRESH seeds {4, 5, 6} reproduces the v6 finding. Both LRN and TSP active at all 3 preregistered thresholds. Scientific status: 'reproduced operating band across the full preregistered AF2-D/TWN severity range'.
 - Stage 3 v1 (EXP-RPM-DAMAGE-TYPE-001): DECIDED NARROW — cross-mechanism comparison at AF2-D with magnitude calibration shows T2 is mechanism-specific. T2 RECOVERS TWN damage but ANTI-RECOVERS Gaussian damage at matched magnitude. Track B gating question is now P(T2 helps | damage mechanism × severity × layer × task); T2 occupies sparse-damage-specific region of {mechanism × severity} space.
 - Stage 3 v2 (EXP-RPM-DAMAGE-MAP-V2): DECIDED CALIBRATION_GATE_FAIL — Stage A probe established that MagnitudePrune (max k=0.95 → ppl 22.06) and Dropout (max p=0.99 → ppl 69.07) CANNOT produce catastrophic damage at AF2-D/L0/down_proj. Only {TWN, Gaussian} produce catastrophic damage at this layer. Per manifest kill criterion #2 fallback: report only {TWN, Gaussian} data = exactly Stage 3 v1. New contribution: empirical demarcation of damage-mechanism envelope — T2 is bounded to {TWN, Gaussian}-catastrophic regime. Track B gating question is further bounded to P(T2 helps | mechanism ∈ {TWN, Gaussian} × severity ≥ 0.5 × layer = AF2-D × wikitext task). Next: Phase 1 EXP-A-011 (layer sensitivity at TWN).
 
@@ -178,7 +192,7 @@ point (rerun mandatory).
 | A-Q: downstream language quality | D+/C- | Large gap, esp. LAMBADA-style |
 | A-E: efficiency / Pareto advantage | C / open | Must beat strong INT4/INT8/ternary baselines on measured cost |
 | **Track A overall** | **B-** | Promising mechanism, not yet competitive |
-| Track B: adaptive computation | C+ | Locked pending A-F (see unlock rules) |
+| Track B: adaptive computation | C+ | **FROZEN** (2026-08-30: conditions 3 and 4 blocked with definitive evidence; no rescue experiments authorized; see `research/reports/RESIDUAL-PLANE-CLOSURE-2026-08-30.md`) |
 | Track C: recursive context | B | Strongest subsystem; needs benchmark quality |
 | Hadamard native training | B- / open | Post-hoc path NO-SHIP |
 

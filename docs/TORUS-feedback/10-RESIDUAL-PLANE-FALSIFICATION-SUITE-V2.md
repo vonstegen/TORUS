@@ -437,6 +437,22 @@ should at minimum:
 If these conditions fail, downgrade the conclusion appropriately rather
 than attempting to rescue the architecture with additional complexity.
 
+**Addendum 2026-08-30 (program-level gating order):** the
+residual-plane branch closed under this bar (MECHANISM CONFIRMED /
+COMPETITIVE ARCHITECTURE NOT SUPPORTED — see
+`research/reports/RESIDUAL-PLANE-CLOSURE-2026-08-30.md`). For
+every future TORUS mechanism, the preregistration order is:
+
+> mechanism signal → capability check → competitive baseline →
+> robustness → scale.
+
+The competitive baselines (best matched-storage correction AND
+equal-budget continuation) are evaluated at DISCOVERY tier with
+frozen bars, before robustness or scale spend. Internal metrics
+(KL, training loss, recovery-vs-random, conditioning) are
+diagnostics regardless of their z-scores; a frozen capability-bar
+FAIL closes the line with no rescue. Cross-program synthesis:
+`research/reports/CROSS-PROGRAM-SYNTHESIS-2026-08-30.md`.
 ------------------------------------------------------------------------
 
 ## Recommended integration into TORUS Feedback v2

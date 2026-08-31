@@ -142,3 +142,26 @@ competitive with base retraining (this result) or the equal-storage
 int8 correction (T02). Track B remains locked on conditions 3 and
 4, both with definitive evidence; the 2026-08-30 steering chain is
 complete.
+
+## Addendum 4, 2026-08-30 — Track B FROZEN; residual-plane branch closed (user direction)
+
+Per the user's program-level direction at commit `9c9ac96`:
+
+- **Track B is FROZEN.** Conditions 3 and 4 each carry definitive
+  negative evidence (T02: T2 loses to INT8 on 4/4 held-out tasks
+  at matched storage; site discovery: NO_SECOND_SITE, no grid
+  expansion). No further rescue experiments are authorized.
+- **Residual-plane development is CLOSED as an active
+  architecture.** Program verdict: MECHANISM CONFIRMED /
+  COMPETITIVE ARCHITECTURE NOT SUPPORTED. The mechanism evidence
+  stands (A-RP-LRN, held-out +21.76σ hellaswag at D5p); the
+  architecture case does not (AF-001-D continuation −10.9σ/−6.9σ;
+  T02 INT8 0/4; A-RP-001/003 CONFIRMED_FAIL).
+- **Closure record:** `research/reports/RESIDUAL-PLANE-CLOSURE-2026-08-30.md`;
+  cross-program synthesis of the optimization/representation ≠
+  downstream-capability pattern:
+  `research/reports/CROSS-PROGRAM-SYNTHESIS-2026-08-30.md`.
+- **Next gating order** (suite doc §15 addendum): mechanism signal
+  → capability check → competitive baseline → robustness → scale.
+  The next TORUS hypothesis is chosen only after program-level
+  consolidation.
