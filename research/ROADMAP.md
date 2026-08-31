@@ -1,6 +1,21 @@
 # TORUS Research Roadmap
 
 **Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
+**Revision:** 2.24 (2026-08-30) — **Experimentation FROZEN at
+  `1b271df` pending Hypothesis 2.** Program-level synthesis
+  written: `research/reports/TORUS-PROGRAM-SYNTHESIS-2026-08-30.md`
+  — answers what TORUS established (phenomena / falsifications /
+  instrumentation / open questions), fixes the Hypothesis-2 design
+  constraints (C1–C7), closes residual planes, Hadamard,
+  sequential curriculum, and gating; leaves open
+  ternary/heterogeneous representation per se (A4), Track C, and
+  the harness. Reframing: "What is the minimum additional
+  information and training mechanism required for a ternary model
+  to retain useful downstream capability while producing a genuine
+  storage/compute advantage over conventional low-bit
+  alternatives?" Hypothesis 2 is selected by the user from the
+  synthesis §5 procedure; no experiment is authorized until its
+  manifest is preregistered.
 **Revision:** 2.23 (2026-08-30) — **Residual-plane branch CLOSED:
   MECHANISM CONFIRMED / COMPETITIVE ARCHITECTURE NOT SUPPORTED.**
   Track B FROZEN (conditions 3 and 4 blocked with definitive
@@ -17,6 +32,7 @@
   mechanism signal → capability check → competitive baseline →
   robustness → scale.
 **Revision:** 2.22 (2026-08-25) — **Stage 2 v6 EXP-RPM-AF2D-SEVERITY
+  COMPLETE; LRN/TSP bands confirmed at AF2-D TWN.**
 - Stage 3 v1 (EXP-RPM-DAMAGE-TYPE-001): DECIDED NARROW — cross-mechanism comparison at AF2-D with magnitude calibration shows T2 is mechanism-specific. T2 RECOVERS TWN damage but ANTI-RECOVERS Gaussian damage at matched magnitude. Track B gating question is now P(T2 helps | damage mechanism × severity × layer × task); T2 occupies sparse-damage-specific region of {mechanism × severity} space.
 - Stage 3 v2 (EXP-RPM-DAMAGE-MAP-V2): DECIDED CALIBRATION_GATE_FAIL — Stage A probe established that MagnitudePrune (max k=0.95 → ppl 22.06) and Dropout (max p=0.99 → ppl 69.07) CANNOT produce catastrophic damage at AF2-D/L0/down_proj. Only {TWN, Gaussian} produce catastrophic damage at this layer. Per manifest kill criterion #2 fallback: report only {TWN, Gaussian} data = exactly Stage 3 v1. New contribution: empirical demarcation of damage-mechanism envelope — T2 is bounded to {TWN, Gaussian}-catastrophic regime. Track B gating question is further bounded to P(T2 helps | mechanism ∈ {TWN, Gaussian} × severity ≥ 0.5 × layer = AF2-D × wikitext task). Next: Phase 1 EXP-A-011 (layer sensitivity at TWN).
 
