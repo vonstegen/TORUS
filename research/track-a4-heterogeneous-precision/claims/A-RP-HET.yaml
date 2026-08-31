@@ -25,7 +25,7 @@ quantitative_thresholds:
     closes quickly (no robustness sweep, curriculum search, or
     scale-up on perplexity alone)."
 date_registered: "2026-08-30"
-state: TESTING
+state: FAILED
 required_evidence:
   - "EXP-A4-001 (discovery): PASS requires H-bar AND C1-bar AND
     C2-check at n=3 seeds. Only a PASS authorizes site expansion,
@@ -44,6 +44,18 @@ supporting_experiments:
       needed."
 history:
   - date: "2026-08-30"
+    transition: "TESTING -> FAILED"
+    cause: "EXP-A4-001 DECIDED FAIL at 3 seeds × 500 steps. All
+      three frozen bars miss. Hetero beats uniform ternary on
+      wikitext (+11.0σ) but loses to INT8 by 60–100σ on every
+      metric; INT8 is essentially lossless vs FP16 (≤ 0.13σ on
+      every metric) so the ternary regime has no margin. Protecting
+      a single FP16 layer is not sufficient. A4 closes quickly as
+      designed. Track C remains the only alive independent branch.
+      See research/reports/RESIDUAL-PLANE-CLOSURE-2026-08-30.md for
+      the cross-program mechanism pattern and the synthesis
+      reframing."
+  - date: "2026-08-30"
     transition: "UNTESTED -> TESTING"
     cause: "User selection of Hypothesis 2 = evidence-directed
       heterogeneous precision (A4), from the program synthesis
@@ -57,4 +69,8 @@ history:
       discovery PASS. Track C remains alive but separate and does
       not compete with H2 for interpretation of the same evidence."
 unlock_rules_affected: []
-conclusion: ""
+conclusion: "DECIDED FAIL at EXP-A4-001. The mechanism for retaining
+  capability is not 'protect a few weights' — the rest of the
+  ternary damage binds, and INT8 has no margin to absorb the
+  protected-layer signal. A4 closes quickly. No rescue experiments
+  authorized."

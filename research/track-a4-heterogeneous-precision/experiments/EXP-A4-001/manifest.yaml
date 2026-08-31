@@ -139,7 +139,14 @@ prior_runs:
       (fp16_reference). Both drivers killed; GPU verified idle;
       relaunched cleanly under a fresh timestamp. Design and frozen
       bars unchanged."
-result_summary: ""
+result_summary: "3 seeds × 500 steps; gates pass; H-bar false
+  (1/3 metrics > 2σ — only wikitext +11σ); C1-capability false
+  (hetero −99σ/−58σ/−85σ vs INT8); C1-bytes true (754 MB ≤
+  1590 MB); C2-check false (deficit ≪ INT8's near-zero deficit
+  vs continuation); z_int8_vs_fp16_continue ≈ 0σ (INT8 essentially
+  lossless); protected-layer signal real but the rest of the
+  ternary regime is the binding constraint; A4 closes quickly as
+  designed."
 decision_logic_summary: |
   Apply the frozen bars above to the n=3 arm means. PASS -> H2 gets
   a program branch (site expansion etc., preregistered separately).
@@ -156,7 +163,17 @@ freeze_exception:
   approved_by: "harness rule (OPERATING-PLAN section 1) + user
     selection of Hypothesis 2 (2026-08-30)."
 supersedes: null
-result_summary: ""
-confidence_and_reproduction: ""
-next_permitted_experiment: ""
-conclusion: ""
+confidence_and_reproduction: "3 seeds reproduce the seed-1 smoke
+  signal direction (hetero 7,055 ± 71 vs uniform 9,658 ± 225 ppl;
+  +11σ sd-of-diff). INT8 ≈ FP16 baseline; hetero ≪ INT8 on every
+  metric by 60–100σ. Decision is robust to seed perturbation."
+next_permitted_experiment: "None (A4 CLOSED). The mechanism
+  remains unresolved: 'protect a few weights' is insufficient. The
+  next hypothesis (if any) must come from a fresh user selection
+  against the synthesis §5 procedure."
+conclusion: "DECIDED FAIL. The minimum additional information of
+  one protected FP16 layer is not sufficient to retain downstream
+  capability under ternary representation. The remaining ternary
+  damage binds; A4 closes quickly as the hostile design intended.
+  Track C remains the only alive independent branch. No rescue
+  experiments authorized."

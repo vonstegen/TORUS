@@ -1,13 +1,20 @@
 # TORUS Research Roadmap
 
-**Status:** active — supersedes `docs/ROADMAP.md` (retained as historical record)
+**Revision:** 2.26 (2026-08-30) — **Hypothesis 2 (A4)
+  DECIDED FAIL.** EXP-A4-001 (3 seeds × 500 steps, ~5 GPU-h;
+  hostile discovery) closed quickly as designed. Protected-layer
+  signal real (+11σ sd-of-diff vs uniform ternary on wikitext,
+  reproducible across 3 seeds); rest of the ternary regime is
+  the binding constraint (arc/lamb at random-tier; INT8 is
+  essentially lossless vs FP16). All three frozen bars miss.
+  Claim A-RP-HET → FAILED. No rescue experiments authorized.
+  Track C remains the only alive independent branch.
 **Revision:** 2.25 (2026-08-30) — **Hypothesis 2 = evidence-directed
   heterogeneous precision (A4).** Claim A-RP-HET (TESTING);
   EXP-A4-001 preregistered (hostile discovery: hetero vs uniform
   ternary vs INT8/INT4 vs continuation vs FP16 reference; KILL bars
   H/C1/C2 from the synthesis constraints; Run-0 physical
   accounting; PASS-only escalation). Track C alive but separate.
-**Revision:** 2.24 (2026-08-30) — **Experimentation FROZEN at
   `1b271df` pending Hypothesis 2.** Program-level synthesis
   written: `research/reports/TORUS-PROGRAM-SYNTHESIS-2026-08-30.md`
   — answers what TORUS established (phenomena / falsifications /
