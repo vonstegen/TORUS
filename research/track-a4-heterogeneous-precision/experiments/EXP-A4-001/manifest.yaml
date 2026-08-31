@@ -130,6 +130,16 @@ exclusions:
     require a PASS (user directive)."
   - "Protected sets beyond L0 down_proj in run 0 (see
     protected_note)."
+prior_runs:
+  - timestamp: '20260831T124547Z'
+    status: INVALID
+    cause: "Launch hygiene defect: the smoke driver (3-step,
+      seed-001) was still running on cuda:0 when the official run
+      was launched on the same GPU -> CUDA OOM at the first eval
+      (fp16_reference). Both drivers killed; GPU verified idle;
+      relaunched cleanly under a fresh timestamp. Design and frozen
+      bars unchanged."
+result_summary: ""
 decision_logic_summary: |
   Apply the frozen bars above to the n=3 arm means. PASS -> H2 gets
   a program branch (site expansion etc., preregistered separately).
